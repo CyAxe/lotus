@@ -8,8 +8,17 @@ fn args() -> ArgMatches {
         .version("0.1.0-beta")
         .author("Khaled Nassar <knassar702@gmail.com>")
         .about(format!("{} Fast Web Security Scanner written in Rust with Lua Support to make DAST process Faster {}{}",Emoji("⚡", "").to_string(),Emoji("🦀",""),Emoji("🌖","")).as_str())
-        .subcommands(vec![Command::new("scan")
-            .about("Scan your target")
+        .subcommands(
+            vec![
+            Command::new("tool")
+            .about("RUN A TOOL")
+            .arg(
+                Arg::new("input-type")
+                .help("input type")
+                .takes_value(true)
+                
+            ),Command::new("scan")
+            .about(format!("{} Run a Scanning Module/s on your target",Emoji("🎯","")).as_str())
             .arg(
                 Arg::new("report")
                 .help("Report file")
