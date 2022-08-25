@@ -1,5 +1,5 @@
 function main(url)
     resp = send_req(url)
-    print(resp.body:match "SQL syntax.*?MySQL")
+    print(string.match(resp.body, "SQL syntax.*MySQL"))
     return "tt"
 end
