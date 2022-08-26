@@ -22,13 +22,13 @@ payloads = {
     "\123",
 }
 
-function matcher(body)
+function matcher(resp)
     for index_key,index_value in ipairs(sqli_errors) do
-        match = string.match(body, index_value)
-        if match == nil then
+        match = is_match(index_value,resp.body)        
+        if match == false then
             -- NOTHING
         else
-            print(string.format(">> FOUND: %s",match))
+            print(string.format(">> FOUND:  %s | %s",resp.url,match))
             return 1
         end
     end
@@ -39,7 +39,7 @@ function main(url)
         query = urlparse.parse(url)
         query.query.cat = index_value
         resp = send_req(url)
-        if matcher(resp.body) == 1 then
+        if matcher(resp) == 1 then
             break
         end
     end

@@ -19,3 +19,8 @@ impl Sender {
         }
     }
 }
+
+pub fn regex(pattern: (String,String)) -> bool {
+    let re = fancy_regex::Regex::new(&pattern.0).unwrap();
+    re.is_match(&pattern.1).unwrap_or(false)
+}

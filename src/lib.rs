@@ -8,7 +8,6 @@ pub fn start() {
         .num_threads(20)
         .build()
         .unwrap();
-    urls.par_iter().for_each(|url| println!("URL: {:?}", url));
     threader.install(|| {
         urls.par_iter().for_each(|url| {
             tester_idk.load_auth(url.to_string());

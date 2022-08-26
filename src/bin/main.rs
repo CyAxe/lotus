@@ -1,7 +1,7 @@
-use lottas::start;
-use std::path::Path;
 use clap::{Arg, ArgMatches, Command};
 use console::Emoji;
+use lottas::start;
+use std::path::Path;
 
 fn args() -> ArgMatches {
     Command::new("Lottas")
@@ -15,9 +15,8 @@ fn args() -> ArgMatches {
             .arg(
                 Arg::new("input-type")
                 .help("input type")
-                .takes_value(true)
-                
-            ),Command::new("scan")
+                .takes_value(true)),
+            Command::new("scan")
             .about(format!("{} Run a Scanning Module/s on your target",Emoji("🎯","")).as_str())
             .arg(
                 Arg::new("report")

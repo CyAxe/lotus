@@ -9,8 +9,10 @@ path = "src/bin/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+url = "2.2.2"
 rlua = "0.19.4"
 rayon = "1.5"
 reqwest = { version = "0.11", features = ["json","blocking"] }
 clap = "3.2.17"
 console = "0.15.1"
+fancy-regex = "0.10.0"
