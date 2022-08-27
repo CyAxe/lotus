@@ -3,7 +3,7 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 pub fn start() {
     let tester_idk = core::LuaLoader::new();
-    let urls = vec!["http://testphp.vulnweb.com/listproducts.php?cat=1'"];
+    let urls = vec!["http://testphp.vulnweb.com/listproducts.php?cat=1","http://testphp.vulnweb.com/listproducts.php?cat=1","http://testphp.vulnweb.com/listproducts.php?cat=1","http://testphp.vulnweb.com/listproducts.php?cat=1","http://testphp.vulnweb.com/listproducts.php?cat=1","http://testphp.vulnweb.com/listproducts.php?cat=1"];
     let threader = rayon::ThreadPoolBuilder::new()
         .num_threads(20)
         .build()
