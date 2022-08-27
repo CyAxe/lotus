@@ -32,7 +32,6 @@ pub enum RespType {
 }
 
 
-
 impl Sender {
     pub fn init() -> Sender {
         Sender {}
@@ -51,7 +50,7 @@ impl Sender {
                 resp_data.insert("url".to_string(), RespType::Emtpy);
                 resp_data.insert("status".to_string(), RespType::Emtpy);
                 resp_data.insert("body".to_string(), RespType::Emtpy);
-                resp_data.insert("errors".to_string(), RespType::Error(format!("{:?}",err).to_string()));
+                resp_data.insert("errors".to_string(), RespType::Error(err.to_string()));
                 resp_data
             },
         }

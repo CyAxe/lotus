@@ -43,6 +43,9 @@ function main(url)
             if matcher(resp) == 1 then
                 break
             end
+        else
+            print("ERRROR")
+            print(resp.errors:GetErrorOrNil())
         end
     end
     report = {}
