@@ -1,4 +1,3 @@
-
 -- Script Information
 script_info = {}
 script_info["name"] = "SQLIErrDetector"
@@ -31,34 +30,26 @@ payloads = {
     "\123",
 }
 
-function matcher(resp)
+function scan(resp)
+    found = {}
     for index_key,index_value in ipairs(sqli_errors) do
         match = is_match(index_value,resp.body:GetStrOrNil()) 
         if match == false then
             -- NOTHING
         else
-            print(string.format(">> FOUND:  %s | %s",resp.url:GetStrOrNil(),index_value))
-            return 1
+            log_info(string.format("SQLI FOUND:  %s | %s",resp.url:GetStrOrNil(),index_value))
+            found[resp.url:GetStrOrNil()] = index_value
         end
     end
+    return found
 end
 
-function main(url)
+function generate_payload(url,param)
+    log_info(url)
+    urls = {}
     for index_key, payload_value in ipairs(payloads) do
-        url_query = change_urlquery(url,payload_value)
-        for param_key, full_url in next, url_query do
-            resp = send_req(string.format("%s",full_url))
-            print(string.format("SENDING REQUEST TO %s",full_url))
-            if resp.errors:GetErrorOrNil() == nil then
-                if matcher(resp) == 1 then
-                    break
-                end
-            else
-                print(string.format("%s", resp.errors:GetErrorOrNil()))
-            end
-        end
+        local new_query = set_urlvalue(url,param,payload_value)
+        table.insert(urls,new_query)
     end
-    report = {}
-    report["found"] = true
-    return report
+    return urls
 end
