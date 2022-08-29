@@ -1,4 +1,12 @@
 
+-- Script Information
+script_info = {}
+script_info["name"] = "SQLIErrDetector"
+script_info["methods"] = "GET"
+script_info["type"] = "active_scan"
+script_info["severity"] = "high"
+
+
 sqli_errors = {
     'SQL syntax.*?MySQL',
     'Warning.*?\\Wmysqli?_', 
