@@ -186,7 +186,7 @@ pub fn set_urlvalue(url: &str, param: &str, payload: &str) -> String {
         .iter()
         .for_each(|(k, v)| {
             if k == param {
-                final_params.insert(k.to_string(), { format!("{}{}", v.to_string(), payload) });
+                final_params.insert(k.to_string(), format!("{}{}", v.to_string(), payload));
             } else {
                 final_params.insert(k.to_string(), v.to_string());
             }

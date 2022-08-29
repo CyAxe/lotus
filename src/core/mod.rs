@@ -74,7 +74,7 @@ impl LuaLoader {
 
     pub fn scan(&self, script_code: &str, urls: Vec<String>) {
         let threader = rayon::ThreadPoolBuilder::new()
-            .num_threads(20)
+            .num_threads(100)
             .build()
             .unwrap();
         let sender = utils::Sender::init();
@@ -124,7 +124,7 @@ impl LuaLoader {
                     global.set("is_match", is_match).unwrap();
                     lua_context.load(script_code).exec().unwrap();
                     let main_func: rlua::Function = global.get("scan").unwrap();
-                    let out_data = main_func.call::<_, rlua::Table>(resp).unwrap();
+                    let _out_data = main_func.call::<_, rlua::Table>(resp).unwrap();
                 });
             });
         });

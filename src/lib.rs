@@ -22,7 +22,7 @@ impl Lottas {
             let parsed_url = Url::parse(url).unwrap();
             // PARSED CUSTTOM PARAMETER
             parsed_url.query_pairs().into_iter().for_each(|url_param| {
-                active.iter().for_each(|(script_path, script_name)| {
+                active.iter().for_each(|(script_path, _script_name)| {
                     let script_out = core::utils::files::filename_to_string(&script_path);
                     lualoader.run_scan(
                         &script_out.unwrap(),
