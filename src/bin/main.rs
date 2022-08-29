@@ -154,6 +154,7 @@ fn args() -> ArgMatches {
 }
 
 fn main() {
+    env_logger::Builder::from_env("debug").init();
     args();
     start();
 }
