@@ -1,9 +1,8 @@
 mod core;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
-pub fn start() {
+pub fn start(urls: Vec<String>) {
     let tester_idk = core::LuaLoader::new();
-    let urls = vec!["httpasf","http://testphp.vulnweb.com/listproducts.php?cat=1&cat=224","http://testphp.vulnweb.com/listproducts.php?cat=1","http://testphp.vulnweb.com/listproducts.php?cat=1","http://testphp.vulnweb.com/listproducts.php?cat=1","http://testphp.vulnweb.com/listproducts.php?cat=1","http://testphp.vulnweb.com/listproducts.php?cat=1&data=111"];
     let threader = rayon::ThreadPoolBuilder::new()
         .num_threads(20)
         .build()

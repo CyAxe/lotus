@@ -1,4 +1,11 @@
 
+-- Script Information
+script_info = {}
+script_info["name"] = "SQLIErrDetector"
+script_info["methods"] = "GET"
+script_info["type"] = "active_scan"
+script_info["severity"] = "high"
+
 sqli_errors = {
     'SQL syntax.*?MySQL',
     'Warning.*?\\Wmysqli?_', 
@@ -30,7 +37,7 @@ function matcher(resp)
         if match == false then
             -- NOTHING
         else
-            log_info(string.format(">> FOUND:  %s | %s",resp.url:GetStrOrNil(),index_value))
+            print(string.format(">> FOUND:  %s | %s",resp.url:GetStrOrNil(),index_value))
             return 1
         end
     end
@@ -41,13 +48,13 @@ function main(url)
         url_query = change_urlquery(url,payload_value)
         for param_key, full_url in next, url_query do
             resp = send_req(string.format("%s",full_url))
-            log_info(string.format("SENDING REQUEST TO %s",full_url))
+            print(string.format("SENDING REQUEST TO %s",full_url))
             if resp.errors:GetErrorOrNil() == nil then
                 if matcher(resp) == 1 then
                     break
                 end
             else
-                log_info(string.format("%s", resp.errors:GetErrorOrNil()))
+                print(string.format("%s", resp.errors:GetErrorOrNil()))
             end
         end
     end
