@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use tealr::{rlu::FromToLua, TypeName};
 pub mod files;
 
+#[derive(Clone)]
 pub struct Sender {}
 
 #[derive(FromToLua, Clone, TypeName)]

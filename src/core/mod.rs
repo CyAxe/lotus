@@ -65,26 +65,24 @@ impl LuaLoader {
             let urls_payloads = main_func
                 .call::<_, rlua::Table>((target_url.0, target_url.1))
                 .unwrap();
-            urls_payloads.pairs::<i32, String>().for_each(|new_url| {
-                all_payloads.push(new_url.unwrap().1);
+            urls_payloads.pairs::<String,String>().for_each(|current_payload|{
+                all_payloads.push(current_payload.unwrap());
             });
         });
-        self.scan(script_code,all_payloads);
+        self.scan(script_code, all_payloads);
     }
 
-    pub fn scan(&self, script_code: &str, urls: Vec<String>) {
+    pub fn scan(&self, script_code: &str, urls: Vec<(String,String)>) {
         let threader = rayon::ThreadPoolBuilder::new()
             .num_threads(100)
             .build()
             .unwrap();
-        let sender = utils::Sender::init();
         threader.install(|| {
             urls.par_iter().for_each(|current_url| {
-                let sender = &sender;
-                let resp = sender.send(current_url.to_string());
                 let lua_code = Lua::new();
                 lua_code.context(|lua_context| {
                     let global = lua_context.globals();
+                    let sender = utils::Sender::init();
                     // Set Functions
                     let is_match = lua_context
                         .create_function(|_, (pattern, resp): (String, String)| {
@@ -115,6 +113,9 @@ impl LuaLoader {
                             Ok(())
                         })
                         .unwrap();
+                    let send_req_func = lua_context.create_function(move |_, url: String|{
+                        Ok(sender.send(url))
+                    }).unwrap();
 
                     // Set Globals
                     global.set("log_info", log_info).unwrap();
@@ -122,9 +123,11 @@ impl LuaLoader {
                     global.set("log_debug", log_debug).unwrap();
                     global.set("log_warn", log_warn).unwrap();
                     global.set("is_match", is_match).unwrap();
+                    global.set("send_req", send_req_func).unwrap();
+                    
                     lua_context.load(script_code).exec().unwrap();
                     let main_func: rlua::Function = global.get("scan").unwrap();
-                    let _out_data = main_func.call::<_, rlua::Table>(resp).unwrap();
+                    let _out_data = main_func.call::<_, rlua::Table>(current_url.clone()).unwrap();
                 });
             });
         });

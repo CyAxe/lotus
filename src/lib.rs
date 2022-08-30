@@ -1,8 +1,9 @@
 mod core;
 use glob::glob;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use reqwest::Url;
 use std::path::Path;
-use tracing::debug;
+use tracing::{debug, info};
 
 pub struct Lottas {
     urls: Vec<String>,
@@ -18,16 +19,24 @@ impl Lottas {
     pub fn start(&self) {
         let active = self.get_scripts("active");
         let lualoader = core::LuaLoader::new();
-        self.urls.iter().for_each(|url| {
-            let parsed_url = Url::parse(url).unwrap();
-            // PARSED CUSTTOM PARAMETER
-            parsed_url.query_pairs().into_iter().for_each(|url_param| {
-                active.iter().for_each(|(script_path, _script_name)| {
-                    let script_out = core::utils::files::filename_to_string(&script_path);
-                    lualoader.run_scan(
-                        &script_out.unwrap(),
-                        (url, url_param.0.to_string().as_str()),
-                    );
+        let threader = rayon::ThreadPoolBuilder::new()
+            .num_threads(100)
+            .build()
+            .unwrap();
+
+        threader.install(|| {
+            self.urls.iter().for_each(|url| {
+                let parsed_url = Url::parse(url).unwrap();
+                // PARSED CUSTTOM PARAMETER
+                parsed_url.query_pairs().into_iter().for_each(|url_param| {
+                    active.par_iter().for_each(|(script_path, _script_name)| {
+                        info!("STARTED {:?}", &script_path);
+                        let script_out = core::utils::files::filename_to_string(&script_path);
+                        lualoader.run_scan(
+                            &script_out.unwrap(),
+                            (url, url_param.0.to_string().as_str()),
+                        );
+                    });
                 });
             });
         });
