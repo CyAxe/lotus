@@ -32,8 +32,11 @@ payloads = {
 }
 
 function scan(url,payload)
-    log_info(string.format("SEND %s" ,url))
     resp = send_req(url)
+    if resp.url:GetStrOrNil() == nil then
+        return 0
+    end
+
     for index_key,index_value in ipairs(sqli_errors) do
         match = is_match(index_value,resp.body:GetStrOrNil()) 
         if match == false then
@@ -48,7 +51,6 @@ function scan(url,payload)
 end
 
 function main(url,param)
-    log_info(url)
     for index_key, payload_value in ipairs(payloads) do
         local new_query = set_urlvalue(url,"cat",payload_value)
         local out = scan(new_query, payload_value)

@@ -72,7 +72,6 @@ impl LuaLoader {
                 .call::<_, rlua::Table>(target_url)
                 .unwrap();
             out.pairs::<String,String>().for_each(|_d|{
-                info!("OUT {:?}",_d);
             });
         });
     }

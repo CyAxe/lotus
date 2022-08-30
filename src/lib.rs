@@ -25,12 +25,11 @@ impl Lottas {
             .unwrap();
 
         threader.install(|| {
-            self.urls.iter().for_each(|url| {
+            self.urls.par_iter().for_each(|url| {
                 let parsed_url = Url::parse(url).unwrap();
                 // PARSED CUSTTOM PARAMETER
                 parsed_url.query_pairs().into_iter().for_each(|url_param| {
                     active.par_iter().for_each(|(script_path, _script_name)| {
-                        info!("STARTED {:?}", &script_path);
                         let script_out = core::utils::files::filename_to_string(&script_path);
                         lualoader.run_scan(
                             &script_out.unwrap(),
