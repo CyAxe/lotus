@@ -3,7 +3,7 @@ use glob::glob;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use reqwest::Url;
 use std::path::Path;
-use tracing::{debug, info};
+use tracing::debug;
 
 pub struct Lottas {
     urls: Vec<String>,

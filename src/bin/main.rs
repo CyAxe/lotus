@@ -9,9 +9,9 @@ fn main() -> Result<(), std::io::Error> {
     let subscriber = FmtSubscriber::builder()
         .with_max_level(Level::INFO)
         .pretty()
-        .with_thread_ids(true)
-        .with_ansi(true)
-        .with_thread_names(true)
+        .with_thread_ids(false)
+        .with_ansi(false)
+        .with_thread_names(false)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     let stdin = io::stdin();

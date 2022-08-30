@@ -31,7 +31,7 @@ payloads = {
     "\123",
 }
 
-function scan(url,payload)
+function scan(url)
     resp = send_req(url)
     if resp.url:GetStrOrNil() == nil then
         return 0
@@ -51,10 +51,17 @@ function scan(url,payload)
 end
 
 function main(url,param)
+    stop = 0
     for index_key, payload_value in ipairs(payloads) do
-        local new_query = set_urlvalue(url,"cat",payload_value)
-        local out = scan(new_query, payload_value)
-        if out == 1 then 
+        new_querys = change_urlquery(url,payload_value)
+        for url_index, new_url in pairs(new_querys) do 
+            local out = scan(new_url)
+            if out == 1 then 
+                stop = 1
+                break
+            end
+        end
+        if stop == 1 then
             break
         end
     end
