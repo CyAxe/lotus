@@ -31,7 +31,7 @@ payloads = {
     "\123",
 }
 
-function scan(url)
+function scan(url,current_payload)
     resp = send_req(url)
     if resp.url:GetStrOrNil() == nil then
         return 0
@@ -43,7 +43,10 @@ function scan(url)
             -- NOTHING
         else
             println(string.format("SQLI FOUND:  %s | %s",resp.url:GetStrOrNil(),index_value))
-            found[resp.url:GetStrOrNil()] = index_value
+            found["url"] = resp.url:GetStrOrNil()
+            found["match"] = index_value
+            found["valid"] = true
+            found["payload"] = current_payload
             return 1
         end
     end
@@ -55,7 +58,7 @@ function main(url)
     for index_key, payload_value in ipairs(payloads) do
         new_querys = change_urlquery(url,payload_value)
         for url_index, new_url in pairs(new_querys) do 
-            local out = scan(new_url)
+            local out = scan(new_url, payload_value)
             if out == 1 then 
                 stop = 1
                 break

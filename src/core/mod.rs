@@ -1,15 +1,26 @@
 pub mod utils;
+use serde::{Serialize, Deserialize};
 use log::{debug, error, info, warn};
 use rlua::Lua;
+use std::path::Path;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 pub struct LuaLoader{}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Report {
+    pub payload: String,
+    pub match_payload: String,
+    pub url: String,
+}
 
 impl <'a>LuaLoader {
     pub fn new() -> LuaLoader {
         LuaLoader {}
     }
 
-    pub fn run_scan(&self,bar: &'a indicatif::ProgressBar, script_code: &str, target_url: &str) {
+    pub fn run_scan(&self,bar: &'a indicatif::ProgressBar,output_dir: &str, script_code: &str, target_url: &str) {
         let lua_code = Lua::new();
         let sender = utils::Sender::init();
         lua_code.context(move |lua_context| {
@@ -120,9 +131,36 @@ impl <'a>LuaLoader {
             lua_context.load(script_code).exec().unwrap();
             let main_func: rlua::Function = global.get("main").unwrap();
             let out = main_func.call::<_, rlua::Table>(target_url).unwrap();
-            out.pairs::<String, String>().for_each(|_d| {
-                debug!("SCRIPT RESULTS : {:?}", _d);
-            });
+
+            if out.get::<_, bool>("valid").unwrap() == true {
+                debug!("valid bug");
+                if Path::new(output_dir).exists() {
+                    // NOTHING
+                } else {
+                    OpenOptions::new()
+                        .write(true)
+                        .append(true)
+                        .create(true)
+                        .open(output_dir)
+                        .expect("Could not open file")
+                        .write_all("".as_bytes())
+                        .expect("Could not write to file");
+                }
+                let new_report = Report {
+                    url: out.get("url").unwrap(),
+                    match_payload: out.get("match").unwrap(),
+                    payload: out.get("payload").unwrap()
+                };
+                let results = serde_json::to_string(&new_report).unwrap();
+                OpenOptions::new()
+                    .write(true)
+                    .append(true)
+                    .create(true)
+                    .open(output_dir)
+                    .expect("Could not open file")
+                    .write_all(format!("{},\n",&results).as_str().as_bytes())
+                    .expect("Could not write to file");
+            }
         });
         bar.inc(1);
     }

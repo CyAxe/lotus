@@ -16,7 +16,7 @@ impl Lottas {
         Lottas { urls, script }
     }
 
-    pub fn start(&self, threads: usize) {
+    pub fn start(&self, threads: usize, output_path: &str) {
         let active = self.get_scripts("active");
         let bar = ProgressBar::new(self.urls.len() as u64 * active.len() as u64);
         bar.set_style(ProgressStyle::default_bar()
@@ -33,7 +33,7 @@ impl Lottas {
             self.urls.par_iter().for_each(|url| {
                 // PARSED CUSTTOM PARAMETER
                 active.iter().for_each(|(script_out, _script_name)| {
-                    lualoader.run_scan(&bar,&script_out, url);
+                    lualoader.run_scan(&bar,&output_path,&script_out, url);
                 });
             });
         });

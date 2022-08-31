@@ -22,7 +22,8 @@ glob = "0.3.0"
 indicatif = "0.17.0"
 fern = "0.6.1"
 chrono = "0.4.22"
-
+serde_json = "1.0.85"
+serde = { version = "1.0.144", features = ["derive"] }
 
 [profile.release]
 opt-level = "z"  # Optimize for size.

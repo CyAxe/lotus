@@ -24,7 +24,7 @@ fn main() -> Result<(), std::io::Error> {
     let lines = stdin.lock().lines();
     let lua_code = cmd_opts.scripts;
     let lottas = Lottas::init(lines.map(|x| x.unwrap()).collect(), lua_code.to_string());
-    lottas.start(cmd_opts.threads);
+    lottas.start(cmd_opts.threads, &cmd_opts.json_output);
     Ok(())
 }
 
@@ -51,4 +51,6 @@ pub struct Opt {
     pub timeout: usize,
     #[structopt(short = "s", long = "scripts", help = "Path of Scripts dir")]
     pub scripts: String,
+    #[structopt(short = "o", long = "output", help = "Path of output JSON file")]
+    pub json_output: String,
 }
