@@ -4,3 +4,4 @@
 - [ ] Fuzzer
 - [ ] Custom Headers Option
 - [ ] Auth Scripts
+- [ ] POST Methods
