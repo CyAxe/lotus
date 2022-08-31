@@ -67,5 +67,3 @@ function main(url)
     end
     return found
 end
-
-

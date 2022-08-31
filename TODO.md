@@ -1,3 +1,6 @@
 ### Custom Scripts types
-- Active Scan
-- Passive Scan
+- [ x ] Active Scan
+- [ ] Passive Scan
+- [ ] Fuzzer
+- [ ] Custom Headers Option
+- [ ] Auth Scripts
