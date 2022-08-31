@@ -123,7 +123,6 @@ impl <'a>LuaLoader {
             out.pairs::<String, String>().for_each(|_d| {
                 debug!("SCRIPT RESULTS : {:?}", _d);
             });
-            bar.inc(1);
         });
         bar.inc(1);
     }
