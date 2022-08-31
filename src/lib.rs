@@ -1,7 +1,6 @@
 mod core;
 use glob::glob;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use reqwest::Url;
 use std::path::Path;
 use tracing::debug;
 
@@ -16,26 +15,22 @@ impl Lottas {
         Lottas { urls, script }
     }
 
-    pub fn start(&self) {
+    pub fn start(&self,threads: usize) {
         let active = self.get_scripts("active");
         let lualoader = core::LuaLoader::new();
         let threader = rayon::ThreadPoolBuilder::new()
-            .num_threads(100)
+            .num_threads(threads)
             .build()
             .unwrap();
 
         threader.install(|| {
             self.urls.par_iter().for_each(|url| {
-                let parsed_url = Url::parse(url).unwrap();
                 // PARSED CUSTTOM PARAMETER
-                parsed_url.query_pairs().into_iter().for_each(|url_param| {
-                    active.par_iter().for_each(|(script_path, _script_name)| {
-                        let script_out = core::utils::files::filename_to_string(&script_path);
-                        lualoader.run_scan(
-                            &script_out.unwrap(),
-                            (url, url_param.0.to_string().as_str()),
-                        );
-                    });
+                active.iter().for_each(|(script_out, _script_name)| {
+                    lualoader.run_scan(
+                        &script_out,
+                        url,
+                    );
                 });
             });
         });
@@ -55,7 +50,7 @@ impl Lottas {
         {
             match entry {
                 Ok(path) => scripts.push((
-                    path.to_str().unwrap().to_string(),
+                    core::utils::files::filename_to_string(path.to_str().unwrap()).unwrap(),
                     path.file_name().unwrap().to_str().unwrap().to_string(),
                 )),
                 Err(e) => tracing::error!("{:?}", e),

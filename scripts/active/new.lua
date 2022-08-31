@@ -42,7 +42,7 @@ function scan(url)
         if match == false then
             -- NOTHING
         else
-            log_info(string.format("NOT SQLI FOUND:  %s | %s",resp.url:GetStrOrNil(),index_value))
+            log_info(string.format("NOT NOTN ON O NOT SQLI FOUND:  %s | %s",resp.url:GetStrOrNil(),index_value))
             found[resp.url:GetStrOrNil()] = index_value
             return 1
         end

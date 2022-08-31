@@ -18,7 +18,7 @@ fn main() -> Result<(), std::io::Error> {
     let lines = stdin.lock().lines();
     let lua_code = cmd_opts.scripts;
     let lottas = Lottas::init(lines.map(|x| x.unwrap()).collect(), lua_code.to_string());
-    lottas.start();
+    lottas.start(cmd_opts.threads);
     Ok(())
 }
 
@@ -35,13 +35,7 @@ pub struct Opt {
         default_value = "30",
         help = "number of workers"
     )]
-    pub scripts_threads: usize,
-    #[structopt(
-        long = "scripts-workers",
-        default_value = "2",
-        help = "How many script to run in the same time"
-    )]
-    pub scripts_worker: usize,
+    pub threads: usize,
     #[structopt(
         short = "t",
         long = "timeout",

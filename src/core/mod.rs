@@ -9,7 +9,7 @@ impl LuaLoader {
         LuaLoader {}
     }
 
-    pub fn run_scan(&self, script_code: &str, target_url: (&str, &str)) {
+    pub fn run_scan(&self, script_code: &str, target_url: &str) {
         let lua_code = Lua::new();
         let sender = utils::Sender::init();
         lua_code.context(|lua_context| {
