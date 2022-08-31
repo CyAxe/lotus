@@ -1,5 +1,6 @@
 mod core;
 use glob::glob;
+use indicatif::{ProgressBar, ProgressStyle};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::path::Path;
 use tracing::debug;
@@ -15,9 +16,14 @@ impl Lottas {
         Lottas { urls, script }
     }
 
-    pub fn start(&self,threads: usize) {
+    pub fn start(&self, threads: usize) {
         let active = self.get_scripts("active");
-        let lualoader = core::LuaLoader::new();
+        let bar = ProgressBar::new(self.urls.len() as u64 * active.len() as u64);
+        bar.set_style(ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}").expect("BRUH")
+            .tick_chars(format!("{}", "⣾⣽⣻⢿⡿⣟⣯⣷").as_str())
+            .progress_chars("#>-"));
+        let lualoader = core::LuaLoader::new(bar);
         let threader = rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
             .build()
@@ -27,10 +33,7 @@ impl Lottas {
             self.urls.par_iter().for_each(|url| {
                 // PARSED CUSTTOM PARAMETER
                 active.iter().for_each(|(script_out, _script_name)| {
-                    lualoader.run_scan(
-                        &script_out,
-                        url,
-                    );
+                    lualoader.run_scan(&script_out, url);
                 });
             });
         });
