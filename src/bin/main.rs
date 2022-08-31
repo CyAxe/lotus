@@ -5,20 +5,21 @@ use structopt::StructOpt;
 fn main() -> Result<(), std::io::Error> {
     let cmd_opts = Opt::from_args();
     fern::Dispatch::new()
-    .format(|out, message, record| {
-        out.finish(format_args!(
-            "{}[{}][{}] {}",
-            chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
-            record.target(),
-            record.level(),
-            message
-        ))
-    })
-    .level(log::LevelFilter::Debug)
-    .level_for("hyper", log::LevelFilter::Warn)
-    .level_for("reqwest", log::LevelFilter::Warn)
-    .chain(fern::log_file("output.log")?)
-    .apply().unwrap();
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{}[{}][{}] {}",
+                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Debug)
+        .level_for("hyper", log::LevelFilter::Warn)
+        .level_for("reqwest", log::LevelFilter::Warn)
+        .chain(fern::log_file("output.log")?)
+        .apply()
+        .unwrap();
     let stdin = io::stdin();
     let lines = stdin.lock().lines();
     let lua_code = cmd_opts.scripts;

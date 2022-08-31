@@ -1,6 +1,6 @@
 pub mod utils;
-use rlua::Lua;
 use log::{debug, error, info, warn};
+use rlua::Lua;
 
 pub struct LuaLoader {
     bar: indicatif::ProgressBar,

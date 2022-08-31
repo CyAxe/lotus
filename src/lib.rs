@@ -1,9 +1,9 @@
 mod core;
 use glob::glob;
 use indicatif::{ProgressBar, ProgressStyle};
+use log::debug;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::path::Path;
-use log::debug;
 
 pub struct Lottas {
     urls: Vec<String>,

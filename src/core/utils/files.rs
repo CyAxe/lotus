@@ -1,6 +1,6 @@
+use log::debug;
 use std::fs::File;
 use std::io::{self, Read};
-use log::debug;
 
 pub fn filename_to_string(s: &str) -> io::Result<String> {
     let mut file = File::open(s)?;
