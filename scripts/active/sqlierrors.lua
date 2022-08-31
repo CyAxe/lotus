@@ -129,7 +129,7 @@ sqli_errors = {
   "org\\.hsqldb\\.jdbc",
   "org\\.h2\\.jdbc",
   "\\[42000-192\\]",
-  "![0-9]{5}![^",
+  "![0-9]{5}![^]",
   "]+(failed|unexpected|error|syntax|expected|violation|exception)",
   "\\[MonetDB\\]\\[ODBC Driver",
   "nl\\.cwi\\.monetdb\\.jdbc",
