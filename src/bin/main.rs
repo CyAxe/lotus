@@ -1,4 +1,4 @@
-use lottas::Lottas;
+use lotus::Lottas;
 use std::io::{self, BufRead};
 use structopt::StructOpt;
 

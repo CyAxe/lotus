@@ -1,12 +1,12 @@
 pub mod utils;
-use serde::{Serialize, Deserialize};
 use log::{debug, error, info, warn};
 use rlua::Lua;
-use std::path::Path;
+use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::path::Path;
 
-pub struct LuaLoader{}
+pub struct LuaLoader {}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Report {
@@ -15,12 +15,18 @@ pub struct Report {
     pub url: String,
 }
 
-impl <'a>LuaLoader {
+impl<'a> LuaLoader {
     pub fn new() -> LuaLoader {
         LuaLoader {}
     }
 
-    pub fn run_scan(&self,bar: &'a indicatif::ProgressBar,output_dir: &str, script_code: &str, target_url: &str) {
+    pub fn run_scan(
+        &self,
+        bar: &'a indicatif::ProgressBar,
+        output_dir: &str,
+        script_code: &str,
+        target_url: &str,
+    ) {
         let lua_code = Lua::new();
         let sender = utils::Sender::init();
         lua_code.context(move |lua_context| {
@@ -66,10 +72,17 @@ impl <'a>LuaLoader {
 
             // Set Globals
             let new_bar = bar.clone();
-            global.set("println", lua_context.create_function(move |_, msg: String|{
-                new_bar.println(msg);
-                Ok(())
-            }).unwrap()).unwrap();
+            global
+                .set(
+                    "println",
+                    lua_context
+                        .create_function(move |_, msg: String| {
+                            new_bar.println(msg);
+                            Ok(())
+                        })
+                        .unwrap(),
+                )
+                .unwrap();
             global.set("log_info", log_info).unwrap();
             global.set("log_error", log_error).unwrap();
             global.set("log_debug", log_debug).unwrap();
@@ -149,7 +162,7 @@ impl <'a>LuaLoader {
                 let new_report = Report {
                     url: out.get("url").unwrap(),
                     match_payload: out.get("match").unwrap(),
-                    payload: out.get("payload").unwrap()
+                    payload: out.get("payload").unwrap(),
                 };
                 let results = serde_json::to_string(&new_report).unwrap();
                 OpenOptions::new()
@@ -158,7 +171,7 @@ impl <'a>LuaLoader {
                     .create(true)
                     .open(output_dir)
                     .expect("Could not open file")
-                    .write_all(format!("{}\n",&results).as_str().as_bytes())
+                    .write_all(format!("{}\n", &results).as_str().as_bytes())
                     .expect("Could not write to file");
             }
         });

@@ -2,6 +2,7 @@ use reqwest::Url;
 use scraper::Html;
 use scraper::Selector;
 use std::collections::HashMap;
+use log::debug;
 use tealr::{rlu::FromToLua, TypeName};
 pub mod files;
 
@@ -65,6 +66,7 @@ impl Sender {
 }
 
 pub fn is_match(pattern: String, resp: String) -> bool {
+    debug!("PATTERN: {} | {}", pattern, resp);
     let re = fancy_regex::Regex::new(&pattern).unwrap();
     re.is_match(&resp).unwrap_or(false)
 }
