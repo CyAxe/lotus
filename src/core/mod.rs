@@ -2,19 +2,17 @@ pub mod utils;
 use log::{debug, error, info, warn};
 use rlua::Lua;
 
-pub struct LuaLoader {
-    bar: indicatif::ProgressBar,
-}
+pub struct LuaLoader{}
 
-impl LuaLoader {
-    pub fn new(bar: indicatif::ProgressBar) -> LuaLoader {
-        LuaLoader { bar }
+impl <'a>LuaLoader {
+    pub fn new() -> LuaLoader {
+        LuaLoader {}
     }
 
-    pub fn run_scan(&self, script_code: &str, target_url: &str) {
+    pub fn run_scan(&self,bar: &'a indicatif::ProgressBar, script_code: &str, target_url: &str) {
         let lua_code = Lua::new();
         let sender = utils::Sender::init();
-        lua_code.context(|lua_context| {
+        lua_code.context(move |lua_context| {
             let global = lua_context.globals();
             // Set Functions
             let set_urlvalue = lua_context.create_function(
@@ -56,6 +54,11 @@ impl LuaLoader {
                 .unwrap();
 
             // Set Globals
+            let new_bar = bar.clone();
+            global.set("println", lua_context.create_function(move |_, msg: String|{
+                new_bar.println(msg);
+                Ok(())
+            }).unwrap()).unwrap();
             global.set("log_info", log_info).unwrap();
             global.set("log_error", log_error).unwrap();
             global.set("log_debug", log_debug).unwrap();
@@ -118,9 +121,10 @@ impl LuaLoader {
             let main_func: rlua::Function = global.get("main").unwrap();
             let out = main_func.call::<_, rlua::Table>(target_url).unwrap();
             out.pairs::<String, String>().for_each(|_d| {
-                debug!("HACKER MAN : {:?}", _d);
+                debug!("SCRIPT RESULTS : {:?}", _d);
             });
+            bar.inc(1);
         });
-        self.bar.inc(1);
+        bar.inc(1);
     }
 }

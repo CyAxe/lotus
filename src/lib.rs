@@ -23,7 +23,7 @@ impl Lottas {
             .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}").expect("ProgressBar Error")
             .tick_chars(format!("{}", "⣾⣽⣻⢿⡿⣟⣯⣷").as_str())
             .progress_chars("#>-"));
-        let lualoader = core::LuaLoader::new(bar);
+        let lualoader = core::LuaLoader::new();
         let threader = rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
             .build()
@@ -33,7 +33,7 @@ impl Lottas {
             self.urls.par_iter().for_each(|url| {
                 // PARSED CUSTTOM PARAMETER
                 active.iter().for_each(|(script_out, _script_name)| {
-                    lualoader.run_scan(&script_out, url);
+                    lualoader.run_scan(&bar,&script_out, url);
                 });
             });
         });
