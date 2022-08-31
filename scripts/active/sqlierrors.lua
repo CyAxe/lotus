@@ -55,17 +55,19 @@ end
 
 function main(url)
     stop = 0
-    for index_key, payload_value in ipairs(payloads) do
-        new_querys = change_urlquery(url,payload_value)
-        for url_index, new_url in pairs(new_querys) do 
-            local out = scan(new_url, payload_value)
-            if out == 1 then 
-                stop = 1
+    if string.find(url,"?") then
+        for index_key, payload_value in ipairs(payloads) do
+            new_querys = change_urlquery(url,payload_value)
+            for url_index, new_url in pairs(new_querys) do 
+                local out = scan(new_url, payload_value)
+                if out == 1 then 
+                    stop = 1
+                    break
+                end
+            end
+            if stop == 1 then
                 break
             end
-        end
-        if stop == 1 then
-            break
         end
     end
     return found
