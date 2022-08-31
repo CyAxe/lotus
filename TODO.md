@@ -1,5 +1,5 @@
 ### Custom Scripts types
-- [ x ] Active Scan
+- [x] Active Scan
 - [ ] Passive Scan
 - [ ] Fuzzer
 - [ ] Custom Headers Option
