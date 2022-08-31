@@ -3,7 +3,7 @@ use glob::glob;
 use indicatif::{ProgressBar, ProgressStyle};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::path::Path;
-use tracing::debug;
+use log::debug;
 
 pub struct Lottas {
     urls: Vec<String>,
@@ -20,7 +20,7 @@ impl Lottas {
         let active = self.get_scripts("active");
         let bar = ProgressBar::new(self.urls.len() as u64 * active.len() as u64);
         bar.set_style(ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}").expect("BRUH")
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}").expect("ProgressBar Error")
             .tick_chars(format!("{}", "⣾⣽⣻⢿⡿⣟⣯⣷").as_str())
             .progress_chars("#>-"));
         let lualoader = core::LuaLoader::new(bar);
@@ -56,7 +56,7 @@ impl Lottas {
                     core::utils::files::filename_to_string(path.to_str().unwrap()).unwrap(),
                     path.file_name().unwrap().to_str().unwrap().to_string(),
                 )),
-                Err(e) => tracing::error!("{:?}", e),
+                Err(e) => log::error!("{:?}", e),
             }
         }
         scripts
