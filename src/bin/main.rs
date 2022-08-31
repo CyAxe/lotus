@@ -30,7 +30,7 @@ fn main() -> Result<(), std::io::Error> {
 
 #[derive(Debug, StructOpt)]
 #[structopt(
-    name = "lottas",
+    name = "lotus",
     about = "Fast Web Security Scanner written in Rust with Lua Support to make DAST process Faster "
 )]
 

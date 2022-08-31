@@ -158,7 +158,7 @@ impl <'a>LuaLoader {
                     .create(true)
                     .open(output_dir)
                     .expect("Could not open file")
-                    .write_all(format!("{},\n",&results).as_str().as_bytes())
+                    .write_all(format!("{}\n",&results).as_str().as_bytes())
                     .expect("Could not write to file");
             }
         });
