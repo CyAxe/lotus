@@ -4,7 +4,6 @@ use rlua::Lua;
 use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::Path;
 
 pub struct LuaLoader {}
 
@@ -157,18 +156,6 @@ impl<'a> LuaLoader {
 
             if out.get::<_, bool>("valid").unwrap() == true {
                 debug!("valid bug");
-                if Path::new(output_dir).exists() {
-                    // NOTHING
-                } else {
-                    OpenOptions::new()
-                        .write(true)
-                        .append(true)
-                        .create(true)
-                        .open(output_dir)
-                        .expect("Could not open file")
-                        .write_all("".as_bytes())
-                        .expect("Could not write to file");
-                }
                 let new_report = Report {
                     url: out.get("url").unwrap(),
                     match_payload: out.get("match").unwrap(),
