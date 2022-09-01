@@ -129,6 +129,9 @@ impl<'a> LuaLoader {
                 )
                 .unwrap();
 
+            global.set("urljoin", lua_context.create_function(|_, (url, path): (String, String)|{
+                Ok(utils::urljoin(url,path))
+            }).unwrap()).unwrap();
             global
                 .set(
                     "html_search",

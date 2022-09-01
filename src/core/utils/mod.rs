@@ -203,3 +203,7 @@ pub fn set_urlvalue(url: &str, param: &str, payload: &str) -> String {
     url.query_pairs_mut().extend_pairs(final_params);
     url.as_str().to_string()
 }
+
+pub fn urljoin(url: String, path: String) -> String {
+    Url::parse(&url).unwrap().join(&path).unwrap().as_str().to_string()
+}
