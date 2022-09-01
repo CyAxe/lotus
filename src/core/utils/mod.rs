@@ -50,7 +50,7 @@ impl Sender {
                     "status".to_string(),
                     RespType::Str(resp.status().to_string()),
                 );
-                resp_data.insert("body".to_string(), RespType::Str(resp.text().unwrap()));
+                resp_data.insert("body".to_string(), RespType::Str(resp.text().unwrap_or("".to_string())));
                 resp_data.insert("errors".to_string(), RespType::NoErrors);
                 resp_data
             }
