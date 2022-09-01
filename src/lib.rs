@@ -34,6 +34,7 @@ impl Lottas {
                 // PARSED CUSTTOM PARAMETER
                 active.iter().for_each(|(script_out, _script_name)| {
                     lualoader.run_scan(&bar, &output_path, &script_out, url);
+                    bar.inc(1);
                 });
             });
         });

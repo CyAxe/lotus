@@ -1,8 +1,8 @@
+use log::debug;
 use reqwest::Url;
 use scraper::Html;
 use scraper::Selector;
 use std::collections::HashMap;
-use log::debug;
 use tealr::{rlu::FromToLua, TypeName};
 pub mod files;
 
@@ -50,7 +50,10 @@ impl Sender {
                     "status".to_string(),
                     RespType::Str(resp.status().to_string()),
                 );
-                resp_data.insert("body".to_string(), RespType::Str(resp.text().unwrap_or("".to_string())));
+                resp_data.insert(
+                    "body".to_string(),
+                    RespType::Str(resp.text().unwrap_or("".to_string())),
+                );
                 resp_data.insert("errors".to_string(), RespType::NoErrors);
                 resp_data
             }
@@ -68,7 +71,7 @@ impl Sender {
 pub fn is_match(pattern: String, resp: String) -> bool {
     debug!("PATTERN: {} ", pattern,);
     let re = fancy_regex::Regex::new(&pattern);
-    if re.is_ok(){
+    if re.is_ok() {
         re.unwrap().is_match(&resp).unwrap_or(false)
     } else {
         debug!("MATCHING ERROR  {:?} | {:?}", pattern, re);
@@ -205,5 +208,10 @@ pub fn set_urlvalue(url: &str, param: &str, payload: &str) -> String {
 }
 
 pub fn urljoin(url: String, path: String) -> String {
-    Url::parse(&url).unwrap().join(&path).unwrap().as_str().to_string()
+    Url::parse(&url)
+        .unwrap()
+        .join(&path)
+        .unwrap()
+        .as_str()
+        .to_string()
 }
