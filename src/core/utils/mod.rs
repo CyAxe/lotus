@@ -69,7 +69,6 @@ impl Sender {
 }
 
 pub fn is_match(pattern: String, resp: String) -> bool {
-    debug!("PATTERN: {} ", pattern,);
     let re = fancy_regex::Regex::new(&pattern);
     if re.is_ok() {
         re.unwrap().is_match(&resp).unwrap_or(false)
