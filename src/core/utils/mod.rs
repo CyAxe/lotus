@@ -3,32 +3,17 @@ use reqwest::Url;
 use scraper::Html;
 use scraper::Selector;
 use std::collections::HashMap;
+use std::sync::{Arc,Mutex};
 use tealr::{rlu::FromToLua, TypeName};
 pub mod files;
+pub mod browser;
 
 #[derive(Clone)]
-pub struct Sender {}
-
-#[derive(FromToLua, Clone, TypeName)]
-struct RespStatus {
-    test_field: String,
-}
-impl From<String> for RespStatus {
-    fn from(t: String) -> Self {
-        println!("started {}", &t);
-        RespStatus { test_field: t }
-    }
-}
-
-impl From<RespStatus> for String {
-    fn from(t: RespStatus) -> Self {
-        t.test_field
-    }
+pub struct Sender {
+    pub many_sent: Arc<Mutex<i8>>
 }
 
 #[derive(FromToLua, Clone, Debug, TypeName)]
-#[tealr(creator_name = RespMaker)]
-#[tealr(extend_methods = method_extension)]
 pub enum RespType {
     NoErrors,
     Emtpy,
@@ -39,12 +24,13 @@ pub enum RespType {
 
 impl Sender {
     pub fn init() -> Sender {
-        Sender {}
+        Sender {many_sent: Arc::new(Mutex::new(0))}
     }
-    pub fn send(&self, url: String) -> HashMap<String, RespType> {
+    pub fn send(&mut self, url: String) -> HashMap<String, RespType> {
         let mut resp_data: HashMap<String, RespType> = HashMap::new();
         match reqwest::blocking::get(url) {
             Ok(resp) => {
+                *self.many_sent.lock().unwrap() += 1;
                 resp_data.insert("url".to_string(), RespType::Str(resp.url().to_string()));
                 resp_data.insert(
                     "status".to_string(),
@@ -66,6 +52,7 @@ impl Sender {
             }
         }
     }
+
 }
 
 pub fn is_match(pattern: String, resp: String) -> bool {

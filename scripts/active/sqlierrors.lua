@@ -1,4 +1,3 @@
--- Script Information
 script_info = {}
 script_info["name"] = "SQLIErrDetector"
 script_info["methods"] = "GET"

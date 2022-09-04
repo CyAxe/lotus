@@ -19,6 +19,16 @@ impl<'a> LuaLoader {
         LuaLoader {}
     }
 
+    fn write_report(&self, output_dir: &str, results: &str) {
+        OpenOptions::new()
+            .write(true)
+            .append(true)
+            .create(true)
+            .open(output_dir)
+            .expect("Could not open file")
+            .write_all(format!("{}\n", results).as_str().as_bytes())
+            .expect("Could not write to file");
+    }
     pub fn run_scan(
         &self,
         bar: &'a indicatif::ProgressBar,
@@ -27,7 +37,9 @@ impl<'a> LuaLoader {
         target_url: &str,
     ) {
         let lua_code = Lua::new();
-        let sender = utils::Sender::init();
+        let mut sender = utils::Sender::init();
+        let browser = utils::browser::Browser::init("http://localhost:4444".into());
+        browser.open("https://www.wikipedia.org/").unwrap();
         lua_code.context(move |lua_context| {
             let global = lua_context.globals();
             // Set Functions
@@ -66,7 +78,7 @@ impl<'a> LuaLoader {
                 })
                 .unwrap();
             let send_req_func = lua_context
-                .create_function(move |_, url: String| Ok(sender.send(url)))
+                .create_function_mut(move |_, url: String| Ok(sender.send(url)))
                 .unwrap();
 
             // Set Globals
@@ -162,14 +174,7 @@ impl<'a> LuaLoader {
                     payload: out.get("payload").unwrap(),
                 };
                 let results = serde_json::to_string(&new_report).unwrap();
-                OpenOptions::new()
-                    .write(true)
-                    .append(true)
-                    .create(true)
-                    .open(output_dir)
-                    .expect("Could not open file")
-                    .write_all(format!("{}\n", &results).as_str().as_bytes())
-                    .expect("Could not write to file");
+                self.write_report(output_dir, &results);
             }
         });
     }

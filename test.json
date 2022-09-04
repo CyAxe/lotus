@@ -1,0 +1,224 @@
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"","match_payload":"/secured/phpinfo.php","url":"http://testphp.vulnweb.com/secured/phpinfo.php"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
+{"payload":"'123","match_payload":"SQL syntax.*?MySQL","url":"http://testphp.vulnweb.com/listproducts.php?cat=1%27123"}
