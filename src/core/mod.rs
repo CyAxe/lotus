@@ -38,8 +38,6 @@ impl<'a> LuaLoader {
     ) {
         let lua_code = Lua::new();
         let mut sender = utils::Sender::init();
-        let browser = utils::browser::Browser::init("http://localhost:4444".into());
-        browser.open("https://www.wikipedia.org/").unwrap();
         lua_code.context(move |lua_context| {
             let global = lua_context.globals();
             // Set Functions

@@ -574,3 +574,8 @@
 [2022-09-04][14:42:29][lotus::core][DEBUG] valid bug
 [2022-09-04][14:42:30][lotus::core][DEBUG] valid bug
 [2022-09-04][14:42:30][lotus::core][DEBUG] valid bug
+[2022-09-04][15:33:18][lotus][DEBUG] INIT THE Lottas Config
+[2022-09-04][15:33:18][lotus::core::utils::files][DEBUG] READING "scripts/active/CVE-2004-0519.lua"
+[2022-09-04][15:33:18][lotus::core::utils::files][DEBUG] READING "scripts/active/phpinfo.lua"
+[2022-09-04][15:33:18][lotus::core::utils::files][DEBUG] READING "scripts/active/sqlierrors.lua"
+[2022-09-04][15:33:18][lotus::core::utils::files][DEBUG] READING "scripts/passive/jwtkey.lua"

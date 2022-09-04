@@ -3,7 +3,7 @@ use thirtyfour_sync::ChromeCapabilities;
 
 pub struct Browser {
     pub driver_url: String,
-    caps: ChromeCapabilities
+    caps: ChromeCapabilities,
 }
 
 impl Browser {
@@ -12,10 +12,7 @@ impl Browser {
         caps.set_headless().unwrap();
         caps.set_ignore_certificate_errors().unwrap();
         caps.set_disable_web_security().unwrap();
-        Browser {
-            driver_url,
-            caps
-        }
+        Browser { driver_url, caps }
     }
 
     pub fn open(&self, url: &str) -> WebDriverResult<()> {
@@ -44,4 +41,3 @@ impl Browser {
         Ok(())
     }
 }
-

@@ -3,14 +3,15 @@ use reqwest::Url;
 use scraper::Html;
 use scraper::Selector;
 use std::collections::HashMap;
-use std::sync::{Arc,Mutex};
+use std::sync::{Arc, Mutex};
 use tealr::{rlu::FromToLua, TypeName};
-pub mod files;
 pub mod browser;
+pub mod files;
+pub mod report;
 
 #[derive(Clone)]
 pub struct Sender {
-    pub many_sent: Arc<Mutex<i8>>
+    pub many_sent: Arc<Mutex<i8>>,
 }
 
 #[derive(FromToLua, Clone, Debug, TypeName)]
@@ -24,7 +25,9 @@ pub enum RespType {
 
 impl Sender {
     pub fn init() -> Sender {
-        Sender {many_sent: Arc::new(Mutex::new(0))}
+        Sender {
+            many_sent: Arc::new(Mutex::new(0)),
+        }
     }
     pub fn send(&mut self, url: String) -> HashMap<String, RespType> {
         let mut resp_data: HashMap<String, RespType> = HashMap::new();
@@ -52,7 +55,6 @@ impl Sender {
             }
         }
     }
-
 }
 
 pub fn is_match(pattern: String, resp: String) -> bool {
@@ -66,8 +68,6 @@ pub fn is_match(pattern: String, resp: String) -> bool {
 }
 
 #[derive(FromToLua, Clone, Debug, TypeName)]
-#[tealr(creator_name = LocationMaker)]
-#[tealr(extend_methods = method_extension)]
 pub enum Location {
     AttrValue(String),
     AttrName(String),
