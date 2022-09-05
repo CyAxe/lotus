@@ -35,7 +35,7 @@ OPTIONS:
 ```bash
 $ lotus --output test.json --scripts scripts/
 $ cat ~/lotus.log # logging file
-# cat test.json | jq
+$ cat test.json | jq
 {
   "payload": "",
   "match_payload": "/secured/phpinfo.php",
