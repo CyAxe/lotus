@@ -9,6 +9,9 @@
 :zap: Fast Web Security Scanner written in Rust based on Lua Scripts :waning_gibbous_moon: :crab: 
 
 
+Currently this project still under beta version, there's alot of features that still under developing
+it would be better if you make a contribte to this project to make it finish faster, you can check the project [issues page](https://github.com/rusty-sec/lotus/issues) for more 
+
 ```bash
 lotus 0.1.0
 Fast Web Security Scanner written in Rust based on Lua Scripts
@@ -26,6 +29,24 @@ OPTIONS:
     -w, --workers <threads>       number of workers [default: 30]
 ```
 
+
+### Usage
+
+```bash
+$ lotus --output test.json --scripts scripts/
+$ cat ~/lotus.log # logging file
+# cat test.json | jq
+{
+  "payload": "",
+  "match_payload": "/secured/phpinfo.php",
+  "url": "http://testphp.vulnweb.com/secured/phpinfo.php"
+}
+{
+  "payload": "'123",
+  "match_payload": "SQL syntax.*?MySQL",
+  "url": "http://testphp.vulnweb.com/listproducts.php?cat=1%27123"
+}
+```
 
 ### Lua API
 
