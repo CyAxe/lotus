@@ -9,8 +9,8 @@
 :zap: Fast Web Security Scanner written in Rust based on Lua Scripts :waning_gibbous_moon: :crab: 
 
 
-Currently this project still under beta version, there's alot of features that still under developing
-it would be better if you make a contribte to this project to make it finish faster, you can check the project [issues page](https://github.com/rusty-sec/lotus/issues) for more 
+Currently this project is still under beta version, there are alot of features that are still under developing
+it would be better if you make a contribute to this project to make it finish faster, you can check the project [issues page](https://github.com/rusty-sec/lotus/issues) for more 
 
 ```bash
 lotus 0.1.0
