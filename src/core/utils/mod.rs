@@ -19,6 +19,7 @@ pub enum RespType {
     Str(String),
     Int(i32),
     Error(String),
+    D(String,String)
 }
 
 impl Sender {
