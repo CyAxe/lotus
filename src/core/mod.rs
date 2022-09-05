@@ -109,14 +109,6 @@ impl<'a> LuaLoader {
                         .unwrap(),
                 )
                 .unwrap();
-            global
-                .set(
-                    "show_bug",
-                    lua_context
-                        .create_function(|_, _report_data: rlua::Table| Ok(()))
-                        .unwrap(),
-                )
-                .unwrap();
 
             global
                 .set(
@@ -148,6 +140,7 @@ impl<'a> LuaLoader {
                         .unwrap(),
                 )
                 .unwrap();
+
             global
                 .set(
                     "html_search",

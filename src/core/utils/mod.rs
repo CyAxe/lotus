@@ -7,7 +7,6 @@ use std::sync::{Arc, Mutex};
 use tealr::{rlu::FromToLua, TypeName};
 pub mod browser;
 pub mod files;
-pub mod report;
 
 #[derive(Clone)]
 pub struct Sender {

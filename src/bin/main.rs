@@ -8,8 +8,12 @@ fn main() -> Result<(), std::io::Error> {
     let stdin = io::stdin();
     let lines = stdin.lock().lines();
     let lua_code = cmd_opts.scripts;
-    let lottas = Lottas::init(lines.map(|x| x.unwrap()).collect(), lua_code.to_string());
-    lottas.start(cmd_opts.threads, &cmd_opts.json_output);
+    let lottas = Lottas::init(lua_code.to_string());
+    lottas.start(
+        cmd_opts.threads,
+        lines.map(|x| x.unwrap().to_string()).collect(),
+        cmd_opts.json_output,
+    );
     Ok(())
 }
 
