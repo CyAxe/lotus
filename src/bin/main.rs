@@ -23,28 +23,28 @@ fn main() -> Result<(), std::io::Error> {
     about = "Fast Web Security Scanner written in Rust with Lua Support to make DAST process Faster "
 )]
 
-pub struct Opt {
+struct Opt {
     #[structopt(
         short = "w",
         long = "workers",
         default_value = "30",
         help = "number of workers"
     )]
-    pub threads: usize,
-    #[structopt(
-        short = "t",
-        long = "timeout",
-        default_value = "10",
-        help = "connection timeout"
-    )]
-    pub timeout: usize,
+    threads: usize,
     #[structopt(short = "s", long = "scripts", help = "Path of Scripts dir")]
-    pub scripts: String,
+    scripts: String,
     #[structopt(short = "o", long = "output", help = "Path of output JSON file")]
-    pub json_output: String,
+    json_output: String,
 }
 
 fn init_log() -> Result<(), std::io::Error> {
+    let log_file = match home::home_dir() {
+                Some(path) => fern::log_file(path.join("lotus.log").to_str().unwrap()).unwrap(),
+                None => { 
+                    eprintln!("Impossible to get your home dir!");
+                    fern::log_file("lotus.log").unwrap()
+                },
+            };
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
@@ -58,7 +58,7 @@ fn init_log() -> Result<(), std::io::Error> {
         .level(log::LevelFilter::Debug)
         .level_for("hyper", log::LevelFilter::Warn)
         .level_for("reqwest", log::LevelFilter::Warn)
-        .chain(fern::log_file("output.log")?)
+        .chain(log_file)
         .apply()
         .unwrap();
     Ok(())
