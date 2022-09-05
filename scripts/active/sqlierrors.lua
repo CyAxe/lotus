@@ -205,12 +205,6 @@ end
 
 function main(url)
     stop = 0
-    local searcher = html_parse("<h1>Hello</h1>","Hello")
-    for index_key,index_value in ipairs(searcher) do
-          if index_value:GetTextOrNil() then
-            println(string.format("FOUND IT IN TEXT %s",index_value:GetTextOrNil()))
-          end
-    end
     if string.find(url,"?") then
         for index_key, payload_value in ipairs(payloads) do
             new_querys = change_urlquery(url,payload_value)
