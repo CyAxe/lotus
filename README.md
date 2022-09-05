@@ -86,7 +86,7 @@ pub enum Location {
 
 ```lua
 local searcher = html_parse("<h1>Hello</h1>","Hello")
-for index_key,index_value in ipairs(sqli_errors) do
+for index_key,index_value in ipairs(searcher) do
   if index_value:GetTextOrNil() then
     println(string.format("FOUND IT IN TEXT %s",index_value:GetTextOrNil()))
 end
