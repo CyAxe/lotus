@@ -6,14 +6,14 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::path::Path;
 use std::sync::Arc;
 
-pub struct Lottas {
+pub struct Lotus {
     script: String,
 }
 
-impl Lottas {
+impl Lotus {
     pub fn init(script: String) -> Self {
         debug!("INIT THE Lottas Config");
-        Lottas { script }
+        Lotus { script }
     }
 
     pub fn start(&self, threads: usize, urls: Vec<String>, output_path: String) {

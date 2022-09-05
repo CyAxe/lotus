@@ -1,4 +1,4 @@
-use lotus::Lottas;
+use lotus::Lotus;
 use std::io::{self, BufRead};
 use structopt::StructOpt;
 
@@ -8,7 +8,7 @@ fn main() -> Result<(), std::io::Error> {
     let stdin = io::stdin();
     let lines = stdin.lock().lines();
     let lua_code = cmd_opts.scripts;
-    let lottas = Lottas::init(lua_code.to_string());
+    let lottas = Lotus::init(lua_code.to_string());
     lottas.start(
         cmd_opts.threads,
         lines.map(|x| x.unwrap().to_string()).collect(),
