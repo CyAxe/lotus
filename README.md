@@ -21,7 +21,7 @@ $ cargo install --git=https://github.com/rusty-sec/lotus/
 or download the binary file from [the release page](https://github.com/rusty-sec/lotus/releases)
 
 ```bash
-$ lotus --output test.json --scripts scripts/
+$ echo "http://testphp.vulnweb.com/listproducts.php?cat=1%27123" | lotus --output test.json --scripts scripts/
 $ cat ~/lotus.log # logging file
 $ cat test.json | jq
 {
