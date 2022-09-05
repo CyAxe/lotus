@@ -5,7 +5,6 @@ use scraper::Selector;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tealr::{rlu::FromToLua, TypeName};
-pub mod browser;
 pub mod files;
 
 #[derive(Clone)]

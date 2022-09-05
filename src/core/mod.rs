@@ -86,6 +86,7 @@ impl<'a> LuaLoader {
                     "println",
                     lua_context
                         .create_function(move |_, msg: String| {
+                            debug!("{}",&msg);
                             new_bar.println(msg);
                             Ok(())
                         })
