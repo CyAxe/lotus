@@ -92,7 +92,7 @@ pub enum RespType {
 
 ```lua
 local resp = send_req("http://google.com")
-if resp.errrors:GetStrOrNil() == nil then
+if resp.errors:GetErrorOrNil() == nil then
   -- NO Connection ERRORS
   if string.find(resp.body:GetStrOrNil(),"google") then
     log_info("FOUND GOOGLE")
