@@ -18,7 +18,7 @@ you can build it from source
 $ cargo install --git=https://github.com/rusty-sec/lotus/
 ```
 
-or download the binary file from the release page
+or download the binary file from [the release page](https://github.com/rusty-sec/lotus/releases)
 
 ```bash
 $ lotus --output test.json --scripts scripts/
