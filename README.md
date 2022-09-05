@@ -66,7 +66,9 @@ local resp = send_req("http://google.com")
 if resp.errrors:GetStrOrNil() == nil then
   -- NO Connection ERRORS
   if string.find(resp.body:GetStrOrNil(),"google") then
-    log_inof
+    log_info("FOUND GOOGLE")
+  end
+end
   
 ```
 
@@ -89,5 +91,6 @@ local searcher = html_parse("<h1>Hello</h1>","Hello")
 for index_key,index_value in ipairs(searcher) do
   if index_value:GetTextOrNil() then
     println(string.format("FOUND IT IN TEXT %s",index_value:GetTextOrNil()))
+  end
 end
 ```
