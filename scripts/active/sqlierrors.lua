@@ -1,5 +1,5 @@
 report = {}
-valid = true
+valid = false
 
 sqli_errors = {
   "SQL syntax.*?MySQL",
@@ -179,6 +179,7 @@ payloads = {
 
 function scan(url,current_payload)
     resp = send_req(url)
+    println(string.format("SQLI SENT %s",resp.status:GetStrOrNil()))
     if resp.body:GetStrOrNil() == "" then
         return 0
     end
@@ -192,6 +193,7 @@ function scan(url,current_payload)
             report["match"] = index_value
             report["payload"] = current_payload
             valid = true
+            println("FOUND SQLI")
             return 1
         end
     end
