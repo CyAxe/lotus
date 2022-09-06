@@ -1,5 +1,5 @@
-use reqwest::Url;
 use std::collections::HashMap;
+use url::Url;
 
 pub fn change_urlquery(url: String, payload: String) -> HashMap<String, String> {
     let url = Url::parse(&url).unwrap();
