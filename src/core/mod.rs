@@ -173,17 +173,16 @@ impl<'a> LuaLoader {
         lua.context(|ctx| {
             let global = ctx.globals();
             if global.get::<_, bool>("valid".to_owned()).unwrap() == true {
-                println!("TRUE");
+                let out = global.get::<_, rlua::Table>("report".to_owned()).unwrap();
+                let new_report = Report {
+                    url: out.get("url").unwrap(),
+                    match_payload: out.get("match").unwrap(),
+                    payload: out.get("payload").unwrap(),
+                };
+                let results = serde_json::to_string(&new_report).unwrap();
+                self.write_report(output_dir, &results);
             }
 
-            let out = global.get::<_, rlua::Table>("report".to_owned()).unwrap();
-            let new_report = Report {
-                url: out.get("url").unwrap(),
-                match_payload: out.get("match").unwrap(),
-                payload: out.get("payload").unwrap(),
-            };
-            let results = serde_json::to_string(&new_report).unwrap();
-            self.write_report(output_dir, &results);
         });
         bar.inc(1);
         Ok(())

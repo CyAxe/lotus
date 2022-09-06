@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tealr::{rlu::FromToLua, TypeName};
+use isahc::prelude::*;
 
 #[derive(Clone)]
 pub struct Sender {
@@ -25,13 +26,13 @@ impl Sender {
     pub async fn send(&mut self, url: String) -> HashMap<String, RespType> {
         let mut resp_data: HashMap<String, RespType> = HashMap::new();
         match isahc::get_async(url).await {
-            Ok(resp) => {
+            Ok(mut resp) => {
                 *self.many_sent.lock().unwrap() += 1;
                 resp_data.insert(
                     "status".to_string(),
                     RespType::Str(resp.status().to_string()),
                 );
-                resp_data.insert("body".to_string(), RespType::Str("".into()));
+                resp_data.insert("body".to_string(), RespType::Str(resp.text().await.unwrap()));
                 resp_data.insert("errors".to_string(), RespType::NoErrors);
                 resp_data
             }
