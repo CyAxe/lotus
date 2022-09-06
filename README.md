@@ -3,14 +3,39 @@
 </p>
 
 
-# lottas
+# lotus
 
 
 :zap: Fast Web Security Scanner written in Rust based on Lua Scripts :waning_gibbous_moon: :crab: 
 
 
-Currently this project still under beta version, there's alot of features that still under developing
-it would be better if you make a contribte to this project to make it finish faster, you can check the project [issues page](https://github.com/rusty-sec/lotus/issues) for more 
+Currently this project is still under beta version, there are alot of features that are still under developing
+it would be better if you make a contribute to this project to make it finish faster, you can check the project [issues page](https://github.com/rusty-sec/lotus/issues) for more, 
+Don't forget to [Join Us on Slack](https://join.slack.com/t/rusty-sec/shared_invite/zt-1fhst3xkl-2k2EoroWXrffmRJ24_iMUw)
+### Usage
+you can build it from source 
+```bash
+$ cargo install --git=https://github.com/rusty-sec/lotus/
+```
+
+or download the binary file from [the release page](https://github.com/rusty-sec/lotus/releases)
+
+```bash
+$ echo "http://testphp.vulnweb.com/listproducts.php?cat=1%27123" | lotus --output test.json --scripts scripts/
+$ cat ~/lotus.log # logging file
+$ cat test.json | jq
+{
+  "payload": "",
+  "match_payload": "/secured/phpinfo.php",
+  "url": "http://testphp.vulnweb.com/secured/phpinfo.php"
+}
+{
+  "payload": "'123",
+  "match_payload": "SQL syntax.*?MySQL",
+  "url": "http://testphp.vulnweb.com/listproducts.php?cat=1%27123"
+}
+```
+
 
 ```bash
 lotus 0.1.0
@@ -30,23 +55,6 @@ OPTIONS:
 ```
 
 
-### Usage
-
-```bash
-$ lotus --output test.json --scripts scripts/
-$ cat ~/lotus.log # logging file
-$ cat test.json | jq
-{
-  "payload": "",
-  "match_payload": "/secured/phpinfo.php",
-  "url": "http://testphp.vulnweb.com/secured/phpinfo.php"
-}
-{
-  "payload": "'123",
-  "match_payload": "SQL syntax.*?MySQL",
-  "url": "http://testphp.vulnweb.com/listproducts.php?cat=1%27123"
-}
-```
 
 ### Lua API
 
@@ -84,7 +92,7 @@ pub enum RespType {
 
 ```lua
 local resp = send_req("http://google.com")
-if resp.errrors:GetStrOrNil() == nil then
+if resp.errors:GetErrorOrNil() == nil then
   -- NO Connection ERRORS
   if string.find(resp.body:GetStrOrNil(),"google") then
     log_info("FOUND GOOGLE")
