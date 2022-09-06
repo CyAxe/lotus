@@ -174,6 +174,7 @@ impl<'a> LuaLoader {
             let global = ctx.globals();
             if global.get::<_, bool>("valid".to_owned()).unwrap() == true {
                 let out = global.get::<_, rlua::Table>("report".to_owned()).unwrap();
+                debug!("VALID BUG ");
                 let new_report = Report {
                     url: out.get("url").unwrap(),
                     match_payload: out.get("match").unwrap(),
