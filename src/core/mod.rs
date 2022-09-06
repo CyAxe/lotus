@@ -1,5 +1,6 @@
 pub mod utils;
 use futures::executor::block_on;
+use std::sync::{Arc, Mutex};
 use log::{debug, error, info, warn};
 use rlua::Lua;
 use rlua_async::{ChunkExt, ContextExt};
@@ -24,12 +25,13 @@ impl<'a> LuaLoader {
         LuaLoader {}
     }
 
-    fn write_report(&self, output_dir: &str, results: &str) {
+    fn write_report(&self, output_dir: Arc<Mutex<&str>>, results: &str) {
+        let out_dir = output_dir.lock().unwrap();
         OpenOptions::new()
             .write(true)
             .append(true)
             .create(true)
-            .open(output_dir)
+            .open(out_dir.to_string())
             .expect("Could not open file")
             .write_all(format!("{}\n", results).as_str().as_bytes())
             .expect("Could not write to file");
@@ -181,7 +183,7 @@ impl<'a> LuaLoader {
                     payload: out.get("payload").unwrap(),
                 };
                 let results = serde_json::to_string(&new_report).unwrap();
-                self.write_report(output_dir, &results);
+                self.write_report(Arc::new(Mutex::new(output_dir)), &results);
             }
 
         });
