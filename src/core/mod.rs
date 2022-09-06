@@ -4,6 +4,9 @@ use rlua::Lua;
 use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
+use utils::html::{css_selector, html_parse, html_search};
+use utils::is_match;
+use utils::url::{change_urlquery, set_urlvalue, urljoin};
 
 pub struct LuaLoader {}
 
@@ -37,13 +40,13 @@ impl<'a> LuaLoader {
         target_url: &str,
     ) {
         let lua_code = Lua::new();
-        let mut sender = utils::Sender::init();
+        let mut sender = utils::http::Sender::init();
         lua_code.context(move |lua_context| {
             let global = lua_context.globals();
             // Set Functions
             let set_urlvalue = lua_context.create_function(
                 |_, (url, param, payload): (String, String, String)| {
-                    Ok(utils::set_urlvalue(&url, &param, &payload))
+                    Ok(set_urlvalue(&url, &param, &payload))
                 },
             );
             let log_info = lua_context
@@ -71,9 +74,7 @@ impl<'a> LuaLoader {
                 })
                 .unwrap();
             let change_url = lua_context
-                .create_function(|_, url: (String, String)| {
-                    Ok(utils::change_urlquery(url.0, url.1))
-                })
+                .create_function(|_, url: (String, String)| Ok(change_urlquery(url.0, url.1)))
                 .unwrap();
             let send_req_func = lua_context
                 .create_function_mut(move |_, url: String| Ok(sender.send(url)))
@@ -86,7 +87,7 @@ impl<'a> LuaLoader {
                     "println",
                     lua_context
                         .create_function(move |_, msg: String| {
-                            debug!("{}",&msg);
+                            debug!("{}", &msg);
                             new_bar.println(msg);
                             Ok(())
                         })
@@ -105,7 +106,7 @@ impl<'a> LuaLoader {
                     "is_match",
                     lua_context
                         .create_function(|_, (pattern, body): (String, String)| {
-                            Ok(utils::is_match(pattern, body))
+                            Ok(is_match(pattern, body))
                         })
                         .unwrap(),
                 )
@@ -116,7 +117,7 @@ impl<'a> LuaLoader {
                     "html_parse",
                     lua_context
                         .create_function(|_, (html, payload): (String, String)| {
-                            Ok(utils::html_parse(&html, &payload))
+                            Ok(html_parse(&html, &payload))
                         })
                         .unwrap(),
                 )
@@ -126,7 +127,7 @@ impl<'a> LuaLoader {
                 .set(
                     "generate_css_selector",
                     lua_context
-                        .create_function(|_, html: String| Ok(utils::css_selector(&html)))
+                        .create_function(|_, html: String| Ok(css_selector(&html)))
                         .unwrap(),
                 )
                 .unwrap();
@@ -135,9 +136,7 @@ impl<'a> LuaLoader {
                 .set(
                     "urljoin",
                     lua_context
-                        .create_function(|_, (url, path): (String, String)| {
-                            Ok(utils::urljoin(url, path))
-                        })
+                        .create_function(|_, (url, path): (String, String)| Ok(urljoin(url, path)))
                         .unwrap(),
                 )
                 .unwrap();
@@ -147,7 +146,7 @@ impl<'a> LuaLoader {
                     "html_search",
                     lua_context
                         .create_function(|_, (html, pattern): (String, String)| {
-                            Ok(utils::html_search(&html, &pattern))
+                            Ok(html_search(&html, &pattern))
                         })
                         .unwrap(),
                 )

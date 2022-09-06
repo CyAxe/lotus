@@ -39,12 +39,12 @@ struct Opt {
 
 fn init_log() -> Result<(), std::io::Error> {
     let log_file = match home::home_dir() {
-                Some(path) => fern::log_file(path.join("lotus.log").to_str().unwrap()).unwrap(),
-                None => { 
-                    eprintln!("Impossible to get your home dir!");
-                    fern::log_file("lotus.log").unwrap()
-                },
-            };
+        Some(path) => fern::log_file(path.join("lotus.log").to_str().unwrap()).unwrap(),
+        None => {
+            eprintln!("Impossible to get your home dir!");
+            fern::log_file("lotus.log").unwrap()
+        }
+    };
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
