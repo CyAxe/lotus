@@ -7,10 +7,10 @@ function main(url)
         local body = resp.body:GetStrOrNil()
         local status = resp.status:GetStrOrNil()
         if ( string.find(body,"PHP Extension") and string.find(body,"PHP Version")) then 
-            report["url"] = new_url
+            report["url"] = urljoin(url,"/secured/phpinfo.php")
             report["match"] = "/secured/phpinfo.php"
-            valid = true
             report["payload"] = ""
+            valid = true
         end
     end
     return report
