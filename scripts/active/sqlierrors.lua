@@ -1,9 +1,5 @@
-script_info = {}
-script_info["name"] = "SQLIErrDetector"
-script_info["methods"] = "GET"
-script_info["type"] = "active_scan"
-script_info["severity"] = "high"
-found = {}
+report = {}
+valid = true
 
 sqli_errors = {
   "SQL syntax.*?MySQL",
@@ -183,7 +179,7 @@ payloads = {
 
 function scan(url,current_payload)
     resp = send_req(url)
-    if resp.url:GetStrOrNil() == nil then
+    if resp.body:GetStrOrNil() == "" then
         return 0
     end
 
@@ -192,10 +188,10 @@ function scan(url,current_payload)
         if match == false then
             -- NOTHING
         else
-            found["url"] = resp.url:GetStrOrNil()
-            found["match"] = index_value
-            found["valid"] = true
-            found["payload"] = current_payload
+            report["url"] = url
+            report["match"] = index_value
+            report["payload"] = current_payload
+            valid = true
             return 1
         end
     end
@@ -219,5 +215,8 @@ function main(url)
             end
         end
     end
-    return found
+    return report
 end
+
+-- Run The Script
+main(TARGET_URL)
