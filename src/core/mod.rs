@@ -1,6 +1,8 @@
 pub mod utils;
+use futures::executor::block_on;
 use log::{debug, error, info, warn};
 use rlua::Lua;
+use rlua_async::{ChunkExt, ContextExt};
 use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -38,135 +40,152 @@ impl<'a> LuaLoader {
         output_dir: &str,
         script_code: &str,
         target_url: &str,
-    ) {
-        let lua_code = Lua::new();
-        let mut sender = utils::http::Sender::init();
-        lua_code.context(move |lua_context| {
-            let global = lua_context.globals();
+    ) -> rlua::Result<()> {
+        let lua = Lua::new();
+        let sender = utils::http::Sender::init();
+        lua.context(move |ctx| {
+            let globals = ctx.globals();
+            // Regex Match
+            globals
+                .set(
+                    "is_match",
+                    ctx.create_function(|_, (pattern, text): (String, String)| {
+                        Ok(is_match(pattern, text))
+                    })
+                    .unwrap(),
+                )
+                .unwrap();
+            // ProgressBar
+            let bar = bar.clone();
+            globals
+                .set(
+                    "println",
+                    ctx.create_function(move |_, msg: String| {
+                        bar.println(msg);
+                        Ok(())
+                    })
+                    .unwrap(),
+                )
+                .unwrap();
+            globals
+                .set(
+                    "generate_css_selector",
+                    ctx.create_function(|_, payload: String| Ok(css_selector(&payload)))
+                        .unwrap(),
+                )
+                .unwrap();
+
+            globals
+                .set(
+                    "html_parse",
+                    ctx.create_function(|_, (html, payload): (String, String)| {
+                        Ok(html_parse(&html, &payload))
+                    })
+                    .unwrap(),
+                )
+                .unwrap();
+
             // Set Functions
-            let set_urlvalue = lua_context.create_function(
-                |_, (url, param, payload): (String, String, String)| {
+            let set_urlvalue =
+                ctx.create_function(|_, (url, param, payload): (String, String, String)| {
                     Ok(set_urlvalue(&url, &param, &payload))
-                },
-            );
-            let log_info = lua_context
+                });
+            let log_info = ctx
                 .create_function(|_, log_msg: String| {
                     info!("{}", log_msg);
                     Ok(())
                 })
                 .unwrap();
-            let log_warn = lua_context
+            let log_warn = ctx
                 .create_function(|_, log_msg: String| {
                     warn!("{}", log_msg);
                     Ok(())
                 })
                 .unwrap();
-            let log_debug = lua_context
+            let log_debug = ctx
                 .create_function(|_, log_msg: String| {
                     debug!("{}", log_msg);
                     Ok(())
                 })
                 .unwrap();
-            let log_error = lua_context
+            let log_error = ctx
                 .create_function(|_, log_msg: String| {
                     error!("{}", log_msg);
                     Ok(())
                 })
                 .unwrap();
-            let change_url = lua_context
+            let change_url = ctx
                 .create_function(|_, url: (String, String)| Ok(change_urlquery(url.0, url.1)))
                 .unwrap();
-            let send_req_func = lua_context
-                .create_function_mut(move |_, url: String| Ok(sender.send(url)))
-                .unwrap();
 
-            // Set Globals
-            let new_bar = bar.clone();
-            global
-                .set(
-                    "println",
-                    lua_context
-                        .create_function(move |_, msg: String| {
-                            debug!("{}", &msg);
-                            new_bar.println(msg);
-                            Ok(())
-                        })
-                        .unwrap(),
-                )
-                .unwrap();
-            global.set("log_info", log_info).unwrap();
-            global.set("log_error", log_error).unwrap();
-            global.set("log_debug", log_debug).unwrap();
-            global.set("log_warn", log_warn).unwrap();
-            global.set("change_urlquery", change_url).unwrap();
-            global.set("set_urlvalue", set_urlvalue.unwrap()).unwrap();
-            global.set("send_req", send_req_func).unwrap();
-            global
-                .set(
-                    "is_match",
-                    lua_context
-                        .create_function(|_, (pattern, body): (String, String)| {
-                            Ok(is_match(pattern, body))
-                        })
-                        .unwrap(),
-                )
-                .unwrap();
-
-            global
-                .set(
-                    "html_parse",
-                    lua_context
-                        .create_function(|_, (html, payload): (String, String)| {
-                            Ok(html_parse(&html, &payload))
-                        })
-                        .unwrap(),
-                )
-                .unwrap();
-
-            global
+            globals.set("log_info", log_info).unwrap();
+            globals.set("log_error", log_error).unwrap();
+            globals.set("log_debug", log_debug).unwrap();
+            globals.set("log_warn", log_warn).unwrap();
+            globals.set("change_urlquery", change_url).unwrap();
+            globals.set("set_urlvalue", set_urlvalue.unwrap()).unwrap();
+            globals
                 .set(
                     "generate_css_selector",
-                    lua_context
-                        .create_function(|_, html: String| Ok(css_selector(&html)))
+                    ctx.create_function(|_, html: String| Ok(css_selector(&html)))
                         .unwrap(),
                 )
                 .unwrap();
 
-            global
+            globals
                 .set(
                     "urljoin",
-                    lua_context
-                        .create_function(|_, (url, path): (String, String)| Ok(urljoin(url, path)))
+                    ctx.create_function(|_, (url, path): (String, String)| Ok(urljoin(url, path)))
                         .unwrap(),
                 )
                 .unwrap();
 
-            global
+            globals
                 .set(
                     "html_search",
-                    lua_context
-                        .create_function(|_, (html, pattern): (String, String)| {
-                            Ok(html_search(&html, &pattern))
-                        })
-                        .unwrap(),
+                    ctx.create_function(|_, (html, pattern): (String, String)| {
+                        Ok(html_search(&html, &pattern))
+                    })
+                    .unwrap(),
                 )
                 .unwrap();
+            globals.set(
+                "send_req",
+                ctx.create_async_function(move |_ctx, url: String| {
+                    let mut sender = sender.clone();
+                    async move {
+                        let resp = sender.send(url).await;
+                        Ok(resp)
+                    }
+                })
+                .unwrap(),
+            )
+        })?;
+        lua.context(|ctx| {
+            let global = ctx.globals();
+            global.set("TARGET_URL", target_url)
+        })?;
+        lua.context(|ctx| {
+            let chunk = ctx.load(script_code);
+            block_on(chunk.exec_async(ctx))
+        })?;
 
-            // Execute The Script
-            lua_context.load(script_code).exec().unwrap();
-            let main_func: rlua::Function = global.get("main").unwrap();
-            let out = main_func.call::<_, rlua::Table>(target_url).unwrap();
-
-            if out.get::<_, bool>("valid").unwrap() == true {
-                debug!("valid bug");
-                let new_report = Report {
-                    url: out.get("url").unwrap(),
-                    match_payload: out.get("match").unwrap(),
-                    payload: out.get("payload").unwrap(),
-                };
-                let results = serde_json::to_string(&new_report).unwrap();
-                self.write_report(output_dir, &results);
+        lua.context(|ctx| {
+            let global = ctx.globals();
+            if global.get::<_, bool>("valid".to_owned()).unwrap() == true {
+                println!("TRUE");
             }
+
+            let out = global.get::<_, rlua::Table>("report".to_owned()).unwrap();
+            let new_report = Report {
+                url: out.get("url").unwrap(),
+                match_payload: out.get("match").unwrap(),
+                payload: out.get("payload").unwrap(),
+            };
+            let results = serde_json::to_string(&new_report).unwrap();
+            self.write_report(output_dir, &results);
         });
+        bar.inc(1);
+        Ok(())
     }
 }

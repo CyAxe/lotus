@@ -16,8 +16,9 @@ path = "src/bin/main.rs"
 
 [dependencies]
 rlua = "0.19.4"
+rlua-async = "0.5.0"
+futures = "0.3.24"
 rayon = "1.5"
-reqwest = { version = "0.11", features = ["json","blocking"] }
 console = "0.15.1"
 fancy-regex = "0.10.0"
 tealr = { version = "0.9.0-alpha1", features=["rlua"] }
@@ -30,8 +31,9 @@ fern = "0.6.1"
 chrono = "0.4.22"
 serde_json = "1.0.85"
 serde = { version = "1.0.144", features = ["derive"] }
-thirtyfour_sync = "0.27.1"
 home = "0.5.3"
+isahc = "1.7.2"
+url = "2.2.2"
 
 [profile.release]
 opt-level = "z"  # Optimize for size.
@@ -39,4 +41,3 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
-
