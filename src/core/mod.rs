@@ -178,6 +178,7 @@ impl<'a> LuaLoader {
 
         lua.context(|ctx| {
             let global = ctx.globals();
+            bar.inc(1);
             if global.get::<_, bool>("valid".to_owned()).unwrap() == true {
                 let out = global.get::<_, rlua::Table>("report".to_owned()).unwrap();
                 debug!("VALID BUG ");
@@ -190,7 +191,6 @@ impl<'a> LuaLoader {
                 self.write_report(Arc::new(Mutex::new(output_dir)), &results);
             }
         });
-        bar.inc(1);
         Ok(())
     }
 }
