@@ -1,7 +1,7 @@
+use isahc::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tealr::{rlu::FromToLua, TypeName};
-use isahc::prelude::*;
 
 #[derive(Clone)]
 pub struct Sender {
@@ -32,7 +32,10 @@ impl Sender {
                     "status".to_string(),
                     RespType::Str(resp.status().to_string()),
                 );
-                resp_data.insert("body".to_string(), RespType::Str(resp.text().await.unwrap()));
+                resp_data.insert(
+                    "body".to_string(),
+                    RespType::Str(resp.text().await.unwrap()),
+                );
                 resp_data.insert("errors".to_string(), RespType::NoErrors);
                 resp_data
             }

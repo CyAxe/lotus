@@ -1,12 +1,12 @@
 pub mod utils;
 use futures::executor::block_on;
-use std::sync::{Arc, Mutex};
 use log::{debug, error, info, warn};
 use rlua::Lua;
 use rlua_async::{ChunkExt, ContextExt};
 use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::sync::{Arc, Mutex};
 use utils::html::{css_selector, html_parse, html_search};
 use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
@@ -185,7 +185,6 @@ impl<'a> LuaLoader {
                 let results = serde_json::to_string(&new_report).unwrap();
                 self.write_report(Arc::new(Mutex::new(output_dir)), &results);
             }
-
         });
         bar.inc(1);
         Ok(())

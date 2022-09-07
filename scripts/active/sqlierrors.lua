@@ -179,14 +179,13 @@ payloads = {
 
 function scan(url,current_payload)
     resp = send_req(url)
-    println(string.format("SQLI SENT %s",resp.status:GetStrOrNil()))
     if resp.body:GetStrOrNil() == "" then
         return 0
     end
 
     for index_key,index_value in ipairs(sqli_errors) do
         match = is_match(index_value,resp.body:GetStrOrNil()) 
-        if match == false then
+        if ( match == false or match == nil) then
             -- NOTHING
         else
             report["url"] = url
