@@ -32,8 +32,10 @@ impl Lotus {
             .unwrap();
         threader.install(move || {
             urls.par_iter().for_each(|url| {
-                active.iter().for_each(|(script_out, _script_name)| {
-                    lualoader.run_scan(&bar, &output_path, &script_out, url);
+                active.par_iter().for_each(|(script_out, _script_name)| {
+                    let _ = lualoader
+                        .run_scan(&bar, &output_path, &script_out, url)
+                        .unwrap();
                     bar.inc(1);
                 });
             });
