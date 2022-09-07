@@ -36,7 +36,6 @@ impl Lotus {
                     let _ = lualoader
                         .run_scan(&bar, &output_path, &script_out, url)
                         .unwrap();
-                    bar.inc(1);
                 });
             });
         });
