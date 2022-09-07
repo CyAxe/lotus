@@ -57,6 +57,10 @@ impl<'a> LuaLoader {
                     .unwrap(),
                 )
                 .unwrap();
+            globals.set("sleep", ctx.create_function(|_, time: u64|{
+                std::thread::sleep(std::time::Duration::from_secs(time));
+                Ok(())
+            }).unwrap()).unwrap();
             // ProgressBar
             let bar = bar.clone();
             globals
