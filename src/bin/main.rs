@@ -58,6 +58,7 @@ fn init_log() -> Result<(), std::io::Error> {
         .level(log::LevelFilter::Debug)
         .level_for("hyper", log::LevelFilter::Warn)
         .level_for("reqwest", log::LevelFilter::Warn)
+        .level_for("isahc", log::LevelFilter::Warn)
         .chain(log_file)
         .apply()
         .unwrap();
