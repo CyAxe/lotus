@@ -46,12 +46,11 @@ impl Lotus {
                 .map(move |(_script_out, script_name)|{
                     log::debug!("RUNNING {} on {}", script_name,url);
                     let lualoader = Arc::clone(&lualoader);
-                    let lualoader = lualoader.clone();
                     async move {
                         lualoader.run_scan(&_script_out,url).await.unwrap();
                     }
                 })
-                .buffer_unordered(5)
+                .buffer_unordered(threads)
                 .collect::<Vec<_>>()
         })
         .buffer_unordered(threads)
