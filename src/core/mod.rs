@@ -189,8 +189,8 @@ impl<'progress> LuaLoader {
         lua.context(|ctx| {
             let global = ctx.globals();
             bar.inc(1);
-            if global.get::<_, bool>("valid".to_owned()).unwrap() == true {
-                let out = global.get::<_, rlua::Table>("report".to_owned()).unwrap();
+            if global.get::<_, bool>("VALID".to_owned()).unwrap() == true {
+                let out = global.get::<_, rlua::Table>("REPORT".to_owned()).unwrap();
                 debug!("VALID BUG ");
                 let new_report = Report {
                     url: out.get("url").unwrap(),

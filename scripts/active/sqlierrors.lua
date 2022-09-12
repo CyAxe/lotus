@@ -1,7 +1,7 @@
-report = {}
-valid = false
+REPORT = {}
+VALID = false
 
-sqli_errors = {
+SQLI_ERRORS = {
   "SQL syntax.*?MySQL",
   "Warning.*?\\Wmysqli?_",
   "MySQLSyntaxErrorException",
@@ -160,7 +160,7 @@ sqli_errors = {
 }
 
 
-payloads = {
+PAYLOADS = {
     "'123",
     "''123",
     "`123",
@@ -177,46 +177,45 @@ payloads = {
     "\123",
 }
 
-function scan(url,current_payload)
-    resp = send_req(url)
+local function SCAN(url,current_payload)
+    local resp = send_req(url)
     if resp.body:GetStrOrNil() == "" then
         return 0
     end
 
-    for index_key,index_value in ipairs(sqli_errors) do
-        match = is_match(index_value,resp.body:GetStrOrNil()) 
+    for index_key,index_value in ipairs(SQLI_ERRORS) do
+        local match = is_match(index_value,resp.body:GetStrOrNil()) 
         if ( match == false or match == nil) then
             -- NOTHING
         else
-            report["url"] = url
-            report["match"] = index_value
-            report["payload"] = current_payload
-            valid = true
-            println("FOUND SQLI")
+            REPORT["url"] = url
+            REPORT["match"] = index_value
+            REPORT["payload"] = current_payload
+            VALID = true
             return 1
         end
     end
     return 0
 end
 
-function main(url)
-    stop = 0
+local function main(url)
+    STOP = 0
     if string.find(url,"?") then
-        for index_key, payload_value in ipairs(payloads) do
+        for index_key, payload_value in ipairs(PAYLOADS) do
             new_querys = change_urlquery(url,payload_value)
             for url_index, new_url in pairs(new_querys) do 
-                local out = scan(new_url, payload_value)
+                local out = SCAN(new_url, payload_value)
                 if out == 1 then 
-                    stop = 1
+                    STOP = 1
                     break
                 end
             end
-            if stop == 1 then
+            if STOP == 1 then
                 break
             end
         end
     end
-    return report
+    return REPORT
 end
 
 -- Run The Script
