@@ -1,19 +1,13 @@
 use lotus::Lotus;
-use std::io::{self, BufRead};
 use structopt::StructOpt;
 
-fn main() -> Result<(), std::io::Error> {
+#[tokio::main]
+async fn main() -> Result<(), std::io::Error> {
     init_log().unwrap();
     let cmd_opts = Opt::from_args();
-    let stdin = io::stdin();
-    let lines = stdin.lock().lines();
     let lua_code = cmd_opts.scripts;
     let lottas = Lotus::init(lua_code.to_string());
-    lottas.start(
-        cmd_opts.threads,
-        lines.map(|x| x.unwrap().to_string()).collect(),
-        cmd_opts.json_output,
-    );
+    lottas.start(cmd_opts.threads, &cmd_opts.json_output).await;
     Ok(())
 }
 

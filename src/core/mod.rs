@@ -11,7 +11,10 @@ use utils::html::{css_selector, html_parse, html_search};
 use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
 
-pub struct LuaLoader {}
+#[derive(Clone)]
+pub struct LuaLoader {
+    output_dir: Arc<Mutex<String>>,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Report {
@@ -20,13 +23,15 @@ pub struct Report {
     pub url: String,
 }
 
-impl<'a> LuaLoader {
-    pub fn new() -> LuaLoader {
-        LuaLoader {}
+impl<'progress> LuaLoader {
+    pub fn new(output_dir: String) -> LuaLoader {
+        LuaLoader {
+            output_dir: Arc::new(Mutex::new(output_dir)),
+        }
     }
 
-    fn write_report(&self, output_dir: Arc<Mutex<&str>>, results: &str) {
-        let out_dir = output_dir.lock().unwrap();
+    fn write_report(&self, results: &str) {
+        let out_dir = self.output_dir.lock().unwrap();
         OpenOptions::new()
             .write(true)
             .append(true)
@@ -36,10 +41,9 @@ impl<'a> LuaLoader {
             .write_all(format!("{}\n", results).as_str().as_bytes())
             .expect("Could not write to file");
     }
-    pub fn run_scan(
+    pub async fn run_scan(
         &self,
-        bar: &'a indicatif::ProgressBar,
-        output_dir: &str,
+        bar: &'progress indicatif::ProgressBar,
         script_code: &str,
         target_url: &str,
     ) -> rlua::Result<()> {
@@ -57,10 +61,16 @@ impl<'a> LuaLoader {
                     .unwrap(),
                 )
                 .unwrap();
-            globals.set("sleep", ctx.create_function(|_, time: u64|{
-                std::thread::sleep(std::time::Duration::from_secs(time));
-                Ok(())
-            }).unwrap()).unwrap();
+            globals
+                .set(
+                    "sleep",
+                    ctx.create_function(|_, time: u64| {
+                        std::thread::sleep(std::time::Duration::from_secs(time));
+                        Ok(())
+                    })
+                    .unwrap(),
+                )
+                .unwrap();
             // ProgressBar
             let bar = bar.clone();
             globals
@@ -188,7 +198,7 @@ impl<'a> LuaLoader {
                     payload: out.get("payload").unwrap(),
                 };
                 let results = serde_json::to_string(&new_report).unwrap();
-                self.write_report(Arc::new(Mutex::new(output_dir)), &results);
+                self.write_report(&results);
             }
         });
         Ok(())
