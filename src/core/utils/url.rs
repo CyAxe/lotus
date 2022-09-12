@@ -3,15 +3,17 @@ use url::Url;
 
 pub fn change_urlquery(url: String, payload: String) -> HashMap<String, String> {
     let url = Url::parse(&url).unwrap();
-    let params: HashMap<_, _> = url.query_pairs().collect::<HashMap<_, _>>();
     let mut scan_params = HashMap::new();
     let mut result: HashMap<String, String> = HashMap::new();
     let mut param_list = Vec::new();
-    params.iter().for_each(|(key, value)| {
-        scan_params.insert(key.to_string(), value.to_string());
-        param_list.push(key.to_string());
-    });
-    drop(params);
+
+    url.query_pairs()
+        .collect::<HashMap<_, _>>()
+        .iter()
+        .for_each(|(key, value)| {
+            scan_params.insert(key.to_string(), value.to_string());
+            param_list.push(key.to_string());
+        });
 
     scan_params.iter().for_each(|(key, value)| {
         payload.split("\n").into_iter().for_each(|payload| {
