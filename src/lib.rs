@@ -4,10 +4,13 @@ use glob::glob;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{self, BufRead};
 use std::path::Path;
+use std::sync::Arc;
 
 pub struct Lotus {
     script: String,
 }
+
+
 
 impl Lotus {
     pub fn init(script: String) -> Self {
@@ -34,26 +37,26 @@ impl Lotus {
             .tick_chars(format!("{}", "⣾⣽⣻⢿⡿⣟⣯⣷").as_str())
             .progress_chars("#>-"));
 
-        let lualoader = core::LuaLoader::new(output_path.to_string());
-        let scan = stream::iter(urls.into_iter()).for_each_concurrent(threads, |url| {
+        let lualoader = Arc::new(core::LuaLoader::new(&bar,output_path.to_string()));
+        stream::iter(urls.into_iter())
+            .map(move |url| {
             let active = active.clone();
-            let bar = bar.clone();
-            let lualoader = lualoader.clone();
-            async move {
-                stream::iter(active.into_iter())
-                    .for_each_concurrent(15, |(script_out, script_name)| {
-                        let bar = bar.clone();
-                        let lualoader = lualoader.clone();
-                        log::debug!("RUNNING {} on {}", script_name,url);
-                        async move {
-                            lualoader.run_scan(&bar, &script_out, &url).await.unwrap();
-                            log::debug!("FINISHED {} on {}", script_name,url);
-                        }
-                    })
-                    .await;
-            }
-        });
-        scan.await;
+            let lualoader = Arc::clone(&lualoader);
+            stream::iter(active.into_iter())
+                .map(move |(_script_out, script_name)|{
+                    log::debug!("RUNNING {} on {}", script_name,url);
+                    let lualoader = Arc::clone(&lualoader);
+                    let lualoader = lualoader.clone();
+                    async move {
+                        lualoader.run_scan(&_script_out,url).await.unwrap();
+                    }
+                })
+                .buffer_unordered(5)
+                .collect::<Vec<_>>()
+        })
+        .buffer_unordered(threads)
+        .collect::<Vec<_>>()
+        .await;
     }
 
     fn get_scripts(&self, script_type: &str) -> Vec<(String, String)> {

@@ -12,8 +12,9 @@ use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
 
 #[derive(Clone)]
-pub struct LuaLoader {
+pub struct LuaLoader<'a> {
     output_dir: Arc<Mutex<String>>,
+    bar: &'a indicatif::ProgressBar
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -23,10 +24,11 @@ pub struct Report {
     pub url: String,
 }
 
-impl<'progress> LuaLoader {
-    pub fn new(output_dir: String) -> LuaLoader {
+impl<'a> LuaLoader<'a> {
+    pub fn new(bar: &'a indicatif::ProgressBar,output_dir: String) -> LuaLoader {
         LuaLoader {
             output_dir: Arc::new(Mutex::new(output_dir)),
+            bar
         }
     }
 
@@ -43,9 +45,8 @@ impl<'progress> LuaLoader {
     }
     pub async fn run_scan(
         &self,
-        bar: &'progress indicatif::ProgressBar,
-        script_code: &str,
-        target_url: &str,
+        script_code: &'a str,
+        target_url: &'a str,
     ) -> rlua::Result<()> {
         let lua = Lua::new();
         let sender = utils::http::Sender::init();
@@ -72,7 +73,7 @@ impl<'progress> LuaLoader {
                 )
                 .unwrap();
             // ProgressBar
-            let bar = bar.clone();
+            let bar = self.bar.clone();
             globals
                 .set(
                     "println",
@@ -188,7 +189,7 @@ impl<'progress> LuaLoader {
 
         lua.context(|ctx| {
             let global = ctx.globals();
-            bar.inc(1);
+            self.bar.inc(1);
             if global.get::<_, bool>("VALID".to_owned()).unwrap() == true {
                 let out = global.get::<_, rlua::Table>("REPORT".to_owned()).unwrap();
                 debug!("VALID BUG ");
