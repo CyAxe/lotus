@@ -38,6 +38,10 @@ impl Lotus {
 
         let mut caps = DesiredCapabilities::chrome();
         caps.set_binary("/usr/bin/brave-browser-stable").unwrap();
+        caps.set_headless().unwrap();
+        caps.set_ignore_certificate_errors().unwrap();
+        caps.set_headless().unwrap();
+
         let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
         let driver = Arc::new(Mutex::new(driver));
         let lualoader = Arc::new(core::LuaLoader::new(&bar, output_path.to_string()));
@@ -51,7 +55,7 @@ impl Lotus {
                         log::debug!("RUNNING {} on {}", script_name, url);
                         let lualoader = Arc::clone(&lualoader);
                         let driver = Arc::clone(&driver);
-                        async move { lualoader.run_scan(driver, &_script_out, url).await.unwrap() }
+                        async move { lualoader.run_scan(Some(driver), &_script_out, url).await.unwrap() }
                     })
                     .buffer_unordered(script_threads)
                     .collect::<Vec<_>>()

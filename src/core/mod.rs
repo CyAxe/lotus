@@ -195,27 +195,34 @@ impl<'a> LuaLoader<'a> {
     }
     pub async fn run_scan(
         &self,
-        driver: Arc<Mutex<WebDriver>>,
+        driver: Option<Arc<Mutex<WebDriver>>>,
         script_code: &'a str,
         target_url: &'a str,
     ) -> mlua::Result<()> {
         let lua = self.get_activefunc();
         lua.globals().set("TARGET_URL", target_url).unwrap();
-        lua.globals()
-            .set(
-                "open",
-                lua.create_function(move |_, url: String| {
-                    futures::executor::block_on({
-                        let driver = Arc::clone(&driver);
-                        async move {
-                            driver.lock().unwrap().goto(url).await.unwrap();
-                        }
-                    });
-                    Ok(())
-                })
-                .unwrap(),
-            )
-            .unwrap();
+        match driver {
+            None => {
+
+            },
+            _ => {
+            lua.globals()
+                .set(
+                    "open",
+                    lua.create_function(move |_, url: String| {
+                        futures::executor::block_on({
+                            let driver = Arc::clone(&driver.as_ref().unwrap());
+                            async move {
+                                driver.lock().unwrap().goto(url).await.unwrap();
+                            }
+                        });
+                        Ok(())
+                    })
+                    .unwrap(),
+                )
+                .unwrap();
+            }
+        };
 
         lua.load(script_code).exec_async().await.unwrap();
         let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
