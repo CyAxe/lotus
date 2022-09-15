@@ -15,7 +15,7 @@ impl Lotus {
         Lotus { script }
     }
 
-    pub async fn start(&self, threads: usize, output_path: &str) {
+    pub async fn start(&self, threads: usize,script_threads: usize, output_path: &str) {
         let stdin = io::stdin();
         let urls = stdin
             .lock()
@@ -46,7 +46,7 @@ impl Lotus {
                         let lualoader = Arc::clone(&lualoader);
                         async move { lualoader.run_scan(&_script_out, url).await.unwrap() }
                     })
-                    .buffer_unordered(threads)
+                    .buffer_unordered(script_threads)
                     .collect::<Vec<_>>()
             })
             .buffer_unordered(threads)

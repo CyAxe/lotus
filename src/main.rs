@@ -7,7 +7,7 @@ async fn main() -> Result<(), std::io::Error> {
     let cmd_opts = Opt::from_args();
     let lua_code = cmd_opts.scripts;
     let lottas = Lotus::init(lua_code.to_string());
-    lottas.start(cmd_opts.threads, &cmd_opts.json_output).await;
+    lottas.start(cmd_opts.threads,cmd_opts.script_threads, &cmd_opts.json_output).await;
     Ok(())
 }
 
@@ -25,7 +25,9 @@ struct Opt {
         help = "number of workers"
     )]
     threads: usize,
-    #[structopt(short = "s", long = "scripts", help = "Path of Scripts dir")]
+    #[structopt(short = "t", long="script-threads", help=" Workers for lua scripts")]
+    script_threads: usize,
+    #[structopt(short = "s", long = "scripts",default_value = "5", help = "Path of Scripts dir")]
     scripts: String,
     #[structopt(short = "o", long = "output", help = "Path of output JSON file")]
     json_output: String,
