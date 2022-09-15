@@ -25,9 +25,9 @@ struct Opt {
         help = "number of workers"
     )]
     threads: usize,
-    #[structopt(short = "t", long="script-threads", help=" Workers for lua scripts")]
+    #[structopt(short = "t", long="script-threads",default_value = "5", help=" Workers for lua scripts")]
     script_threads: usize,
-    #[structopt(short = "s", long = "scripts",default_value = "5", help = "Path of Scripts dir")]
+    #[structopt(short = "s", long = "scripts", help = "Path of Scripts dir")]
     scripts: String,
     #[structopt(short = "o", long = "output", help = "Path of output JSON file")]
     json_output: String,
