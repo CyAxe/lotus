@@ -192,6 +192,7 @@ local function SCAN(url,current_payload)
             REPORT["match"] = index_value
             REPORT["payload"] = current_payload
             VALID = true
+            println(string.format("SQLI ERROR: %s",url))
             return 1
         end
     end

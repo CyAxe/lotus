@@ -11,6 +11,7 @@ local function main(url)
             REPORT["match"] = "/secured/phpinfo.php"
             REPORT["payload"] = ""
             VALID = true
+            println(string.format("PHPINFO: %s",url))
         end
     end
 end

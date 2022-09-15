@@ -99,7 +99,7 @@ impl<'a> LuaLoader<'a> {
             .set(
                 "println",
                 lua.create_function(move |_, msg: String| {
-                    bar.println(msg);
+                    bar.println(format!("{} {}",console::Emoji("🔥","fire"),msg));
                     Ok(())
                 })
                 .unwrap(),
