@@ -16,7 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 # LUA
-mlua = { version = "0.8", features = ["lua54", "vendored", "async"] }
+mlua = { version = "0.8"}
 tealr = {version="0.9.0-alpha1", features=["mlua", "mlua_lua54", "mlua_vendored", "mlua_async"]} 
 
 # Threading
