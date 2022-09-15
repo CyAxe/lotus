@@ -15,23 +15,34 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# LUA
 rlua = "0.19.4"
 rlua-async = "0.5.0"
+tealr = { version = "0.9.0-alpha1", features=["rlua"] }
+
+# Threading
 futures = "0.3.24"
 tokio = { version = "1.21.0", features = ["full"] }
-console = "0.15.1"
-fancy-regex = "0.10.0"
-tealr = { version = "0.9.0-alpha1", features=["rlua"] }
-scraper = "0.13.0"
+
+# LOGGING & Console
 log = "0.4.17"
 structopt = "0.3"
-glob = "0.3.0"
-indicatif = "0.17.0"
 fern = "0.6.1"
 chrono = "0.4.22"
+console = "0.15.1"
+indicatif = "0.17.0"
+
+# REGEX AND MATCHES
+fancy-regex = "0.10.0"
+scraper = "0.13.0"
+
+# Dirs
+glob = "0.3.0"
+home = "0.5.3"
+
+# HTTP & URLS
 serde_json = "1.0.85"
 serde = { version = "1.0.144", features = ["derive"] }
-home = "0.5.3"
 isahc = "1.7.2"
 url = "2.2.2"
 
