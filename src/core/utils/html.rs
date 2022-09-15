@@ -1,6 +1,6 @@
 use scraper::Html;
 use scraper::Selector;
-use tealr::{rlu::FromToLua, TypeName};
+use tealr::{mlu::FromToLua, TypeName};
 
 #[derive(FromToLua, Clone, Debug, TypeName)]
 pub enum Location {

@@ -32,6 +32,7 @@ struct Opt {
 }
 
 fn init_log() -> Result<(), std::io::Error> {
+    let no_log = true;
     let log_file = match home::home_dir() {
         Some(path) => fern::log_file(path.join("lotus.log").to_str().unwrap()).unwrap(),
         None => {
@@ -39,7 +40,7 @@ fn init_log() -> Result<(), std::io::Error> {
             fern::log_file("lotus.log").unwrap()
         }
     };
-    fern::Dispatch::new()
+    let logger = fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
                 "{}[{}][{}] {}",
@@ -52,9 +53,11 @@ fn init_log() -> Result<(), std::io::Error> {
         .level(log::LevelFilter::Debug)
         .level_for("hyper", log::LevelFilter::Warn)
         .level_for("reqwest", log::LevelFilter::Warn)
-        .level_for("isahc", log::LevelFilter::Warn)
-        .chain(log_file)
-        .apply()
-        .unwrap();
+        .level_for("isahc", log::LevelFilter::Warn);
+    if no_log == true {
+        logger.apply().unwrap();
+    } else {
+        logger.chain(log_file).apply().unwrap();
+    }
     Ok(())
 }

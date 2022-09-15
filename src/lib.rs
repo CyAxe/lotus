@@ -10,8 +10,6 @@ pub struct Lotus {
     script: String,
 }
 
-
-
 impl Lotus {
     pub fn init(script: String) -> Self {
         Lotus { script }
@@ -37,25 +35,23 @@ impl Lotus {
             .tick_chars(format!("{}", "⣾⣽⣻⢿⡿⣟⣯⣷").as_str())
             .progress_chars("#>-"));
 
-        let lualoader = Arc::new(core::LuaLoader::new(&bar,output_path.to_string()));
+        let lualoader = Arc::new(core::LuaLoader::new(&bar, output_path.to_string()));
         stream::iter(urls.into_iter())
             .map(move |url| {
-            let active = active.clone();
-            let lualoader = Arc::clone(&lualoader);
-            stream::iter(active.into_iter())
-                .map(move |(_script_out, script_name)|{
-                    log::debug!("RUNNING {} on {}", script_name,url);
-                    let lualoader = Arc::clone(&lualoader);
-                    async move {
-                        lualoader.run_scan(&_script_out,url).await.unwrap();
-                    }
-                })
-                .buffer_unordered(threads)
-                .collect::<Vec<_>>()
-        })
-        .buffer_unordered(threads)
-        .collect::<Vec<_>>()
-        .await;
+                let active = active.clone();
+                let lualoader = Arc::clone(&lualoader);
+                stream::iter(active.into_iter())
+                    .map(move |(_script_out, script_name)| {
+                        log::debug!("RUNNING {} on {}", script_name, url);
+                        let lualoader = Arc::clone(&lualoader);
+                        async move { lualoader.run_scan(&_script_out, url).await.unwrap() }
+                    })
+                    .buffer_unordered(threads)
+                    .collect::<Vec<_>>()
+            })
+            .buffer_unordered(threads)
+            .collect::<Vec<_>>()
+            .await;
     }
 
     fn get_scripts(&self, script_type: &str) -> Vec<(String, String)> {

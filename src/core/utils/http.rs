@@ -1,7 +1,7 @@
 use isahc::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tealr::{rlu::FromToLua, TypeName};
+use tealr::{mlu::FromToLua, TypeName};
 
 #[derive(Clone)]
 pub struct Sender {
