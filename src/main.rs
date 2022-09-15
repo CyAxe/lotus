@@ -7,7 +7,13 @@ async fn main() -> Result<(), std::io::Error> {
     let cmd_opts = Opt::from_args();
     let lua_code = cmd_opts.scripts;
     let lottas = Lotus::init(lua_code.to_string());
-    lottas.start(cmd_opts.threads,cmd_opts.script_threads, &cmd_opts.json_output).await;
+    lottas
+        .start(
+            cmd_opts.threads,
+            cmd_opts.script_threads,
+            &cmd_opts.json_output,
+        )
+        .await;
     Ok(())
 }
 
@@ -25,7 +31,12 @@ struct Opt {
         help = "number of workers"
     )]
     threads: usize,
-    #[structopt(short = "t", long="script-threads",default_value = "5", help=" Workers for lua scripts")]
+    #[structopt(
+        short = "t",
+        long = "script-threads",
+        default_value = "5",
+        help = " Workers for lua scripts"
+    )]
     script_threads: usize,
     #[structopt(short = "s", long = "scripts", help = "Path of Scripts dir")]
     scripts: String,

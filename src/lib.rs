@@ -4,7 +4,8 @@ use glob::glob;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{self, BufRead};
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use thirtyfour::prelude::*;
 
 pub struct Lotus {
     script: String,
@@ -15,7 +16,7 @@ impl Lotus {
         Lotus { script }
     }
 
-    pub async fn start(&self, threads: usize,script_threads: usize, output_path: &str) {
+    pub async fn start(&self, threads: usize, script_threads: usize, output_path: &str) {
         let stdin = io::stdin();
         let urls = stdin
             .lock()
@@ -35,16 +36,22 @@ impl Lotus {
             .tick_chars(format!("{}", "⣾⣽⣻⢿⡿⣟⣯⣷").as_str())
             .progress_chars("#>-"));
 
+        let mut caps = DesiredCapabilities::chrome();
+        caps.set_binary("/usr/bin/brave-browser-stable").unwrap();
+        let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
+        let driver = Arc::new(Mutex::new(driver));
         let lualoader = Arc::new(core::LuaLoader::new(&bar, output_path.to_string()));
         stream::iter(urls.into_iter())
             .map(move |url| {
                 let active = active.clone();
                 let lualoader = Arc::clone(&lualoader);
+                let driver = Arc::clone(&driver);
                 stream::iter(active.into_iter())
                     .map(move |(_script_out, script_name)| {
                         log::debug!("RUNNING {} on {}", script_name, url);
                         let lualoader = Arc::clone(&lualoader);
-                        async move { lualoader.run_scan(&_script_out, url).await.unwrap() }
+                        let driver = Arc::clone(&driver);
+                        async move { lualoader.run_scan(driver, &_script_out, url).await.unwrap() }
                     })
                     .buffer_unordered(script_threads)
                     .collect::<Vec<_>>()
@@ -52,7 +59,7 @@ impl Lotus {
             .buffer_unordered(threads)
             .collect::<Vec<_>>()
             .await;
-    }
+   }
 
     fn get_scripts(&self, script_type: &str) -> Vec<(String, String)> {
         let mut scripts = Vec::new();

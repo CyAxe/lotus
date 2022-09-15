@@ -29,6 +29,10 @@ impl Sender {
             Ok(mut resp) => {
                 *self.many_sent.lock().unwrap() += 1;
                 resp_data.insert(
+                    "url".to_string(),
+                    RespType::Str(resp.effective_uri().unwrap().to_string()),
+                );
+                resp_data.insert(
                     "status".to_string(),
                     RespType::Str(resp.status().to_string()),
                 );

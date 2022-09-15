@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
+use thirtyfour::prelude::*;
 use utils::html::{css_selector, html_parse, html_search};
 use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
@@ -99,7 +100,7 @@ impl<'a> LuaLoader<'a> {
             .set(
                 "println",
                 lua.create_function(move |_, msg: String| {
-                    bar.println(format!("{} {}",console::Emoji("🔥","fire"),msg));
+                    bar.println(format!("{} {}", console::Emoji("🔥", "fire"), msg));
                     Ok(())
                 })
                 .unwrap(),
@@ -161,7 +162,9 @@ impl<'a> LuaLoader<'a> {
         lua.globals().set("log_debug", log_debug).unwrap();
         lua.globals().set("log_warn", log_warn).unwrap();
         lua.globals().set("change_urlquery", change_url).unwrap();
-        lua.globals().set("set_urlvalue", set_urlvalue.unwrap()).unwrap();
+        lua.globals()
+            .set("set_urlvalue", set_urlvalue.unwrap())
+            .unwrap();
         lua.globals()
             .set(
                 "generate_css_selector",
@@ -190,24 +193,44 @@ impl<'a> LuaLoader<'a> {
 
         lua
     }
-    pub async fn run_scan(&self, script_code: &'a str, target_url: &'a str) -> mlua::Result<()> {
+    pub async fn run_scan(
+        &self,
+        driver: Arc<Mutex<WebDriver>>,
+        script_code: &'a str,
+        target_url: &'a str,
+    ) -> mlua::Result<()> {
         let lua = self.get_activefunc();
-        lua.globals().set("TARGET_URL",target_url).unwrap();
-
-        lua.load(script_code)
-            .exec_async()
-            .await
+        lua.globals().set("TARGET_URL", target_url).unwrap();
+        lua.globals()
+            .set(
+                "open",
+                lua.create_function(move |_, url: String| {
+                    futures::executor::block_on({
+                        let driver = Arc::clone(&driver);
+                        async move {
+                            driver.lock().unwrap().goto(url).await.unwrap();
+                        }
+                    });
+                    Ok(())
+                })
+                .unwrap(),
+            )
             .unwrap();
-        let out_table = lua.globals().get::<_,bool>("VALID".to_owned()).unwrap();
+
+        lua.load(script_code).exec_async().await.unwrap();
+        let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
         if out_table == true {
-                let out = lua.globals().get::<_, mlua::Table>("REPORT".to_owned()).unwrap();
-                let new_report = Report {
-                    url: out.get("url").unwrap(),
-                    match_payload: out.get("match").unwrap(),
-                    payload: out.get("payload").unwrap(),
-                };
-                let results = serde_json::to_string(&new_report).unwrap();
-                self.write_report(&results);
+            let out = lua
+                .globals()
+                .get::<_, mlua::Table>("REPORT".to_owned())
+                .unwrap();
+            let new_report = Report {
+                url: out.get("url").unwrap(),
+                match_payload: out.get("match").unwrap(),
+                payload: out.get("payload").unwrap(),
+            };
+            let results = serde_json::to_string(&new_report).unwrap();
+            self.write_report(&results);
         }
         self.bar.inc(1);
         Ok(())
