@@ -14,8 +14,8 @@ local function main(url)
         end
         local css_pattern = generate_css_selector(PAYLOAD)
         local searcher = html_search(body,css_pattern)
-        if string.len(searcher) then
-            println(string.format("RXSS: %s | %s | %s",new_url,PAYLOAD,css_pattern))
+        if string.len(searcher) > 0 then
+            println(string.format("RXSS: %s | %s | %s ",resp.url:GetStrOrNil(),PAYLOAD,css_pattern))
         end
     end
     return REPORT
