@@ -48,9 +48,8 @@ pub fn cmd_args() -> ArgMatches {
                 .help("Save all lots to custom file")
                 .takes_value(true)
                 .short('l')
-                .long("log")
-            )
-
+                .long("log"),
+        )
         .arg(
             Arg::with_name("script_threads")
                 .help("Workers for lua scripts")
@@ -94,6 +93,9 @@ fn init_log(log_path: &str) -> Result<(), std::io::Error> {
         .level_for("hyper", log::LevelFilter::Warn)
         .level_for("reqwest", log::LevelFilter::Warn)
         .level_for("isahc", log::LevelFilter::Warn);
-    logger.chain(fern::log_file(log_path).unwrap()).apply().unwrap();
+    logger
+        .chain(fern::log_file(log_path).unwrap())
+        .apply()
+        .unwrap();
     Ok(())
 }

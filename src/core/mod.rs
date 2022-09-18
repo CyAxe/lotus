@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
-use thirtyfour::prelude::*;
 use utils::html::{css_selector, html_parse, html_search};
 use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
@@ -42,18 +41,7 @@ impl<'a> LuaLoader<'a> {
             .write_all(format!("{}\n", results).as_str().as_bytes())
             .expect("Could not write to file");
     }
-    fn get_activefunc(&self) -> Lua {
-        let lua = Lua::new();
-        lua.globals()
-            .set(
-                "welcome",
-                lua.create_function(|_, name: String| {
-                    println!("WELCOME {}", name);
-                    Ok(())
-                })
-                .unwrap(),
-            )
-            .unwrap();
+    fn get_activefunc(&self, lua: Lua) -> Lua {
         lua.globals()
             .set(
                 "set_urlvalue",
@@ -67,7 +55,7 @@ impl<'a> LuaLoader<'a> {
         lua.globals()
             .set(
                 "send_req",
-                lua.create_async_function(|_, url: String| async move {
+                lua.create_async_function(|_ctx, url: String| async move {
                     let mut sender = utils::http::Sender::init();
                     Ok(sender.send(url).await)
                 })
@@ -193,37 +181,10 @@ impl<'a> LuaLoader<'a> {
 
         lua
     }
-    pub async fn run_scan(
-        &self,
-        driver: Option<Arc<Mutex<WebDriver>>>,
-        script_code: &'a str,
-        target_url: &'a str,
-    ) -> mlua::Result<()> {
-        let lua = self.get_activefunc();
+    pub async fn run_scan(&self, script_code: &'a str, target_url: &'a str) -> mlua::Result<()> {
+        let lua = Lua::new();
+        let lua = self.get_activefunc(lua);
         lua.globals().set("TARGET_URL", target_url).unwrap();
-        match driver {
-            None => {
-
-            },
-            _ => {
-            lua.globals()
-                .set(
-                    "open",
-                    lua.create_function(move |_, url: String| {
-                        futures::executor::block_on({
-                            let driver = Arc::clone(&driver.as_ref().unwrap());
-                            async move {
-                                driver.lock().unwrap().goto(url).await.unwrap();
-                            }
-                        });
-                        Ok(())
-                    })
-                    .unwrap(),
-                )
-                .unwrap();
-            }
-        };
-
         lua.load(script_code).exec_async().await.unwrap();
         let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
         if out_table == true {

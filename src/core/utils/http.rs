@@ -15,6 +15,7 @@ pub enum RespType {
     Str(String),
     Int(i32),
     Error(String),
+    Headers(HashMap<String, String>),
 }
 
 impl Sender {
@@ -40,12 +41,24 @@ impl Sender {
                     "body".to_string(),
                     RespType::Str(resp.text().await.unwrap()),
                 );
+                let mut response_headers: HashMap<String, String> = HashMap::new();
+                resp.headers()
+                    .iter()
+                    .for_each(|(header_name, header_value)| {
+                        response_headers.insert(
+                            header_name.to_string(),
+                            header_value.to_str().unwrap().to_string(),
+                        );
+                    });
+
+                resp_data.insert("headers".to_string(), RespType::Headers(response_headers));
                 resp_data.insert("errors".to_string(), RespType::NoErrors);
                 resp_data
             }
             Err(err) => {
                 resp_data.insert("status".to_string(), RespType::Emtpy);
                 resp_data.insert("body".to_string(), RespType::Emtpy);
+                resp_data.insert("headers".to_string(), RespType::Emtpy);
                 resp_data.insert("errors".to_string(), RespType::Error(err.to_string()));
                 resp_data
             }
