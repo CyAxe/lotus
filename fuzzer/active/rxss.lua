@@ -1,5 +1,7 @@
 REPORT = {}
 VALID = false
+STOP_AFTER_MATCH = true
+THREADS = 1
 
 
 PAYLOAD = '"><img src=x onerror=alert()>'
@@ -14,7 +16,7 @@ function main(param,new_url)
     local resp = send_req(new_url)
     local body = resp.body:GetStrOrNil()
     if body == "" then
-        return
+        return REPORT
     end
     local css_pattern = generate_css_selector(PAYLOAD)
     if string.len(css_pattern) > 0 then

@@ -1,5 +1,7 @@
 REPORT = {}
 VALID = false
+STOP_AFTER_MATCH = true
+THREADS = 1
 
 function payloads_gen(url)
     new_url = {urljoin(url,"/secured/phpinfo.php")}

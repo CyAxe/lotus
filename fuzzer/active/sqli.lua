@@ -1,5 +1,7 @@
 REPORT = {}
 VALID = false
+STOP_AFTER_MATCH = true
+THREADS = 2
 
 SQLI_ERRORS = {
   "SQL syntax.*?MySQL",
@@ -193,7 +195,7 @@ function main(param,url)
             REPORT["payload"] = current_payload
             VALID = true
             println(string.format("SQLI ERROR: %s",url))
-            return 1
+            break
         end
     end
     return REPORT
@@ -209,6 +211,6 @@ function payloads_gen(url)
             end
         end
     end
-    return REPORT
+    return all_payloads
 end
 
