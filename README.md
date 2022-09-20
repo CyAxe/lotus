@@ -40,7 +40,7 @@ or download the binary file from [the release page](https://github.com/rusty-sec
 
 
 ```bash
-Lotus 0.1-beta
+Lotus 0.2-beta
 Khaled Nassar <knassar702@gmail.com>
 Fast Web Security Scanner written in Rust based on Lua Scripts
 

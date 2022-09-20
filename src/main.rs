@@ -31,7 +31,7 @@ async fn main() -> Result<(), std::io::Error> {
 
 pub fn cmd_args() -> ArgMatches {
     App::new("Lotus")
-        .version("0.1-beta")
+        .version("0.2-beta")
         .author("Khaled Nassar <knassar702@gmail.com>")
         .about("Fast Web Security Scanner written in Rust based on Lua Scripts ")
         .arg(
