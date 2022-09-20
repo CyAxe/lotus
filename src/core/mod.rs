@@ -236,11 +236,15 @@ impl<'a> LuaLoader<'a> {
             all_payloads
         };
         let main_func = lua.globals().get::<_,mlua::Function>("main").unwrap();
+        let globals = lua.globals();
         stream::iter(payloads.into_iter())
             .map(move |payload| {
+                let globals = globals.clone();
                 let main_func = main_func.clone();
                 async move {
-                    main_func.call_async::<_,mlua::Table>(payload.unwrap()).await.unwrap();
+                    if globals.get::<_,bool>("VALID").unwrap() == false {
+                        main_func.call_async::<_,mlua::Table>(payload.unwrap()).await.unwrap();
+                    }
                 }
             })
             .buffer_unordered(20)
