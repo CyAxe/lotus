@@ -9,6 +9,7 @@ use thirtyfour::prelude::*;
 use utils::html::{css_selector, html_parse, html_search};
 use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
+use futures::{stream, StreamExt};
 
 #[derive(Clone)]
 pub struct LuaLoader<'a> {
@@ -224,6 +225,27 @@ impl<'a> LuaLoader<'a> {
             }
         };
 
+        lua.load(script_code).exec_async().await.unwrap();
+        let payloads_func = lua.globals().get::<_,mlua::Function>("payloads_gen").unwrap();
+        let payloads = payloads_func.call_async::<_,mlua::Table>(target_url).await.unwrap();
+        let payloads = {
+            let mut all_payloads = Vec::new();
+            payloads.pairs::<String,String>().into_iter().for_each(|item|{
+                all_payloads.push(item);
+            });
+            all_payloads
+        };
+        let main_func = lua.globals().get::<_,mlua::Function>("main").unwrap();
+        stream::iter(payloads.into_iter())
+            .map(move |payload| {
+                let main_func = main_func.clone();
+                async move {
+                    main_func.call_async::<_,mlua::Table>(payload.unwrap()).await.unwrap();
+                }
+            })
+            .buffer_unordered(20)
+            .collect::<Vec<_>>()
+            .await;
         lua.load(script_code).exec_async().await.unwrap();
         let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
         if out_table == true {
