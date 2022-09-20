@@ -250,7 +250,6 @@ impl<'a> LuaLoader<'a> {
             .buffer_unordered(20)
             .collect::<Vec<_>>()
             .await;
-        lua.load(script_code).exec_async().await.unwrap();
         let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
         if out_table == true {
             let out = lua
