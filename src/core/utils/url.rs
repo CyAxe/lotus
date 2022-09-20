@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use url::Url;
 
-pub fn change_urlquery(url: String, payload: String) -> HashMap<String, String> {
+pub fn change_urlquery(url: String, payload: String, remove_content: bool) -> HashMap<String, String> {
     let url = Url::parse(&url).unwrap();
     let mut scan_params = HashMap::new();
     let mut result: HashMap<String, String> = HashMap::new();
@@ -18,7 +18,12 @@ pub fn change_urlquery(url: String, payload: String) -> HashMap<String, String> 
     scan_params.iter().for_each(|(key, value)| {
         payload.split("\n").into_iter().for_each(|payload| {
             let mut new_params = scan_params.clone();
-            new_params.insert(key.to_string(), value.as_str().to_owned() + payload);
+            if remove_content == true {
+                new_params.insert(key.to_string(), payload.to_string());
+            } else {
+
+                new_params.insert(key.to_string(), value.as_str().to_owned() + payload);
+            }
             let mut new_url = url.clone();
             new_url.query_pairs_mut().clear();
 

@@ -154,7 +154,7 @@ impl<'a> LuaLoader<'a> {
             })
             .unwrap();
         let change_url = lua
-            .create_function(|_, url: (String, String)| Ok(change_urlquery(url.0, url.1)))
+            .create_function(|_, (url,payload, remove_content): (String, String, bool)| Ok(change_urlquery(url,payload,remove_content)))
             .unwrap();
 
         lua.globals().set("log_info", log_info).unwrap();
