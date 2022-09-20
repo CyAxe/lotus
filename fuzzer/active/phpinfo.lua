@@ -11,6 +11,9 @@ end
 
 function main(param,url) 
     local resp = send_req(url)
+    if resp.errors:GetErrorOrNil() then
+        return REPORT
+    end
     if resp.body:GetStrOrNil() then 
         local body = resp.body:GetStrOrNil()
         if ( string.find(body,"PHP Extension") and string.find(body,"PHP Version")) then 

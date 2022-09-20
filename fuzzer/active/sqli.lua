@@ -181,7 +181,7 @@ PAYLOADS = {
 
 function main(param,url)
     local resp = send_req(url)
-    if resp.body:GetStrOrNil() == "" then
+    if resp.errors:GetErrorOrNil() then
         return REPORT
     end
 
