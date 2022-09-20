@@ -21,37 +21,43 @@ $ cargo install --git=https://github.com/rusty-sec/lotus/
 or download the binary file from [the release page](https://github.com/rusty-sec/lotus/releases)
 
 ```bash
-$ echo "http://testphp.vulnweb.com/listproducts.php?cat=1%27123" | lotus --output test.json --scripts scripts/
-$ cat ~/lotus.log # logging file
-$ cat test.json | jq
+❯ echo "http://testphp.vulnweb.com/listproducts.php?cat=1" | lotus --scripts fuzzer/ --workers 30 --output test.json
+🔥 RXSS: http://testphp.vulnweb.com/listproducts.php?cat=1%22%3E%3Cimg+src%3Dx+onerror%3Dalert%28%29%3E | "><img src=x onerror=alert()> | img[onerror="alert()"][src="x"]
+🔥 PHPINFO: http://testphp.vulnweb.com/secured/phpinfo.php
+
+❯ cat test.json | jq
+{
+  "payload": "\"><img src=x onerror=alert()>",
+  "match_payload": "img[onerror=\"alert()\"][src=\"x\"]",
+  "url": "http://testphp.vulnweb.com/listproducts.php?cat=1%22%3E%3Cimg+src%3Dx+onerror%3Dalert%28%29%3E"
+}
 {
   "payload": "",
   "match_payload": "/secured/phpinfo.php",
   "url": "http://testphp.vulnweb.com/secured/phpinfo.php"
 }
-{
-  "payload": "'123",
-  "match_payload": "SQL syntax.*?MySQL",
-  "url": "http://testphp.vulnweb.com/listproducts.php?cat=1%27123"
-}
 ```
 
 
 ```bash
-lotus 0.1.0
+Lotus 0.1-beta
+Khaled Nassar <knassar702@gmail.com>
 Fast Web Security Scanner written in Rust based on Lua Scripts
 
 USAGE:
-    lotus [OPTIONS] --output <json-output> --scripts <scripts>
+    lotus [OPTIONS] --workers <workers> --scripts <scripts> --output <output> [nolog]
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+ARGS:
+    <nolog>    no logging
 
 OPTIONS:
-    -o, --output <json-output>    Path of output JSON file
-    -s, --scripts <scripts>       Path of Scripts dir
-    -w, --workers <threads>       number of workers [default: 30]
+    -h, --help                               Print help information
+    -l, --log <log>                          Save all lots to custom file
+    -o, --output <output>                    Path of the JSON output fiel
+    -s, --scripts <scripts>                  Path of scripts dir
+    -t, --script-threads <script_threads>    Workers for lua scripts [default: 5]
+    -V, --version                            Print version information
+    -w, --workers <workers>                  Number of works of urls [default: 10]
 ```
 
 
