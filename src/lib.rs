@@ -27,10 +27,9 @@ impl Lotus {
         let urls = urls.iter().map(|url| url.as_str()).collect::<Vec<&str>>();
 
         let active = self.get_scripts("active");
-        let passive = self.get_scripts("passive");
 
         // ProgressBar Settings
-        let bar = ProgressBar::new(urls.len() as u64 * active.len() as u64 * passive.len() as u64);
+        let bar = ProgressBar::new(urls.len() as u64 * active.len() as u64);
         bar.set_style(ProgressStyle::default_bar()
             .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}").expect("ProgressBar Error")
             .tick_chars(format!("{}", "⣾⣽⣻⢿⡿⣟⣯⣷").as_str())
