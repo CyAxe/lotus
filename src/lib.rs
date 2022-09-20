@@ -4,7 +4,7 @@ use glob::glob;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{self, BufRead};
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use thirtyfour::prelude::*;
 
 pub struct Lotus {
@@ -42,20 +42,16 @@ impl Lotus {
         caps.set_ignore_certificate_errors().unwrap();
         caps.set_headless().unwrap();
 
-        let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
-        let driver = Arc::new(Mutex::new(driver));
         let lualoader = Arc::new(core::LuaLoader::new(&bar, output_path.to_string()));
         stream::iter(urls.into_iter())
             .map(move |url| {
                 let active = active.clone();
                 let lualoader = Arc::clone(&lualoader);
-                let driver = Arc::clone(&driver);
                 stream::iter(active.into_iter())
                     .map(move |(_script_out, script_name)| {
                         log::debug!("RUNNING {} on {}", script_name, url);
                         let lualoader = Arc::clone(&lualoader);
-                        let driver = Arc::clone(&driver);
-                        async move { lualoader.run_scan(Some(driver), &_script_out, url).await.unwrap() }
+                        async move { lualoader.run_scan(None, &_script_out, url).await.unwrap() }
                     })
                     .buffer_unordered(script_threads)
                     .collect::<Vec<_>>()
