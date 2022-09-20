@@ -238,7 +238,7 @@ impl<'a> LuaLoader<'a> {
         let main_func = lua.globals().get::<_,mlua::Function>("main").unwrap();
         let script_threads = lua.globals().get::<_, usize>("THREADS").unwrap();
         let globals = lua.globals();
-        stream::iter(payloads.into_iter())
+        let reports = stream::iter(payloads.into_iter())
             .map(move |payload| {
                 let globals = globals.clone();
                 let main_func = main_func.clone();
@@ -250,6 +250,7 @@ impl<'a> LuaLoader<'a> {
                     } else {
                         main_func.call_async::<_,mlua::Table>(payload.unwrap()).await.unwrap();
                     }
+                    globals.get::<_,mlua::Table>("REPORT").unwrap()
                 }
             })
             .buffer_unordered(script_threads)
@@ -257,17 +258,15 @@ impl<'a> LuaLoader<'a> {
             .await;
         let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
         if out_table == true {
-            let out = lua
-                .globals()
-                .get::<_, mlua::Table>("REPORT".to_owned())
-                .unwrap();
-            let new_report = Report {
-                url: out.get("url").unwrap_or("".into()),
-                match_payload: out.get("match").unwrap_or("".into()),
-                payload: out.get("payload").unwrap_or("".to_string()),
-            };
-            let results = serde_json::to_string(&new_report).unwrap();
-            self.write_report(&results);
+            reports.iter().for_each(|out| {
+                let new_report = Report {
+                    url: out.get("url").unwrap_or("".into()),
+                    match_payload: out.get("match").unwrap_or("".into()),
+                    payload: out.get("payload").unwrap_or("".to_string()),
+                };
+                let results = serde_json::to_string(&new_report).unwrap();
+                self.write_report(&results);
+            });
         }
         self.bar.inc(1);
         Ok(())
