@@ -5,6 +5,10 @@ THREADS = 1
 
 
 PAYLOAD = '"><img src=x onerror=alert()>'
+DATA = read(string.format("%s/txt/xss.txt",SCRIPT_PATH))
+for s in DATA:gmatch("[^\n]+") do
+    print(string.format("> %s",s))
+end
 
 function payloads_gen(url)
     new_querys = change_urlquery(url,PAYLOAD)
