@@ -1,4 +1,5 @@
 pub mod utils;
+use futures::{stream, StreamExt};
 use log::{debug, error, info, warn};
 use mlua::Lua;
 use serde::{Deserialize, Serialize};
@@ -9,7 +10,9 @@ use thirtyfour::prelude::*;
 use utils::html::{css_selector, html_parse, html_search};
 use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
-use futures::{stream, StreamExt};
+use std::fs::File;
+use std::io::Read;
+
 
 #[derive(Clone)]
 pub struct LuaLoader<'a> {
@@ -155,7 +158,11 @@ impl<'a> LuaLoader<'a> {
             })
             .unwrap();
         let change_url = lua
-            .create_function(|_, (url,payload, remove_content): (String, String, bool)| Ok(change_urlquery(url,payload,remove_content)))
+            .create_function(
+                |_, (url, payload, remove_content): (String, String, bool)| {
+                    Ok(change_urlquery(url, payload, remove_content))
+                },
+            )
             .unwrap();
 
         lua.globals().set("log_info", log_info).unwrap();
@@ -181,6 +188,20 @@ impl<'a> LuaLoader<'a> {
                     .unwrap(),
             )
             .unwrap();
+        lua.globals()
+            .set("read",
+                 lua.create_function(|_ctx, file_path: String| {
+                    use std::path::Path;
+                    if Path::new(&file_path).exists() == true {
+                        let mut file = File::open(&file_path)?;
+                        let mut file_content = String::new();
+                        file.read_to_string(&mut file_content)?;
+                        Ok(file_content)
+                    } else {
+                        Ok(0.to_string())
+                    }
+                 }).unwrap()
+                 ).unwrap();
 
         lua.globals()
             .set(
@@ -198,44 +219,53 @@ impl<'a> LuaLoader<'a> {
         &self,
         driver: Option<Arc<Mutex<WebDriver>>>,
         script_code: &'a str,
+        script_dir: &'a str,
         target_url: &'a str,
     ) -> mlua::Result<()> {
         let lua = self.get_activefunc();
         lua.globals().set("TARGET_URL", target_url).unwrap();
         match driver {
-            None => {
-
-            },
+            None => {}
             _ => {
-            lua.globals()
-                .set(
-                    "open",
-                    lua.create_function(move |_, url: String| {
-                        futures::executor::block_on({
-                            let driver = Arc::clone(&driver.as_ref().unwrap());
-                            async move {
-                                driver.lock().unwrap().goto(url).await.unwrap();
-                            }
-                        });
-                        Ok(())
-                    })
-                    .unwrap(),
-                )
-                .unwrap();
+                lua.globals()
+                    .set(
+                        "open",
+                        lua.create_function(move |_, url: String| {
+                            futures::executor::block_on({
+                                let driver = Arc::clone(&driver.as_ref().unwrap());
+                                async move {
+                                    driver.lock().unwrap().goto(url).await.unwrap();
+                                }
+                            });
+                            Ok(())
+                        })
+                        .unwrap(),
+                    )
+                    .unwrap();
             }
         };
+        lua.globals().set("SCRIPT_PATH", script_dir).unwrap();
 
         lua.load(script_code).exec_async().await.unwrap();
-        let payloads_func = lua.globals().get::<_,mlua::Function>("payloads_gen").unwrap();
-        let payloads = payloads_func.call_async::<_,mlua::Table>(target_url).await.unwrap();
+        let payloads_func = lua
+            .globals()
+            .get::<_, mlua::Function>("payloads_gen")
+            .unwrap();
+        let payloads = payloads_func
+            .call_async::<_, mlua::Table>(target_url)
+            .await
+            .unwrap();
         let payloads = {
             let mut all_payloads = Vec::new();
-            payloads.pairs::<String,String>().into_iter().for_each(|item|{
-                all_payloads.push(item);
-            });
+            payloads
+                .pairs::<String, String>()
+                .into_iter()
+                .for_each(|item| {
+                    all_payloads.push(item);
+                });
             all_payloads
         };
-        let main_func = lua.globals().get::<_,mlua::Function>("main").unwrap();
+        let main_func = lua.globals().get::<_, mlua::Function>("main").unwrap();
         let script_threads = lua.globals().get::<_, usize>("THREADS").unwrap();
         let globals = lua.globals();
         let reports = stream::iter(payloads.into_iter())
@@ -243,14 +273,20 @@ impl<'a> LuaLoader<'a> {
                 let globals = globals.clone();
                 let main_func = main_func.clone();
                 async move {
-                    if globals.get::<_,bool>("STOP_AFTER_MATCH").unwrap() == true {
-                        if globals.get::<_,bool>("VALID").unwrap() == false {
-                            main_func.call_async::<_,mlua::Table>(payload.unwrap()).await.unwrap();
+                    if globals.get::<_, bool>("STOP_AFTER_MATCH").unwrap() == true {
+                        if globals.get::<_, bool>("VALID").unwrap() == false {
+                            main_func
+                                .call_async::<_, mlua::Table>(payload.unwrap())
+                                .await
+                                .unwrap();
                         }
                     } else {
-                        main_func.call_async::<_,mlua::Table>(payload.unwrap()).await.unwrap();
+                        main_func
+                            .call_async::<_, mlua::Table>(payload.unwrap())
+                            .await
+                            .unwrap();
                     }
-                    globals.get::<_,mlua::Table>("REPORT").unwrap()
+                    globals.get::<_, mlua::Table>("REPORT").unwrap()
                 }
             })
             .buffer_unordered(script_threads)
