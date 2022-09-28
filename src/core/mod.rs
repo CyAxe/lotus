@@ -3,16 +3,17 @@ use futures::{stream, StreamExt};
 use log::{debug, error, info, warn};
 use mlua::Lua;
 use serde::{Deserialize, Serialize};
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::sync::{Arc, Mutex};
 use thirtyfour::prelude::*;
+
 use utils::html::{css_selector, html_parse, html_search};
 use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
+
 use std::fs::File;
 use std::io::Read;
-
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct LuaLoader<'a> {
