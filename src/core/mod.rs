@@ -258,10 +258,10 @@ impl<'a> LuaLoader<'a> {
         let payloads = {
             let mut all_payloads = Vec::new();
             payloads
-                .pairs::<String, String>()
+                .pairs::<mlua::Value, mlua::Value>()
                 .into_iter()
                 .for_each(|item| {
-                    all_payloads.push(item);
+                    all_payloads.push(item.unwrap());
                 });
             all_payloads
         };
@@ -276,13 +276,13 @@ impl<'a> LuaLoader<'a> {
                     if globals.get::<_, bool>("STOP_AFTER_MATCH").unwrap() == true {
                         if globals.get::<_, bool>("VALID").unwrap() == false {
                             main_func
-                                .call_async::<_, mlua::Table>(payload.unwrap())
+                                .call_async::<_, mlua::Table>(payload)
                                 .await
                                 .unwrap();
                         }
                     } else {
                         main_func
-                            .call_async::<_, mlua::Table>(payload.unwrap())
+                            .call_async::<_, mlua::Table>(payload)
                             .await
                             .unwrap();
                     }

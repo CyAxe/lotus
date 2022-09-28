@@ -1,11 +1,10 @@
 mod core;
+use crate::core::utils::bar::create_progress;
 use futures::{stream, StreamExt};
 use glob::glob;
-use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{self, BufRead};
 use std::path::Path;
 use std::sync::Arc;
-use thirtyfour::prelude::*;
 
 pub struct Lotus {
     script: String,
@@ -25,32 +24,25 @@ impl Lotus {
             .collect::<Vec<String>>();
 
         let urls = urls.iter().map(|url| url.as_str()).collect::<Vec<&str>>();
-
-        let active = self.get_scripts("active");
+        let active = self.get_scripts();
 
         // ProgressBar Settings
-        let bar = ProgressBar::new(urls.len() as u64 * active.len() as u64);
-        bar.set_style(ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}").expect("ProgressBar Error")
-            .tick_chars(format!("{}", "⣾⣽⣻⢿⡿⣟⣯⣷").as_str())
-            .progress_chars("#>-"));
+        let bar = create_progress(urls.len() as u64 * active.len() as u64);
 
-        let mut caps = DesiredCapabilities::chrome();
-        caps.set_binary("/usr/bin/brave-browser-stable").unwrap();
-        caps.set_headless().unwrap();
-        caps.set_ignore_certificate_errors().unwrap();
-        caps.set_headless().unwrap();
 
         let lualoader = Arc::new(core::LuaLoader::new(&bar, output_path.to_string()));
         stream::iter(urls.into_iter())
             .map(move |url| {
                 let active = active.clone();
                 let lualoader = Arc::clone(&lualoader);
+                let script_path = &self.script;
                 stream::iter(active.into_iter())
                     .map(move |(_script_out, script_name)| {
                         log::debug!("RUNNING {} on {}", script_name, url);
                         let lualoader = Arc::clone(&lualoader);
-                        async move { lualoader.run_scan(None, &_script_out, url).await.unwrap() }
+                        async move { 
+                            lualoader.run_scan(None, &_script_out,&script_path, url).await.unwrap() 
+                        }
                     })
                     .buffer_unordered(script_threads)
                     .collect::<Vec<_>>()
@@ -58,14 +50,14 @@ impl Lotus {
             .buffer_unordered(threads)
             .collect::<Vec<_>>()
             .await;
-   }
+    }
 
-    fn get_scripts(&self, script_type: &str) -> Vec<(String, String)> {
+    fn get_scripts(&self) -> Vec<(String, String)> {
         let mut scripts = Vec::new();
         for entry in glob(
             format!(
                 "{}{}",
-                Path::new(&self.script).join(script_type).to_str().unwrap(),
+                Path::new(&self.script).to_str().unwrap(),
                 "/*.lua"
             )
             .as_str(),

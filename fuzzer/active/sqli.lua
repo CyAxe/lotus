@@ -23,7 +23,7 @@ PAYLOADS = {
     "\123",
 }
 
-function main(param,url)
+function main(current_payload,url)
     local resp = send_req(url)
     if resp.errors:GetErrorOrNil() then
         return REPORT
@@ -35,7 +35,7 @@ function main(param,url)
             -- NOTHING
         else
             REPORT["url"] = url
-            REPORT["match"] = index_value
+            REPORT["match"] = err
             REPORT["payload"] = current_payload
             VALID = true
             println(string.format("SQLI ERROR: %s",url))
@@ -47,12 +47,10 @@ end
 
 function payloads_gen(url)
     all_payloads = {}
-    if string.find(url,"?") then
-        for index_key, payload_value in ipairs(PAYLOADS) do
-            new_querys = change_urlquery(url,payload_value)
-            for pay_index, pay_value in pairs(new_querys) do
-                table.insert(all_payloads,pay_value)
-            end
+    for index_key, payload_value in ipairs(PAYLOADS) do
+        new_querys = change_urlquery(url,payload_value)
+        for pay_index, pay_value in pairs(new_querys) do
+            all_payloads[payload_value] = pay_value
         end
     end
     return all_payloads
