@@ -4,7 +4,7 @@ STOP_AFTER_MATCH = true
 THREADS = 1
 
 
-PAYLOADS = '"><img src=x onerror=alert()>'
+PAYLOADS = read(string.format("%s/txt/xss.txt",SCRIPT_PATH))
 
 function payloads_gen(url)
     all_payloads = {}
