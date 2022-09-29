@@ -2,7 +2,6 @@ pub mod utils;
 use futures::{stream, StreamExt};
 use log::{debug, error, info, warn};
 use mlua::Lua;
-use serde::{Deserialize, Serialize};
 use thirtyfour::prelude::*;
 
 use utils::html::{css_selector, html_parse, html_search};
@@ -10,22 +9,16 @@ use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
 
 use std::fs::File;
-use std::io::Read;
 use std::fs::OpenOptions;
+use std::io::Read;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct LuaLoader<'a> {
     output_dir: Arc<Mutex<String>>,
     bar: &'a indicatif::ProgressBar,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Report {
-    pub payload: String,
-    pub match_payload: String,
-    pub url: String,
 }
 
 impl<'a> LuaLoader<'a> {
@@ -190,8 +183,9 @@ impl<'a> LuaLoader<'a> {
             )
             .unwrap();
         lua.globals()
-            .set("read",
-                 lua.create_function(|_ctx, file_path: String| {
+            .set(
+                "read",
+                lua.create_function(|_ctx, file_path: String| {
                     use std::path::Path;
                     if Path::new(&file_path).exists() == true {
                         let mut file = File::open(&file_path)?;
@@ -201,8 +195,10 @@ impl<'a> LuaLoader<'a> {
                     } else {
                         Ok(0.to_string())
                     }
-                 }).unwrap()
-                 ).unwrap();
+                })
+                .unwrap(),
+            )
+            .unwrap();
 
         lua.globals()
             .set(
@@ -296,12 +292,12 @@ impl<'a> LuaLoader<'a> {
         let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
         if out_table == true {
             reports.iter().for_each(|out| {
-                let new_report = Report {
-                    url: out.get("url").unwrap_or("".into()),
-                    match_payload: out.get("match").unwrap_or("".into()),
-                    payload: out.get("payload").unwrap_or("".to_string()),
-                };
-                let results = serde_json::to_string(&new_report).unwrap();
+                let mut test_report: HashMap<String, mlua::Value> = HashMap::new();
+                out.clone().pairs::<String,mlua::Value>().for_each(|out_report| {
+                    let current_out = out_report.clone();
+                    test_report.insert(current_out.unwrap().0,out_report.unwrap().1);
+                });
+                let results = serde_json::to_string(&test_report).unwrap();
                 self.write_report(&results);
             });
         }
