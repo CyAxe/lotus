@@ -21,7 +21,7 @@ $ cargo install --git=https://github.com/rusty-sec/lotus/
 or download the binary file from [the release page](https://github.com/rusty-sec/lotus/releases)
 
 ```bash
-❯ echo "http://testphp.vulnweb.com/listproducts.php?cat=1" | lotus --scripts fuzzer/ --workers 30 --output test.json
+❯ echo "http://testphp.vulnweb.com/listproducts.php?cat=1" | lotus urls --scripts fuzzer/ --workers 30 --output test.json
 🔥 RXSS: http://testphp.vulnweb.com/listproducts.php?cat=1%22%3E%3Cimg+src%3Dx+onerror%3Dalert%28%29%3E | "><img src=x onerror=alert()> | img[onerror="alert()"][src="x"]
 🔥 PHPINFO: http://testphp.vulnweb.com/secured/phpinfo.php
 
