@@ -1,6 +1,6 @@
 use isahc::prelude::*;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Mutex,Arc};
 use tealr::{mlu::FromToLua, TypeName};
 
 #[derive(Clone)]
@@ -27,7 +27,7 @@ impl Sender {
         let mut resp_data: HashMap<String, RespType> = HashMap::new();
         match isahc::get_async(url).await {
             Ok(mut resp) => {
-                *self.many_sent.lock().unwrap() += 1;
+//                *self.many_sent.lock().await += 1;
                 resp_data.insert(
                     "url".to_string(),
                     RespType::Str(resp.effective_uri().unwrap().to_string()),

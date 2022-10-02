@@ -4,30 +4,54 @@ mod logger;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    let cmd_opts = args::cmd_args();
-    if cmd_opts.is_present("log") == true {
-        logger::init_log(cmd_opts.value_of("log").unwrap()).unwrap();
+    let current_subcommand = args::cmd_args().subcommand_name().unwrap().to_string();
+    if args::cmd_args()
+        .subcommand_matches(&current_subcommand)
+        .unwrap()
+        .is_present("log")
+        == true
+    {
+        logger::init_log(
+            args::cmd_args()
+                .subcommand_matches(&current_subcommand)
+                .unwrap()
+                .value_of("log")
+                .unwrap(),
+        )
+        .unwrap();
     }
-    let lua_code = cmd_opts.value_of("scripts").unwrap();
-    let lottas = Lotus::init(lua_code.to_string());
+    let lottas = Lotus::init(
+        args::cmd_args()
+            .subcommand_matches(&current_subcommand)
+            .unwrap()
+            .value_of("scripts")
+            .unwrap()
+            .to_string(),
+    );
     lottas
         .start(
-            cmd_opts
+            args::cmd_args()
+                .subcommand_matches(&current_subcommand)
+                .unwrap()
                 .value_of("workers")
                 .unwrap()
                 .trim()
                 .parse::<usize>()
                 .unwrap(),
-            cmd_opts
+            args::cmd_args()
+                .subcommand_matches(&current_subcommand)
+                .unwrap()
                 .value_of("script_threads")
                 .unwrap()
                 .trim()
                 .parse::<usize>()
                 .unwrap(),
-            &cmd_opts.value_of("output").unwrap(),
+            &args::cmd_args()
+                .subcommand_matches(&current_subcommand)
+                .unwrap()
+                .value_of("output")
+                .unwrap(),
         )
         .await;
     Ok(())
 }
-
-

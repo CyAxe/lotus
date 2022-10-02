@@ -20,6 +20,7 @@ end
 
 function main(current_payload,new_url)
     local resp = send_req(new_url)
+
     if resp.errors:GetErrorOrNil() then
         return REPORT
     end
