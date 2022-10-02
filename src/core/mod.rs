@@ -3,6 +3,7 @@ use futures::{stream, StreamExt};
 use log::{debug, error, info, warn};
 use mlua::Lua;
 use thirtyfour::prelude::*;
+use interactsh_rs::client;
 
 use utils::html::{css_selector, html_parse, html_search};
 use utils::is_match;
@@ -85,8 +86,8 @@ impl<'a> LuaLoader<'a> {
         lua.globals()
             .set(
                 "sleep",
-                lua.create_function(|_, time: u64| {
-                    std::thread::sleep(std::time::Duration::from_secs(time));
+                lua.create_async_function(|_, time: u64| async move {
+                    tokio::time::sleep(tokio::time::Duration::from_secs(time)).await;
                     Ok(())
                 })
                 .unwrap(),
@@ -175,6 +176,15 @@ impl<'a> LuaLoader<'a> {
             )
             .unwrap();
 
+        lua.globals()
+            .set("oast",
+                 lua.create_async_function(|_, ()| async move {
+                     let c = client::builder::ClientBuilder::default().build();
+                     let r = c.unwrap().register().await.unwrap();
+                     println!("\n\n{:?}\n\n",r.get_interaction_url());
+                     Ok(())
+                 }).unwrap()
+                 ).unwrap();
         lua.globals()
             .set(
                 "urljoin",
