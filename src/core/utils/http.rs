@@ -14,6 +14,7 @@ pub enum RespType {
     Emtpy,
     Str(String),
     Int(i32),
+    Headers(HashMap<String,String>),
     Error(String),
 }
 
@@ -28,6 +29,10 @@ impl Sender {
         match isahc::get_async(url).await {
             Ok(mut resp) => {
 //                *self.many_sent.lock().await += 1;
+                let mut resp_headers: HashMap<String,String> = HashMap::new();
+                resp.headers().iter().for_each(|(header_name,header_value)|{
+                    resp_headers.insert(header_name.to_string(),header_value.to_str().unwrap().to_string());
+                });
                 resp_data.insert(
                     "url".to_string(),
                     RespType::Str(resp.effective_uri().unwrap().to_string()),
@@ -41,12 +46,14 @@ impl Sender {
                     RespType::Str(resp.text().await.unwrap()),
                 );
                 resp_data.insert("errors".to_string(), RespType::NoErrors);
+                resp_data.insert("headers".to_string(), RespType::Headers(resp_headers));
                 resp_data
             }
             Err(err) => {
                 resp_data.insert("status".to_string(), RespType::Emtpy);
                 resp_data.insert("body".to_string(), RespType::Emtpy);
                 resp_data.insert("errors".to_string(), RespType::Error(err.to_string()));
+                resp_data.insert("headers".to_string(), RespType::Headers(HashMap::new()));
                 resp_data
             }
         }
