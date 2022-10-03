@@ -26,6 +26,8 @@ PAYLOADS = {
 function main(current_payload,url)
     local resp = send_req(url)
     if resp.errors:GetErrorOrNil() then
+        local log_msg = string.format("[SQLI] Connection Error: %s",new_url)
+        log_error(log_msg)
         return REPORT
     end
 

@@ -22,8 +22,11 @@ function main(current_payload,new_url)
     local resp = send_req(new_url)
 
     if resp.errors:GetErrorOrNil() then
+        local log_msg = string.format("[RXSS] Connection Error: %s",new_url)
+        log_error(log_msg)
         return REPORT
     end
+
     local body = resp.body:GetStrOrNil()
     local headers = resp.headers:GetHeadersOrNil()
     local content_type = headers["content-type"]
