@@ -25,15 +25,25 @@ function main(current_payload,new_url)
         return REPORT
     end
     local body = resp.body:GetStrOrNil()
-    local css_pattern = generate_css_selector(current_payload)
-    if string.len(css_pattern) > 0 then
-        local searcher = html_search(body,css_pattern)
-        if string.len(searcher) > 0 then
-            println(string.format("RXSS: %s | %s | %s ",resp.url:GetStrOrNil(),"",css_pattern))
-            REPORT["url"] = new_url
-            REPORT["match"] = css_pattern
-            REPORT["payload"] = current_payload
-            VALID = true
+    local headers = resp.headers:GetHeadersOrNil()
+    local content_type = headers["content-type"]
+    if content_type ~= nil then
+        if string.find(content_type,"html") then
+
+            -- Generate Css Selector pattern to find the xss payload in the page
+            local css_pattern = generate_css_selector(current_payload)
+            if string.len(css_pattern) > 0 then
+                -- Search in the response body with the Css Selector pattern of the payload
+                local searcher = html_search(body,css_pattern)
+                if string.len(searcher) > 0 then
+                    println(string.format("RXSS: %s | %s | %s ",resp.url:GetStrOrNil(),current_payload,css_pattern))
+                    REPORT["url"] = new_url
+                    REPORT["match"] = css_pattern
+                    REPORT["payload"] = current_payload
+                    VALID = true
+                end
+            end
+
         end
     end
     return REPORT
