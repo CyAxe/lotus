@@ -1,106 +1,50 @@
 pub mod utils;
-use futures::{stream, StreamExt};
+use futures::{lock::Mutex, stream, StreamExt};
 use log::{debug, error, info, warn};
 use mlua::Lua;
 use thirtyfour::prelude::*;
-use interactsh_rs::client;
 
 use utils::html::{css_selector, html_parse, html_search};
+use utils::http as http_sender;
 use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::Read;
 use std::io::Write;
-use std::sync::{Arc, Mutex};
-use std::collections::HashMap;
+use std::path::Path;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct LuaLoader<'a> {
-    output_dir: Arc<Mutex<String>>,
+    output_dir: String,
     bar: &'a indicatif::ProgressBar,
 }
 
 impl<'a> LuaLoader<'a> {
     pub fn new(bar: &'a indicatif::ProgressBar, output_dir: String) -> LuaLoader {
-        LuaLoader {
-            output_dir: Arc::new(Mutex::new(output_dir)),
-            bar,
-        }
+        LuaLoader { output_dir, bar }
     }
 
     fn write_report(&self, results: &str) {
-        let out_dir = self.output_dir.lock().unwrap();
         OpenOptions::new()
             .write(true)
             .append(true)
             .create(true)
-            .open(out_dir.to_string())
+            .open(&self.output_dir)
             .expect("Could not open file")
             .write_all(format!("{}\n", results).as_str().as_bytes())
             .expect("Could not write to file");
     }
-    fn get_activefunc(&self) -> Lua {
-        let lua = Lua::new();
-        lua.globals()
-            .set(
-                "welcome",
-                lua.create_function(|_, name: String| {
-                    println!("WELCOME {}", name);
-                    Ok(())
-                })
-                .unwrap(),
-            )
-            .unwrap();
-        lua.globals()
-            .set(
-                "set_urlvalue",
-                lua.create_function(|_, (url, param, payload): (String, String, String)| {
-                    Ok(set_urlvalue(&url, &param, &payload))
-                })
-                .unwrap(),
-            )
-            .unwrap();
-
-        lua.globals()
-            .set(
-                "send_req",
-                lua.create_async_function(|_, url: String| async move {
-                    let mut sender = utils::http::Sender::init();
-                    Ok(sender.send(url).await)
-                })
-                .unwrap(),
-            )
-            .unwrap();
+    fn get_matching_func(&self, lua: &Lua) {
         // Regex Match
         lua.globals()
             .set(
                 "is_match",
                 lua.create_function(|_, (pattern, text): (String, String)| {
                     Ok(is_match(pattern, text))
-                })
-                .unwrap(),
-            )
-            .unwrap();
-        lua.globals()
-            .set(
-                "sleep",
-                lua.create_async_function(|_, time: u64| async move {
-                    tokio::time::sleep(tokio::time::Duration::from_secs(time)).await;
-                    Ok(())
-                })
-                .unwrap(),
-            )
-            .unwrap();
-        // ProgressBar
-        let bar = self.bar.clone();
-        lua.globals()
-            .set(
-                "println",
-                lua.create_function(move |_, msg: String| {
-                    bar.println(format!("{} {}", console::Emoji("🔥", "fire"), msg));
-                    Ok(())
                 })
                 .unwrap(),
             )
@@ -123,11 +67,31 @@ impl<'a> LuaLoader<'a> {
             )
             .unwrap();
 
-        // Set Functions
-        let set_urlvalue =
-            lua.create_function(|_, (url, param, payload): (String, String, String)| {
-                Ok(set_urlvalue(&url, &param, &payload))
-            });
+        lua.globals()
+            .set(
+                "html_search",
+                lua.create_function(|_, (html, pattern): (String, String)| {
+                    Ok(html_search(&html, &pattern))
+                })
+                .unwrap(),
+            )
+            .unwrap();
+    }
+
+    fn get_utilsfunc(&self, lua: &Lua) {
+        // ProgressBar
+        let bar = self.bar.clone();
+        lua.globals()
+            .set(
+                "println",
+                lua.create_function(move |_, msg: String| {
+                    bar.println(format!("{}", msg));
+                    Ok(())
+                })
+                .unwrap(),
+            )
+            .unwrap();
+
         let log_info = lua
             .create_function(|_, log_msg: String| {
                 info!("{}", log_msg);
@@ -152,52 +116,12 @@ impl<'a> LuaLoader<'a> {
                 Ok(())
             })
             .unwrap();
-        let change_url = lua
-            .create_function(
-                |_, (url, payload, remove_content): (String, String, bool)| {
-                    Ok(change_urlquery(url, payload, remove_content))
-                },
-            )
-            .unwrap();
 
-        lua.globals().set("log_info", log_info).unwrap();
-        lua.globals().set("log_error", log_error).unwrap();
-        lua.globals().set("log_debug", log_debug).unwrap();
-        lua.globals().set("log_warn", log_warn).unwrap();
-        lua.globals().set("change_urlquery", change_url).unwrap();
-        lua.globals()
-            .set("set_urlvalue", set_urlvalue.unwrap())
-            .unwrap();
-        lua.globals()
-            .set(
-                "generate_css_selector",
-                lua.create_function(|_, html: String| Ok(css_selector(&html)))
-                    .unwrap(),
-            )
-            .unwrap();
-
-        lua.globals()
-            .set("oast",
-                 lua.create_async_function(|_, ()| async move {
-                     let c = client::builder::ClientBuilder::default().build();
-                     let r = c.unwrap().register().await.unwrap();
-                     println!("\n\n{:?}\n\n",r.get_interaction_url());
-                     Ok(())
-                 }).unwrap()
-                 ).unwrap();
-        lua.globals()
-            .set(
-                "urljoin",
-                lua.create_function(|_, (url, path): (String, String)| Ok(urljoin(url, path)))
-                    .unwrap(),
-            )
-            .unwrap();
         lua.globals()
             .set(
                 "read",
                 lua.create_function(|_ctx, file_path: String| {
-                    use std::path::Path;
-                    if Path::new(&file_path).exists() == true {
+                    if Path::new(&file_path).exists() {
                         let mut file = File::open(&file_path)?;
                         let mut file_content = String::new();
                         file.read_to_string(&mut file_content)?;
@@ -209,28 +133,92 @@ impl<'a> LuaLoader<'a> {
                 .unwrap(),
             )
             .unwrap();
+        lua.globals().set("log_info", log_info).unwrap();
+        lua.globals().set("log_error", log_error).unwrap();
+        lua.globals().set("log_debug", log_debug).unwrap();
+        lua.globals().set("log_warn", log_warn).unwrap();
+    }
 
+    fn get_httpfunc(&self, lua: &Lua) {
         lua.globals()
             .set(
-                "html_search",
-                lua.create_function(|_, (html, pattern): (String, String)| {
-                    Ok(html_search(&html, &pattern))
+                "set_urlvalue",
+                lua.create_function(|_, (url, param, payload): (String, String, String)| {
+                    Ok(set_urlvalue(&url, &param, &payload))
                 })
                 .unwrap(),
             )
             .unwrap();
 
-        lua
+        lua.globals()
+            .set(
+                "sleep",
+                lua.create_async_function(|_, time: u64| async move {
+                    tokio::time::sleep(tokio::time::Duration::from_secs(time)).await;
+                    Ok(())
+                })
+                .unwrap(),
+            )
+            .unwrap();
+        // Set Functions
+        let set_urlvalue =
+            lua.create_function(|_, (url, param, payload): (String, String, String)| {
+                Ok(set_urlvalue(&url, &param, &payload))
+            });
+        let change_url = lua
+            .create_function(
+                |_, (url, payload, remove_content): (String, String, bool)| {
+                    Ok(change_urlquery(url, payload, remove_content))
+                },
+            )
+            .unwrap();
+        lua.globals().set("change_urlquery", change_url).unwrap();
+        lua.globals()
+            .set("set_urlvalue", set_urlvalue.unwrap())
+            .unwrap();
+
+        lua.globals()
+            .set(
+                "urljoin",
+                lua.create_function(|_, (url, path): (String, String)| Ok(urljoin(url, path)))
+                    .unwrap(),
+            )
+            .unwrap();
     }
+
     pub async fn run_scan(
         &self,
         driver: Option<Arc<Mutex<WebDriver>>>,
         script_code: &'a str,
         script_dir: &'a str,
         target_url: &'a str,
+        _proxy: &'a str,
+        _timeout: &'a u64,
+        _redirects: &'a u32,
     ) -> mlua::Result<()> {
-        let lua = self.get_activefunc();
+        let lua = Lua::new();
+        self.get_httpfunc(&lua);
+        self.get_utilsfunc(&lua);
+        self.get_matching_func(&lua);
         lua.globals().set("TARGET_URL", target_url).unwrap();
+        lua.globals()
+            .set(
+                "tester",
+                lua.create_function(|_ctx, name: mlua::Value| {
+                    match name {
+                        mlua::Value::String(ref data) => {
+                            if data == &"bruh".to_string() {
+                                println!("YES");
+                            }
+                        }
+                        _ => {}
+                    }
+                    println!(">> {:?} | ", name);
+                    Ok(())
+                })
+                .unwrap(),
+            )
+            .unwrap();
         match driver {
             None => {}
             _ => {
@@ -239,9 +227,9 @@ impl<'a> LuaLoader<'a> {
                         "open",
                         lua.create_function(move |_, url: String| {
                             futures::executor::block_on({
-                                let driver = Arc::clone(&driver.as_ref().unwrap());
+                                let driver = Arc::clone(driver.as_ref().unwrap());
                                 async move {
-                                    driver.lock().unwrap().goto(url).await.unwrap();
+                                    driver.lock().await.goto(url).await.unwrap();
                                 }
                             });
                             Ok(())
@@ -272,44 +260,52 @@ impl<'a> LuaLoader<'a> {
                 });
             all_payloads
         };
+        // HTTP Sender
+        lua.globals()
+            .set(
+                "http",
+                http_sender::Sender::init(
+                    Some(
+                        "http://localhost:8080/"
+                            .to_string()
+                            .parse::<url::Url>()
+                            .unwrap(),
+                    ),
+                    2,
+                    1,
+                ),
+            )
+            .unwrap();
+
         let main_func = lua.globals().get::<_, mlua::Function>("main").unwrap();
-        let script_threads = lua.globals().get::<_, usize>("THREADS").unwrap();
-        let globals = lua.globals();
-        let reports = stream::iter(payloads.into_iter())
+        let script_threads = lua.globals().get::<_, usize>("THREADS").unwrap_or(5);
+        stream::iter(payloads.into_iter())
             .map(move |payload| {
-                let globals = globals.clone();
                 let main_func = main_func.clone();
                 async move {
-                    if globals.get::<_, bool>("STOP_AFTER_MATCH").unwrap() == true {
-                        if globals.get::<_, bool>("VALID").unwrap() == false {
-                            main_func
-                                .call_async::<_, mlua::Table>(payload)
-                                .await
-                                .unwrap();
-                        }
-                    } else {
-                        main_func
-                            .call_async::<_, mlua::Table>(payload)
-                            .await
-                            .unwrap();
-                    }
-                    globals.get::<_, mlua::Table>("REPORT").unwrap()
+                    main_func
+                        .call_async::<_, mlua::Table>(payload)
+                        .await
+                        .unwrap();
                 }
             })
             .buffer_unordered(script_threads)
             .collect::<Vec<_>>()
             .await;
         let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
-        if out_table == true {
-            reports.iter().for_each(|out| {
-                let mut test_report: HashMap<String, mlua::Value> = HashMap::new();
-                out.clone().pairs::<String,mlua::Value>().for_each(|out_report| {
+
+        if out_table {
+            let mut test_report: HashMap<String, mlua::Value> = HashMap::new();
+            lua.globals()
+                .get::<_, mlua::Table>("REPORT")
+                .unwrap()
+                .pairs::<String, mlua::Value>()
+                .for_each(|out_report| {
                     let current_out = out_report.clone();
-                    test_report.insert(current_out.unwrap().0,out_report.unwrap().1);
+                    test_report.insert(current_out.unwrap().0, out_report.unwrap().1);
                 });
-                let results = serde_json::to_string(&test_report).unwrap();
-                self.write_report(&results);
-            });
+            let results = serde_json::to_string(&test_report).unwrap();
+            self.write_report(&results);
         }
         self.bar.inc(1);
         Ok(())

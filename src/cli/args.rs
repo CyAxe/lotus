@@ -8,10 +8,7 @@ pub fn cmd_args() -> ArgMatches {
         .subcommands(vec![
             Command::new("tools")
                 .about("Run Automation Mode")
-                .arg(
-                    Arg::with_name("")
-                    )
-            ,
+                .arg(Arg::with_name("")),
             Command::new("urls")
                 .about("working with urls only")
                 .arg(
@@ -21,6 +18,14 @@ pub fn cmd_args() -> ArgMatches {
                         .takes_value(true)
                         .default_value("10")
                         .long("workers"),
+                )
+                .arg(
+                    Arg::with_name("run_shell")
+                        .help("Run Actions after finding bugs")
+                        .takes_value(true)
+                        .short('c')
+                        .long("run-command")
+                        .default_value(""),
                 )
                 .arg(
                     Arg::with_name("log")

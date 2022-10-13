@@ -32,14 +32,14 @@ pub fn css_selector(html: &str) -> String {
                 if attr.1.to_string().len() > 0 {
                     search.push_str(&format!(
                         r#"[{}="{}"]"#,
-                        attr.0.local.to_string(),
-                        attr.1.to_string().replace("'", "\\'").replace("\"", "\\\"")
+                        attr.0.local,
+                        attr.1.replace('\'', "\\'").replace('\"', "\\\"")
                     ));
                 } else {
-                    search.push_str(&format!(r#"[{}]"#, attr.0.local.to_string()));
+                    search.push_str(&format!(r#"[{}]"#, attr.0.local));
                 }
             });
-            if search.contains("[") {
+            if search.contains('[') {
                 found.push_str(&search);
             }
         }
@@ -49,7 +49,7 @@ pub fn css_selector(html: &str) -> String {
 
 pub fn html_parse(html: &str, payload: &str) -> Vec<Location> {
     let mut found: Vec<Location> = Vec::new();
-    if payload.len() == 0 {
+    if payload.is_empty() {
         return found;
     }
     let document = Html::parse_document(html);

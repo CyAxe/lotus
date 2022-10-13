@@ -20,9 +20,9 @@ pub fn change_urlquery(
         });
 
     scan_params.iter().for_each(|(key, value)| {
-        payload.split("\n").into_iter().for_each(|payload| {
+        payload.split('\n').into_iter().for_each(|payload| {
             let mut new_params = scan_params.clone();
-            if remove_content == true {
+            if remove_content {
                 new_params.insert(key.to_string(), payload.to_string());
             } else {
                 new_params.insert(key.to_string(), value.as_str().to_owned() + payload);
@@ -47,7 +47,7 @@ pub fn set_urlvalue(url: &str, param: &str, payload: &str) -> String {
         .iter()
         .for_each(|(k, v)| {
             if k == param {
-                final_params.insert(k.to_string(), format!("{}{}", v.to_string(), payload));
+                final_params.insert(k.to_string(), format!("{}{}", v, payload));
             } else {
                 final_params.insert(k.to_string(), v.to_string());
             }

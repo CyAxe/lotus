@@ -4,7 +4,10 @@ mod logger;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    let current_subcommand = args::cmd_args().subcommand_name().unwrap().to_string();
+    let current_subcommand = args::cmd_args()
+        .subcommand_name()
+        .unwrap_or("urls")
+        .to_string();
     if args::cmd_args()
         .subcommand_matches(&current_subcommand)
         .unwrap()
