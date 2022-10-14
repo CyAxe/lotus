@@ -1,6 +1,9 @@
 use lotus::Lotus;
+use lotus::RequestOpts;
 mod args;
 mod logger;
+
+
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -31,6 +34,35 @@ async fn main() -> Result<(), std::io::Error> {
             .unwrap()
             .to_string(),
     );
+    let request_opts = RequestOpts {
+        proxy: match args::cmd_args()
+            .subcommand_matches(&current_subcommand)
+            .unwrap()
+            .value_of("proxy") {
+                Some(proxy) => {
+                    Some(proxy.to_string())
+                },
+                None => {
+                    None
+
+                }
+
+            },
+        timeout: args::cmd_args()
+            .subcommand_matches(&current_subcommand)
+            .unwrap()
+            .value_of("timeout")
+            .unwrap()
+            .to_string()
+            .parse::<u64>().unwrap(),
+        redirects: args::cmd_args()
+            .subcommand_matches(&current_subcommand)
+            .unwrap()
+            .value_of("redirects")
+            .unwrap()
+            .to_string()
+            .parse::<u32>().unwrap(),
+    };
     lottas
         .start(
             args::cmd_args()
@@ -41,6 +73,7 @@ async fn main() -> Result<(), std::io::Error> {
                 .trim()
                 .parse::<usize>()
                 .unwrap(),
+            request_opts,
             args::cmd_args()
                 .subcommand_matches(&current_subcommand)
                 .unwrap()

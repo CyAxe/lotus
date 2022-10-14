@@ -9,6 +9,12 @@ pub fn cmd_args() -> ArgMatches {
             Command::new("urls")
                 .about("working with urls only")
                 .arg(
+                    Arg::with_name("redirects")
+                        .help("Set limit of http redirects")
+                        .long("redirects")
+                        .default_value("10")
+                    )
+                .arg(
                     Arg::with_name("timeout")
                         .help("Set Connection timeout")
                         .long("timeout")
@@ -17,8 +23,10 @@ pub fn cmd_args() -> ArgMatches {
                 .arg(
                     Arg::with_name("proxy")
                         .help("Forward all connection through a proxy (eg: --proxy http://localhost:8080)")
+                        .required(false)
+                        .takes_value(true)
+                        .validator(url::Url::parse)
                         .long("proxy")
-                        .default_value("")
                     )
 
                 .arg(

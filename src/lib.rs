@@ -1,5 +1,7 @@
 mod core;
 use crate::core::utils::{bar::create_progress, files::filename_to_string};
+use crate::core::LuaLoader;
+pub use crate::core::RequestOpts;
 use futures::{stream, StreamExt};
 use glob::glob;
 use log::{debug, error};
@@ -16,7 +18,7 @@ impl Lotus {
         Lotus { script }
     }
 
-    pub async fn start(&self, threads: usize, script_threads: usize, output_path: &str) {
+    pub async fn start(&self, threads: usize,request: RequestOpts, script_threads: usize, output_path: &str) {
         if atty::is(atty::Stream::Stdin) {
             println!("No Urls found in Stdin");
             std::process::exit(0);
@@ -34,7 +36,7 @@ impl Lotus {
         // ProgressBar Settings
         let bar = create_progress(urls.len() as u64 * active.len() as u64);
 
-        let lualoader = Arc::new(core::LuaLoader::new(&bar, output_path.to_string()));
+        let lualoader = Arc::new(LuaLoader::new(&bar,request, output_path.to_string()));
         stream::iter(urls.into_iter())
             .map(move |url| {
                 let active = active.clone();
@@ -51,9 +53,6 @@ impl Lotus {
                                     &script_out,
                                     script_path,
                                     url,
-                                    "http://localhost:8080/",
-                                    &10,
-                                    &1,
                                 )
                                 .await
                                 .unwrap()

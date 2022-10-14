@@ -18,14 +18,22 @@ use std::path::Path;
 use std::sync::Arc;
 
 #[derive(Clone)]
+pub struct RequestOpts {
+    pub proxy: Option<String>,
+    pub timeout: u64,
+    pub redirects: u32
+}
+
+#[derive(Clone)]
 pub struct LuaLoader<'a> {
     output_dir: String,
+    request: RequestOpts,
     bar: &'a indicatif::ProgressBar,
 }
 
 impl<'a> LuaLoader<'a> {
-    pub fn new(bar: &'a indicatif::ProgressBar, output_dir: String) -> LuaLoader {
-        LuaLoader { output_dir, bar }
+    pub fn new(bar: &'a indicatif::ProgressBar,request: RequestOpts,output_dir: String) -> LuaLoader {
+        LuaLoader { output_dir,request, bar }
     }
 
     fn write_report(&self, results: &str) {
@@ -192,9 +200,6 @@ impl<'a> LuaLoader<'a> {
         script_code: &'a str,
         script_dir: &'a str,
         target_url: &'a str,
-        _proxy: &'a str,
-        _timeout: &'a u64,
-        _redirects: &'a u32,
     ) -> mlua::Result<()> {
         let lua = Lua::new();
         self.get_httpfunc(&lua);
@@ -265,14 +270,9 @@ impl<'a> LuaLoader<'a> {
             .set(
                 "http",
                 http_sender::Sender::init(
-                    Some(
-                        "http://localhost:8080/"
-                            .to_string()
-                            .parse::<url::Url>()
-                            .unwrap(),
-                    ),
-                    2,
-                    1,
+                    self.request.proxy.clone(),
+                    self.request.timeout,
+                    self.request.redirects
                 ),
             )
             .unwrap();

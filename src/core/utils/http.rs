@@ -9,7 +9,7 @@ use tealr::{mlu::FromToLua, TypeName};
 
 #[derive(Clone)]
 pub struct Sender {
-    proxy: Option<url::Url>,
+    proxy: Option<String>,
     timeout: u64,
     redirects: u32,
 }
@@ -28,7 +28,21 @@ impl UserData for Sender {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_async_method(
             "send",
-            |_, this, (method, url, body): (String, String, String)| async move {
+            |_, this, (method, url, req_body): (String, String, mlua::Value)| async move {
+                let body: String;
+                if req_body.type_name() == "string" {
+                    body = match req_body {
+                        mlua::Value::String(body) => {
+                            body.to_str().unwrap().to_string()
+                        },
+                        _ => {
+                            "".to_string()
+                        }
+                    };
+                } else {
+                    body = "".to_string();
+                }
+
                 let resp = this.send(&method, url, body).await;
                 Ok(resp)
             },
@@ -37,7 +51,7 @@ impl UserData for Sender {
 }
 
 impl Sender {
-    pub fn init(proxy: Option<url::Url>, timeout: u64, redirects: u32) -> Sender {
+    pub fn init(proxy: Option<String>, timeout: u64, redirects: u32) -> Sender {
         Sender {
             timeout,
             redirects,
@@ -48,7 +62,16 @@ impl Sender {
         HttpClientBuilder::new()
             .timeout(Duration::from_secs(self.timeout))
             .redirect_policy(RedirectPolicy::Limit(self.redirects))
-            .proxy(None)
+            .proxy({ 
+                match &self.proxy {
+                    Some(proxy) => {
+                            Some(proxy.parse().unwrap())
+                    },
+                    None => {
+                        None
+                    }
+                }
+            })
             .ssl_options(SslOption::DANGER_ACCEPT_INVALID_CERTS)
             .ssl_options(SslOption::DANGER_ACCEPT_REVOKED_CERTS)
             .ssl_options(SslOption::DANGER_ACCEPT_INVALID_HOSTS)
@@ -59,6 +82,7 @@ impl Sender {
         let current_request = Request::builder()
             .uri(url)
             .method(method)
+            .header("User-agent","Mozilla/5.0 (X11; Manjaro; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0")
             .body(body)
             .unwrap();
         let req = self

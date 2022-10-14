@@ -19,7 +19,7 @@ end
 
 
 function main(current_payload,new_url)
-    local resp = http:send("GET",new_url,"")
+    local resp = http:send("GET",new_url)
     if resp.errors:GetErrorOrNil() then
         local log_msg = string.format("[RXSS] Connection Error: %s",new_url)
         log_error(log_msg)
