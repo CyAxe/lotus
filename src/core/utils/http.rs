@@ -26,6 +26,28 @@ pub enum RespType {
 
 impl UserData for Sender {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method_mut(
+            "set_proxy", |_, this, the_proxy: mlua::Value| {
+                match the_proxy {
+                    mlua::Value::String(new_proxy) => {
+                        this.proxy = Some(new_proxy.to_str().unwrap().to_string());
+                    },
+                    _ => {
+                        this.proxy = None;
+                    }
+                };
+                Ok(())
+            }
+        );
+        methods.add_method_mut("set_timeout", |_, this, timeout: u64| {
+            this.timeout = timeout;
+            Ok(())
+        });
+
+        methods.add_method_mut("set_redirects", |_, this, redirects: u32| {
+            this.redirects = redirects;
+            Ok(())
+        });
         methods.add_async_method(
             "send",
             |_, this, (method, url, req_body): (String, String, mlua::Value)| async move {
@@ -58,6 +80,7 @@ impl Sender {
             proxy,
         }
     }
+
     fn build_client(&self) -> Result<isahc::HttpClient, isahc::Error> {
         HttpClientBuilder::new()
             .timeout(Duration::from_secs(self.timeout))
