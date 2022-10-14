@@ -9,20 +9,32 @@ pub fn cmd_args() -> ArgMatches {
             Command::new("urls")
                 .about("working with urls only")
                 .arg(
+                    Arg::with_name("timeout")
+                        .help("Set Connection timeout")
+                        .long("timeout")
+                        .default_value("10")
+                    )
+                .arg(
+                    Arg::with_name("proxy")
+                        .help("Forward all connection through a proxy (eg: --proxy http://localhost:8080)")
+                        .long("proxy")
+                        .default_value("")
+                    )
+
+                .arg(
+                    Arg::with_name("headers")
+                        .help("Set Default Headers for all connections (eg: --headers 'API-KEY: 123')")
+                        .long("headers")
+                        .default_value("")
+                    )
+
+                .arg(
                     Arg::with_name("workers")
                         .help("Number of works of urls")
                         .short('w')
                         .takes_value(true)
                         .default_value("10")
                         .long("workers"),
-                )
-                .arg(
-                    Arg::with_name("run_shell")
-                        .help("Run Actions after finding bugs")
-                        .takes_value(true)
-                        .short('c')
-                        .long("run-command")
-                        .default_value(""),
                 )
                 .arg(
                     Arg::with_name("log")
