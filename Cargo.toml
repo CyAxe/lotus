@@ -33,6 +33,7 @@ clap = "3.2.21"
 fern = "0.6.1"
 chrono = "0.4.22"
 console = "0.15.1"
+atty = "0.2.14"
 indicatif = "0.17.0"
 
 # REGEX AND MATCHES

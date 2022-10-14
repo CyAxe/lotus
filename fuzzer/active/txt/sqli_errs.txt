@@ -6,7 +6,7 @@ Warning.*?\Wmaxdb_
 nl\.cwi\.monetdb\.jdbc
 SQLServer JDBC Driver
 Pdo[./_\](Oracle|OCI)
-SQL Server[^&lt;&quot;]+[0-9a-fA-F]{8}
+SQL Server[^&lt;&quot;]+[0-9a-fA-F]{8}
 DB-Error.*
 quoted string not properly terminated
 check the manual that (corresponds to|fits) your MySQL server version
@@ -15,9 +15,9 @@ org\.jkiss\.dbeaver\.ext\.vertica
 /vertica/Parser/scan
 Altibase\.jdbc\.driver
 ODBC SQL Server Driver
-ORA-\d{5}
+ORA-\d{5}
 is not supported by MemSQL
-SQL Server[^&lt;&quot;]+Driver
+SQL Server[^&lt;&quot;]+Driver
 Warning.*?\Wsybase_
 Syntax error \(missing operator\) in query expression
 macromedia\.jdbc\.oracle
