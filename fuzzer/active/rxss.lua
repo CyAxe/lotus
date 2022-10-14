@@ -4,9 +4,9 @@ STOP_AFTER_MATCH = true
 THREADS = 1
 
 
-PAYLOADS = read(string.format("%s/txt/xss.txt",SCRIPT_PATH))
 
 function payloads_gen(url)
+    local PAYLOADS = read(string.format("%s/txt/xss.txt",SCRIPT_PATH))
     all_payloads = {}
     for payload in PAYLOADS:gmatch("[^\n]+") do
         new_querys = change_urlquery(url,payload)
@@ -19,8 +19,7 @@ end
 
 
 function main(current_payload,new_url)
-    local resp = send_req(new_url)
-
+    local resp = http:send("GET",new_url,"")
     if resp.errors:GetErrorOrNil() then
         local log_msg = string.format("[RXSS] Connection Error: %s",new_url)
         log_error(log_msg)
