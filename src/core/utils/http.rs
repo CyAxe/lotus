@@ -1,9 +1,6 @@
-use isahc::{
-    config::{RedirectPolicy, SslOption},
-    prelude::*,
-    HttpClientBuilder, Request,
-};
 use mlua::UserData;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::{redirect, Client, Proxy};
 use std::{collections::HashMap, time::Duration};
 use tealr::{mlu::FromToLua, TypeName};
 
@@ -26,19 +23,17 @@ pub enum RespType {
 
 impl UserData for Sender {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method_mut(
-            "set_proxy", |_, this, the_proxy: mlua::Value| {
-                match the_proxy {
-                    mlua::Value::String(new_proxy) => {
-                        this.proxy = Some(new_proxy.to_str().unwrap().to_string());
-                    },
-                    _ => {
-                        this.proxy = None;
-                    }
-                };
-                Ok(())
-            }
-        );
+        methods.add_method_mut("set_proxy", |_, this, the_proxy: mlua::Value| {
+            match the_proxy {
+                mlua::Value::String(new_proxy) => {
+                    this.proxy = Some(new_proxy.to_str().unwrap().to_string());
+                }
+                _ => {
+                    this.proxy = None;
+                }
+            };
+            Ok(())
+        });
         methods.add_method_mut("set_timeout", |_, this, timeout: u64| {
             this.timeout = timeout;
             Ok(())
@@ -50,22 +45,28 @@ impl UserData for Sender {
         });
         methods.add_async_method(
             "send",
-            |_, this, (method, url, req_body): (String, String, mlua::Value)| async move {
+            |_, this, (method, url, req_body, req_headers): (String, String, mlua::Value, mlua::Value)| async move {
                 let body: String;
-                if req_body.type_name() == "string" {
-                    body = match req_body {
-                        mlua::Value::String(body) => {
-                            body.to_str().unwrap().to_string()
-                        },
-                        _ => {
-                            "".to_string()
-                        }
-                    };
-                } else {
-                    body = "".to_string();
-                }
+                let mut all_headers = HeaderMap::new();
+                match req_headers {
+                    mlua::Value::Table(current_headers) => {
+                        current_headers.pairs::<String,String>().for_each(|currentheader| {
+                            all_headers.insert(HeaderName::from_bytes(currentheader.clone().unwrap().0.as_bytes()).unwrap(), HeaderValue::from_bytes(currentheader.unwrap().1.as_bytes()).unwrap());
+                        });
+                    },
+                    _ => {
+                    }
+                };
+                body = match req_body {
+                    mlua::Value::String(body) => {
+                        body.to_str().unwrap().to_string()
+                    },
+                    _ => {
+                        "".to_string()
+                    }
+                };
 
-                let resp = this.send(&method, url, body).await;
+                let resp = this.send(&method, url, body, all_headers).await;
                 Ok(resp)
             },
         );
@@ -81,41 +82,55 @@ impl Sender {
         }
     }
 
-    fn build_client(&self) -> Result<isahc::HttpClient, isahc::Error> {
-        HttpClientBuilder::new()
-            .timeout(Duration::from_secs(self.timeout))
-            .redirect_policy(RedirectPolicy::Limit(self.redirects))
-            .proxy({ 
-                match &self.proxy {
-                    Some(proxy) => {
-                            Some(proxy.parse().unwrap())
-                    },
-                    None => {
-                        None
-                    }
-                }
-            })
-            .ssl_options(SslOption::DANGER_ACCEPT_INVALID_CERTS)
-            .ssl_options(SslOption::DANGER_ACCEPT_REVOKED_CERTS)
-            .ssl_options(SslOption::DANGER_ACCEPT_INVALID_HOSTS)
-            .build()
+    fn build_client(&self) -> Result<reqwest::Client, reqwest::Error> {
+        match &self.proxy {
+            Some(the_proxy) => {
+                Client::builder()
+                    .timeout(Duration::from_secs(self.timeout))
+                    .redirect(redirect::Policy::limited(self.redirects as usize))
+                    .proxy(Proxy::all(the_proxy).unwrap())
+                    .no_trust_dns()
+                    .user_agent(
+                        "Mozilla/5.0 (X11; Manjaro; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0",
+                    )
+                    .danger_accept_invalid_certs(true)
+                    .build()
+            }
+            None => {
+                Client::builder()
+                    .timeout(Duration::from_secs(self.timeout))
+                    .redirect(redirect::Policy::limited(self.redirects as usize))
+                    .no_proxy()
+                    .no_trust_dns()
+                    .user_agent(
+                        "Mozilla/5.0 (X11; Manjaro; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0",
+                    )
+                    .danger_accept_invalid_certs(true)
+                    .build()
+            }
+        }
     }
-    pub async fn send(&self, method: &str, url: String, body: String) -> HashMap<String, RespType> {
+    pub async fn send(
+        &self,
+        method: &str,
+        url: String,
+        body: String,
+        headers: HeaderMap,
+    ) -> HashMap<String, RespType> {
         let mut resp_data: HashMap<String, RespType> = HashMap::new();
-        let current_request = Request::builder()
-            .uri(url)
-            .method(method)
-            .header("User-agent","Mozilla/5.0 (X11; Manjaro; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0")
-            .body(body)
-            .unwrap();
-        let req = self
+        match self
             .build_client()
             .unwrap()
-            .send_async(current_request)
-            .await;
-
-        match req {
-            Ok(mut resp) => {
+            .request(
+                reqwest::Method::from_bytes(method.as_bytes()).unwrap(),
+                url.clone(),
+            )
+            .headers(headers)
+            .body(body)
+            .send()
+            .await
+        {
+            Ok(resp) => {
                 let mut resp_headers: HashMap<String, String> = HashMap::new();
                 resp.headers()
                     .iter()
@@ -125,10 +140,7 @@ impl Sender {
                             header_value.to_str().unwrap().to_string(),
                         );
                     });
-                resp_data.insert(
-                    "url".to_string(),
-                    RespType::Str(resp.effective_uri().unwrap().to_string()),
-                );
+                resp_data.insert("url".to_string(), RespType::Str(url));
                 resp_data.insert(
                     "status".to_string(),
                     RespType::Str(resp.status().to_string()),

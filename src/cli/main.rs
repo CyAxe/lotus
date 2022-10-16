@@ -3,8 +3,6 @@ use lotus::RequestOpts;
 mod args;
 mod logger;
 
-
-
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     let current_subcommand = args::cmd_args()
@@ -38,30 +36,27 @@ async fn main() -> Result<(), std::io::Error> {
         proxy: match args::cmd_args()
             .subcommand_matches(&current_subcommand)
             .unwrap()
-            .value_of("proxy") {
-                Some(proxy) => {
-                    Some(proxy.to_string())
-                },
-                None => {
-                    None
-
-                }
-
-            },
+            .value_of("proxy")
+        {
+            Some(proxy) => Some(proxy.to_string()),
+            None => None,
+        },
         timeout: args::cmd_args()
             .subcommand_matches(&current_subcommand)
             .unwrap()
             .value_of("timeout")
             .unwrap()
             .to_string()
-            .parse::<u64>().unwrap(),
+            .parse::<u64>()
+            .unwrap(),
         redirects: args::cmd_args()
             .subcommand_matches(&current_subcommand)
             .unwrap()
             .value_of("redirects")
             .unwrap()
             .to_string()
-            .parse::<u32>().unwrap(),
+            .parse::<u32>()
+            .unwrap(),
     };
     lottas
         .start(

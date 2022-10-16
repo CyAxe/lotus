@@ -18,7 +18,13 @@ impl Lotus {
         Lotus { script }
     }
 
-    pub async fn start(&self, threads: usize,request: RequestOpts, script_threads: usize, output_path: &str) {
+    pub async fn start(
+        &self,
+        threads: usize,
+        request: RequestOpts,
+        script_threads: usize,
+        output_path: &str,
+    ) {
         if atty::is(atty::Stream::Stdin) {
             println!("No Urls found in Stdin");
             std::process::exit(0);
@@ -36,7 +42,7 @@ impl Lotus {
         // ProgressBar Settings
         let bar = create_progress(urls.len() as u64 * active.len() as u64);
 
-        let lualoader = Arc::new(LuaLoader::new(&bar,request, output_path.to_string()));
+        let lualoader = Arc::new(LuaLoader::new(&bar, request, output_path.to_string()));
         stream::iter(urls.into_iter())
             .map(move |url| {
                 let active = active.clone();
@@ -48,12 +54,7 @@ impl Lotus {
                         let lualoader = Arc::clone(&lualoader);
                         async move {
                             lualoader
-                                .run_scan(
-                                    None,
-                                    &script_out,
-                                    script_path,
-                                    url,
-                                )
+                                .run_scan(None, &script_out, script_path, url)
                                 .await
                                 .unwrap()
                         }

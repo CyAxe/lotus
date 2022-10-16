@@ -33,12 +33,16 @@ fn lua_report_func(vm: &Lua) -> &Lua {
         )
         .unwrap();
 
-
     vm.globals()
-        .set("save_file", vm.create_function(|_,(data, report_path) : (String, String)|{
-            save_file(&report_path, &data);
-            Ok(())
-        }).unwrap()).unwrap();
+        .set(
+            "save_file",
+            vm.create_function(|_, (data, report_path): (String, String)| {
+                save_file(&report_path, &data);
+                Ok(())
+            })
+            .unwrap(),
+        )
+        .unwrap();
     vm
 }
 

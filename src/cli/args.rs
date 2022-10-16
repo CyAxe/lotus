@@ -28,14 +28,6 @@ pub fn cmd_args() -> ArgMatches {
                         .validator(url::Url::parse)
                         .long("proxy")
                     )
-
-                .arg(
-                    Arg::with_name("headers")
-                        .help("Set Default Headers for all connections (eg: --headers 'API-KEY: 123')")
-                        .long("headers")
-                        .default_value("")
-                    )
-
                 .arg(
                     Arg::with_name("workers")
                         .help("Number of works of urls")
