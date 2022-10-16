@@ -39,7 +39,6 @@ function main(current_payload,url)
         VALID = false
         return report
      end
-    http:set_proxy()
     local resp = http:send("GET",url,"")
     if resp.errors:GetErrorOrNil() then
         local log_msg = string.format("[SQLI] Connection Error: %s",new_url)
@@ -48,7 +47,7 @@ function main(current_payload,url)
     end
 
     for err in SQLI_ERRORS:gmatch("[^\n]+") do
-        local match = is_match(err,resp.body:GetStrOrNil()) 
+        local match = is_match(err,resp.body:GetStrOrNil())
         if ( match == false or match == nil) then
             -- NOTHING
         else
