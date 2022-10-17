@@ -1,6 +1,6 @@
 use mlua::UserData;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use reqwest::{redirect, Client, Proxy};
+use reqwest::{redirect, Client, Method, Proxy};
 use std::{collections::HashMap, time::Duration};
 use tealr::{mlu::FromToLua, TypeName};
 
@@ -121,10 +121,7 @@ impl Sender {
         match self
             .build_client()
             .unwrap()
-            .request(
-                reqwest::Method::from_bytes(method.as_bytes()).unwrap(),
-                url.clone(),
-            )
+            .request(Method::from_bytes(method.as_bytes()).unwrap(), url.clone())
             .headers(headers)
             .body(body)
             .send()

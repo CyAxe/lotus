@@ -46,7 +46,6 @@ glob = "0.3.0"
 # HTTP & URLS
 serde_json = "1.0.85"
 serde = { version = "1.0.144", features = ["derive"] }
-isahc = "1.7.2"
 reqwest = "0.11.12"
 url = "2.2.2"
 thirtyfour = "0.31.0"
