@@ -1,6 +1,8 @@
 use mlua::UserData;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use reqwest::{redirect, Client, Method, Proxy};
+use reqwest::{
+    header::{HeaderMap, HeaderName, HeaderValue},
+    redirect, Client, Method, Proxy,
+};
 use std::{collections::HashMap, time::Duration};
 use tealr::{mlu::FromToLua, TypeName};
 
