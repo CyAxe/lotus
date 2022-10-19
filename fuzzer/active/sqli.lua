@@ -47,7 +47,7 @@ function main(current_payload,url)
     end
 
     for err in SQLI_ERRORS:gmatch("[^\n]+") do
-        local match = is_match(err,resp.body:GetStrOrNil()) 
+        local match = is_match(err,resp.body:GetStrOrNil())
         if ( match == false or match == nil) then
             -- NOTHING
         else

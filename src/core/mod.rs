@@ -21,7 +21,7 @@ use std::sync::Arc;
 pub struct RequestOpts {
     pub proxy: Option<String>,
     pub timeout: u64,
-    pub redirects: u32
+    pub redirects: u32,
 }
 
 #[derive(Clone)]
@@ -32,8 +32,16 @@ pub struct LuaLoader<'a> {
 }
 
 impl<'a> LuaLoader<'a> {
-    pub fn new(bar: &'a indicatif::ProgressBar,request: RequestOpts,output_dir: String) -> LuaLoader {
-        LuaLoader { output_dir,request, bar }
+    pub fn new(
+        bar: &'a indicatif::ProgressBar,
+        request: RequestOpts,
+        output_dir: String,
+    ) -> LuaLoader {
+        LuaLoader {
+            output_dir,
+            request,
+            bar,
+        }
     }
 
     fn write_report(&self, results: &str) {
@@ -206,24 +214,6 @@ impl<'a> LuaLoader<'a> {
         self.get_utilsfunc(&lua);
         self.get_matching_func(&lua);
         lua.globals().set("TARGET_URL", target_url).unwrap();
-        lua.globals()
-            .set(
-                "tester",
-                lua.create_function(|_ctx, name: mlua::Value| {
-                    match name {
-                        mlua::Value::String(ref data) => {
-                            if data == &"bruh".to_string() {
-                                println!("YES");
-                            }
-                        }
-                        _ => {}
-                    }
-                    println!(">> {:?} | ", name);
-                    Ok(())
-                })
-                .unwrap(),
-            )
-            .unwrap();
         match driver {
             None => {}
             _ => {
@@ -272,7 +262,7 @@ impl<'a> LuaLoader<'a> {
                 http_sender::Sender::init(
                     self.request.proxy.clone(),
                     self.request.timeout,
-                    self.request.redirects
+                    self.request.redirects,
                 ),
             )
             .unwrap();
