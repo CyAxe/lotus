@@ -24,6 +24,7 @@ impl Lotus {
         request: RequestOpts,
         script_threads: usize,
         output_path: &str,
+        custom_report: &str
     ) {
         if atty::is(atty::Stream::Stdin) {
             println!("No Urls found in Stdin");
@@ -54,7 +55,7 @@ impl Lotus {
                         let lualoader = Arc::clone(&lualoader);
                         async move {
                             lualoader
-                                .run_scan(None, &script_out, script_path, url)
+                                .run_scan(None, &script_out, script_path, url,custom_report)
                                 .await
                                 .unwrap()
                         }

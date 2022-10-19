@@ -58,6 +58,11 @@ async fn main() -> Result<(), std::io::Error> {
             .parse::<u32>()
             .unwrap(),
     };
+    let out_script = args::cmd_args()
+                .subcommand_matches(&current_subcommand)
+                .unwrap()
+                .value_of("out_script")
+                .unwrap_or("");
     lottas
         .start(
             args::cmd_args()
@@ -81,7 +86,12 @@ async fn main() -> Result<(), std::io::Error> {
                 .subcommand_matches(&current_subcommand)
                 .unwrap()
                 .value_of("output")
-                .unwrap(),
+                .unwrap_or(""),
+            &args::cmd_args()
+                .subcommand_matches(&current_subcommand)
+                .unwrap()
+                .value_of("out_script")
+                .unwrap_or("")
         )
         .await;
     Ok(())

@@ -8,6 +8,8 @@ use utils::html::{css_selector, html_parse, html_search};
 use utils::http as http_sender;
 use utils::is_match;
 use utils::url::{change_urlquery, set_urlvalue, urljoin};
+use utils::report::report_script;
+use utils::files::filename_to_string;
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -208,6 +210,7 @@ impl<'a> LuaLoader<'a> {
         script_code: &'a str,
         script_dir: &'a str,
         target_url: &'a str,
+        report_code: &'a str,
     ) -> mlua::Result<()> {
         let lua = Lua::new();
         self.get_httpfunc(&lua);
@@ -282,20 +285,23 @@ impl<'a> LuaLoader<'a> {
             .buffer_unordered(script_threads)
             .collect::<Vec<_>>()
             .await;
-        let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
-
-        if out_table {
-            let mut test_report: HashMap<String, mlua::Value> = HashMap::new();
-            lua.globals()
-                .get::<_, mlua::Table>("REPORT")
-                .unwrap()
-                .pairs::<String, mlua::Value>()
-                .for_each(|out_report| {
-                    let current_out = out_report.clone();
-                    test_report.insert(current_out.unwrap().0, out_report.unwrap().1);
-                });
-            let results = serde_json::to_string(&test_report).unwrap();
-            self.write_report(&results);
+        if report_code.len() > 0 {
+            report_script(filename_to_string(report_code).unwrap().as_str());
+        } else {
+            let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
+            if out_table {
+                let mut test_report: HashMap<String, mlua::Value> = HashMap::new();
+                lua.globals()
+                    .get::<_, mlua::Table>("REPORT")
+                    .unwrap()
+                    .pairs::<String, mlua::Value>()
+                    .for_each(|out_report| {
+                        let current_out = out_report.clone();
+                        test_report.insert(current_out.unwrap().0, out_report.unwrap().1);
+                    });
+                let results = serde_json::to_string(&test_report).unwrap();
+                self.write_report(&results);
+            }
         }
         self.bar.inc(1);
         Ok(())
