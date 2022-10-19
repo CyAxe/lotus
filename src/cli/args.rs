@@ -1,4 +1,5 @@
 use clap::{App, Arg, ArgMatches, Command};
+mod validator;
 
 pub fn cmd_args() -> ArgMatches {
     App::new("Lotus")
@@ -8,6 +9,14 @@ pub fn cmd_args() -> ArgMatches {
         .subcommands(vec![
             Command::new("urls")
                 .about("working with urls only")
+                .arg(
+                    Arg::with_name("out_script")
+                        .help("Use Custom Lua for reporting")
+                        .long("--lua-report")
+                        .validator(validator::file_exists)
+                        .takes_value(true)
+                        .required_unless_present("output")
+                    )
                 .arg(
                     Arg::with_name("redirects")
                         .help("Set limit of http redirects")
@@ -38,7 +47,7 @@ pub fn cmd_args() -> ArgMatches {
                 )
                 .arg(
                     Arg::with_name("log")
-                        .help("Save all lots to custom file")
+                        .help("Save all logs to custom file")
                         .takes_value(true)
                         .short('l')
                         .long("log"),
@@ -62,7 +71,7 @@ pub fn cmd_args() -> ArgMatches {
                 .arg(
                     Arg::with_name("output")
                         .help("Path of the JSON output fiel")
-                        .required(true)
+                        .required_if_eq("out_script","")
                         .takes_value(true)
                         .long("output")
                         .short('o'),
