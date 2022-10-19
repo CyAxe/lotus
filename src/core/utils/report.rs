@@ -10,7 +10,6 @@ pub fn report_script(report_code: &str) {
     lua_report_func(&lua_vm);
     match lua_vm.load(report_code).exec() {
         Ok(_done) => {
-            println!("YES");
         }
         Err(err) => {
             println!("CODE: {}",report_code);
