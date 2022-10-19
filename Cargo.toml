@@ -16,7 +16,7 @@ path = "src/cli/main.rs"
 
 [dependencies]
 # interactsh
-interactsh-rs = { git ="https://github.com/pyroraptor07/interactsh-rs" , version="0.1.0-alpha"}
+interactsh-rs = { git ="https://github.com/pyroraptor07/interactsh-rs" , version="0.1.0-RC1"}
 
 # LUA
 mlua = { version = "0.8" , features=["serialize"]}
