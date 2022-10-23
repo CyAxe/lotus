@@ -14,7 +14,7 @@ https://github.com/rusty-sec/lotus/issues/39
 
 Currently this project is still under beta version, there are alot of features that are still under developing
 it would be better if you make a contribute to this project to make it finish faster, you can check the project [issues page](https://github.com/rusty-sec/lotus/issues) for more, 
-Don't forget to [Join Us on Slack](https://join.slack.com/t/rusty-sec/shared_invite/zt-1fhst3xkl-2k2EoroWXrffmRJ24_iMUw)
+Don't forget to [Join Us on Discord](https://discord.gg/pxw57D4v)
 ### Usage
 you can build it from source 
 ```bash
