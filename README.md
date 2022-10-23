@@ -3,6 +3,9 @@
 </p>
 
 
+:warning: We're Looking for maintainers
+https://github.com/rusty-sec/lotus/issues/39
+
 # lotus
 
 
