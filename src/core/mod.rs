@@ -4,12 +4,12 @@ use log::{debug, error, info, warn};
 use mlua::Lua;
 use thirtyfour::prelude::*;
 
+use utils::files::filename_to_string;
 use utils::html::{css_selector, html_parse, html_search};
 use utils::http as http_sender;
 use utils::is_match;
-use utils::url::{change_urlquery, set_urlvalue, urljoin};
 use utils::report::report_script;
-use utils::files::filename_to_string;
+use utils::url::{change_urlquery, set_urlvalue, urljoin};
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -205,7 +205,7 @@ impl<'a> LuaLoader<'a> {
             .unwrap();
     }
 
-    /// Start All Lua Scripts 
+    /// Start All Lua Scripts
     pub async fn run_scan(
         &self,
         driver: Option<Arc<Mutex<WebDriver>>>,
