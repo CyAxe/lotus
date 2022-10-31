@@ -1,17 +1,18 @@
 pub mod utils;
-use futures::{lock::Mutex, stream, StreamExt};
+use futures::lock::Mutex;
 use log::{debug, error, info, warn};
 use mlua::Lua;
 use thirtyfour::prelude::*;
+use url::Url;
 
 use utils::files::filename_to_string;
 use utils::html::{css_selector, html_parse, html_search};
 use utils::http as http_sender;
 use utils::is_match;
-use utils::report::report_script;
-use utils::url::{change_urlquery, set_urlvalue, urljoin};
+use utils::lua_report::report_script;
+use utils::report::{AllReports,OutReport};
+use utils::url::HttpMessage;
 
-use std::collections::HashMap;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::Read;
@@ -161,46 +162,12 @@ impl<'a> LuaLoader<'a> {
     fn get_httpfunc(&self, lua: &Lua) {
         lua.globals()
             .set(
-                "set_urlvalue",
-                lua.create_function(|_, (url, param, payload): (String, String, String)| {
-                    Ok(set_urlvalue(&url, &param, &payload))
-                })
-                .unwrap(),
-            )
-            .unwrap();
-
-        lua.globals()
-            .set(
                 "sleep",
                 lua.create_async_function(|_, time: u64| async move {
                     tokio::time::sleep(tokio::time::Duration::from_secs(time)).await;
                     Ok(())
                 })
                 .unwrap(),
-            )
-            .unwrap();
-        // Set Functions
-        let set_urlvalue =
-            lua.create_function(|_, (url, param, payload): (String, String, String)| {
-                Ok(set_urlvalue(&url, &param, &payload))
-            });
-        let change_url = lua
-            .create_function(
-                |_, (url, payload, remove_content): (String, String, bool)| {
-                    Ok(change_urlquery(url, payload, remove_content))
-                },
-            )
-            .unwrap();
-        lua.globals().set("change_urlquery", change_url).unwrap();
-        lua.globals()
-            .set("set_urlvalue", set_urlvalue.unwrap())
-            .unwrap();
-
-        lua.globals()
-            .set(
-                "urljoin",
-                lua.create_function(|_, (url, path): (String, String)| Ok(urljoin(url, path)))
-                    .unwrap(),
             )
             .unwrap();
     }
@@ -218,7 +185,20 @@ impl<'a> LuaLoader<'a> {
         self.get_httpfunc(&lua);
         self.get_utilsfunc(&lua);
         self.get_matching_func(&lua);
-        lua.globals().set("TARGET_URL", target_url).unwrap();
+        lua.globals()
+            .set(
+                "HttpMessage",
+                HttpMessage {
+                    url: Url::parse(target_url).unwrap(),
+                },
+            )
+            .unwrap();
+        lua.globals()
+            .set("Reports",AllReports {
+                reports: Vec::new()
+            }).unwrap();
+        lua.globals()
+            .set("NewReport", OutReport::init()).unwrap();
         match driver {
             None => {}
             _ => {
@@ -242,24 +222,7 @@ impl<'a> LuaLoader<'a> {
         lua.globals().set("SCRIPT_PATH", script_dir).unwrap();
 
         lua.load(script_code).exec_async().await.unwrap();
-        let payloads_func = lua
-            .globals()
-            .get::<_, mlua::Function>("payloads_gen")
-            .unwrap();
-        let payloads = payloads_func
-            .call_async::<_, mlua::Table>(target_url)
-            .await
-            .unwrap();
-        let payloads = {
-            let mut all_payloads = Vec::new();
-            payloads
-                .pairs::<mlua::Value, mlua::Value>()
-                .into_iter()
-                .for_each(|item| {
-                    all_payloads.push(item.unwrap());
-                });
-            all_payloads
-        };
+
         // HTTP Sender
         lua.globals()
             .set(
@@ -273,36 +236,25 @@ impl<'a> LuaLoader<'a> {
             .unwrap();
 
         let main_func = lua.globals().get::<_, mlua::Function>("main").unwrap();
-        let script_threads = lua.globals().get::<_, usize>("THREADS").unwrap_or(5);
-        stream::iter(payloads.into_iter())
-            .map(move |payload| {
-                let main_func = main_func.clone();
-                async move {
-                    main_func
-                        .call_async::<_, mlua::Table>(payload)
-                        .await
-                        .unwrap();
-                }
-            })
-            .buffer_unordered(script_threads)
-            .collect::<Vec<_>>()
-            .await;
+        debug!("MAIN FUNC STARTED");
+        main_func.call_async::<_, mlua::Value>(target_url).await.unwrap();
+        debug!("MAIN FUNC DONE");
+
         if report_code.len() > 0 {
+            // Still under development (not ready yet)
             report_script(filename_to_string(report_code).unwrap().as_str());
         } else {
-            let out_table = lua.globals().get::<_, bool>("VALID".to_owned()).unwrap();
-            if out_table {
-                let mut test_report: HashMap<String, mlua::Value> = HashMap::new();
-                lua.globals()
-                    .get::<_, mlua::Table>("REPORT")
-                    .unwrap()
-                    .pairs::<String, mlua::Value>()
-                    .for_each(|out_report| {
-                        let current_out = out_report.clone();
-                        test_report.insert(current_out.unwrap().0, out_report.unwrap().1);
-                    });
-                let results = serde_json::to_string(&test_report).unwrap();
-                self.write_report(&results);
+            let final_report = lua.globals().get::<_, AllReports>("Reports");
+            match final_report {
+                Ok(the_report) => {
+                    if the_report.clone().reports.len() > 0 {
+                        let results = serde_json::to_string(&the_report.reports).unwrap();
+                        self.write_report(&results);
+                    }
+                }
+                Err(err) => {
+                    error!("Report Error: {}", err);
+                }
             }
         }
         self.bar.inc(1);

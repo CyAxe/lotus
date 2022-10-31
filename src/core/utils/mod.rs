@@ -22,6 +22,7 @@ pub mod files;
 pub mod html;
 pub mod http;
 // pub mod oast;
+pub mod lua_report;
 pub mod report;
 pub mod url;
 
