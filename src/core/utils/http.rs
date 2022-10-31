@@ -132,6 +132,11 @@ impl Sender {
     /// ```lua
     /// local resp = http:send("GET","http://google.com")
     /// print(resp.body:GetStrOrNil())
+    ///
+    /// -- set proxy/timeout    
+    /// http:set_proxy("http://proxysite.com:8080")
+    /// http:set_timeout(15)
+    /// http:set_redirects(2) // set custom redirects limit
     /// ```
     pub async fn send(
         &self,
