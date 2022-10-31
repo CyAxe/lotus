@@ -11,6 +11,8 @@ pub enum Location {
     Comment(String),
 }
 
+/// Searching in HTML with css Selector pattern
+/// you can use it for XSS Attacks or web scraping
 pub fn html_search(html: &str, pattern: &str) -> String {
     let mut found = String::new();
     let document = Html::parse_document(html);
@@ -21,6 +23,7 @@ pub fn html_search(html: &str, pattern: &str) -> String {
     found
 }
 
+/// Generate Css Selector pattern for your XSS Payload
 pub fn css_selector(html: &str) -> String {
     let mut found = String::new();
     let document = Html::parse_document(html);
@@ -47,6 +50,8 @@ pub fn css_selector(html: &str) -> String {
     found
 }
 
+/// Parsing the HTML to find the location of custom Payload, the Function will return Location Enum
+/// you can use it to Generate the right XSS Payload based on where the payload is reflected
 pub fn html_parse(html: &str, payload: &str) -> Vec<Location> {
     let mut found: Vec<Location> = Vec::new();
     if payload.is_empty() {

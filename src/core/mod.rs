@@ -33,6 +33,7 @@ pub struct LuaLoader<'a> {
     bar: &'a indicatif::ProgressBar,
 }
 
+/// Start Lotus by adding the ProgressBar and http request options
 impl<'a> LuaLoader<'a> {
     pub fn new(
         bar: &'a indicatif::ProgressBar,
@@ -204,6 +205,7 @@ impl<'a> LuaLoader<'a> {
             .unwrap();
     }
 
+    /// Start All Lua Scripts 
     pub async fn run_scan(
         &self,
         driver: Option<Arc<Mutex<WebDriver>>>,
