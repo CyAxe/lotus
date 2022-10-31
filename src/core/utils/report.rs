@@ -33,6 +33,10 @@ impl UserData for OutReport {
             this.risk = Some(risk);
             Ok(())
         });
+        methods.add_method_mut("setName", |_, this, name: String| {
+            this.name = Some(name);
+            Ok(())
+        });
         methods.add_method_mut("setUrl", |_, this, url: String| {
             this.url = Some(url);
             Ok(())
