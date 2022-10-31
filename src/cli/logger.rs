@@ -1,3 +1,4 @@
+// Lotus init logger
 pub fn init_log(log_path: &str) -> Result<(), std::io::Error> {
     let logger = fern::Dispatch::new()
         .format(|out, message, record| {
@@ -13,6 +14,7 @@ pub fn init_log(log_path: &str) -> Result<(), std::io::Error> {
         .level_for("hyper", log::LevelFilter::Warn)
         .level_for("reqwest", log::LevelFilter::Warn)
         .level_for("isahc", log::LevelFilter::Warn);
+        // Disalbe unwanted loggers
     logger
         .chain(fern::log_file(log_path).unwrap())
         .apply()

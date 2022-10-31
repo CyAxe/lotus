@@ -9,11 +9,10 @@ pub fn report_script(report_code: &str) {
     let lua_vm = Lua::new();
     lua_report_func(&lua_vm);
     match lua_vm.load(report_code).exec() {
-        Ok(_done) => {
-        }
+        Ok(_done) => {}
         Err(err) => {
-            println!("CODE: {}",report_code);
-            println!("ERR {:?}",err);
+            println!("CODE: {}", report_code);
+            println!("ERR {:?}", err);
             error!("Lua Report Error: {}", err);
         }
     }

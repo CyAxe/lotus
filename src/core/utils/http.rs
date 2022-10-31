@@ -116,7 +116,7 @@ impl Sender {
             }
         }
     }
-    /// Send http request to custom url with user options (proxy, headers, etc.) 
+    /// Send http request to custom url with user options (proxy, headers, etc.)
     /// the response should be HashMap with RespType enum
     ///
     ///
