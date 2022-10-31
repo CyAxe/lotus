@@ -18,6 +18,9 @@ impl UserData for HttpMessage {
                 Ok(this.change_urlquery(payload, remove_content))
             },
         );
+        methods.add_method("getUrl",|_, this, ()| {
+            Ok(this.url.as_str().to_string())
+        });
         methods.add_method("getParams", |_, this, ()| {
             Ok(this.url.query().unwrap().to_string())
         });
