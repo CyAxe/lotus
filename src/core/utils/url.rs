@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use url::Url;
 
+/// Change all urlquery of the url at the sametime
 pub fn change_urlquery(
     url: String,
     payload: String,

@@ -1,5 +1,6 @@
 use indicatif::{ProgressBar, ProgressStyle};
 
+/// Lotus ProgressBar based on the length of `bar` parameter
 pub fn create_progress(bar: u64) -> ProgressBar {
     let bar = ProgressBar::new(bar);
     bar.set_style(

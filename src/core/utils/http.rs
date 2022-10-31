@@ -13,6 +13,7 @@ pub struct Sender {
     redirects: u32,
 }
 
+/// RespType for lua userdata
 #[derive(FromToLua, Clone, Debug, TypeName)]
 pub enum RespType {
     NoErrors,
@@ -23,6 +24,7 @@ pub enum RespType {
     Error(String),
 }
 
+/// Adding OOP for http sender class
 impl UserData for Sender {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut("set_proxy", |_, this, the_proxy: mlua::Value| {
@@ -76,6 +78,8 @@ impl UserData for Sender {
 }
 
 impl Sender {
+    /// Build your own http request module with user option
+    ///
     pub fn init(proxy: Option<String>, timeout: u64, redirects: u32) -> Sender {
         Sender {
             timeout,
@@ -112,6 +116,23 @@ impl Sender {
             }
         }
     }
+    /// Send http request to custom url with user options (proxy, headers, etc.) 
+    /// the response should be HashMap with RespType enum
+    ///
+    ///
+    /// ```rust
+    /// let mut headers = HashMap::new();
+    /// headers.insert("API-KEY".into(),"123".into());
+    /// let resp = http.send("PUT","http://example.com","post_id=1",headers)
+    /// ```
+    ///
+    /// ***
+    ///
+    /// for Lua API
+    /// ```lua
+    /// local resp = http:send("GET","http://google.com")
+    /// print(resp.body:GetStrOrNil())
+    /// ```
     pub async fn send(
         &self,
         method: &str,
