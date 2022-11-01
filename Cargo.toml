@@ -2,7 +2,7 @@
 name = "lotus"
 version = "0.3.0"
 edition = "2021"
-license = "MIT OR Apache-2.0"
+license = "GPLv2"
 keywords = ["security", "automation", "bugbounty"]
 categories = ["command-line-utilities"]
 description = "Fast Web Security Scanner written in Rust based on Lua Scripts"
