@@ -45,5 +45,4 @@ function main(url)
             end
         end
     end
-    return REPORT
 end
