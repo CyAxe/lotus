@@ -57,7 +57,11 @@ or download the binary file from [the release page](https://github.com/rusty-sec
     "param": "cat",
     "attack": "''123",
     "evidence": "check the manual that (corresponds to|fits) your MySQL server version"
-  },
+  }
+ 
+```
+
+
 ```bash
 Lotus 0.2-beta
 Khaled Nassar <knassar702@gmail.com>
