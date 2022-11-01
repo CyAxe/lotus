@@ -59,6 +59,7 @@ or download the binary file from [the release page](https://github.com/rusty-sec
     "evidence": "check the manual that (corresponds to|fits) your MySQL server version"
   }
  
+]
 ```
 
 
