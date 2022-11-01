@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 use indicatif::{ProgressBar, ProgressStyle};
 
 /// Lotus ProgressBar based on the length of `bar` parameter

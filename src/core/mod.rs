@@ -28,7 +28,7 @@ use utils::html::{css_selector, html_parse, html_search};
 use utils::http as http_sender;
 use utils::is_match;
 use utils::lua_report::report_script;
-use utils::report::{AllReports,OutReport};
+use utils::report::{AllReports, OutReport};
 use utils::url::HttpMessage;
 
 use std::fs::File;
@@ -212,11 +212,14 @@ impl<'a> LuaLoader<'a> {
             )
             .unwrap();
         lua.globals()
-            .set("Reports",AllReports {
-                reports: Vec::new()
-            }).unwrap();
-        lua.globals()
-            .set("NewReport", OutReport::init()).unwrap();
+            .set(
+                "Reports",
+                AllReports {
+                    reports: Vec::new(),
+                },
+            )
+            .unwrap();
+        lua.globals().set("NewReport", OutReport::init()).unwrap();
         match driver {
             None => {}
             _ => {
@@ -255,7 +258,10 @@ impl<'a> LuaLoader<'a> {
 
         let main_func = lua.globals().get::<_, mlua::Function>("main").unwrap();
         debug!("MAIN FUNC STARTED");
-        main_func.call_async::<_, mlua::Value>(target_url).await.unwrap();
+        main_func
+            .call_async::<_, mlua::Value>(target_url)
+            .await
+            .unwrap();
         debug!("MAIN FUNC DONE");
 
         if report_code.len() > 0 {

@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 use log::{debug, error};
 use mlua::Lua;
 use std::collections::HashMap;

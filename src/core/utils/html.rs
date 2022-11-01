@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 use scraper::Html;
 use scraper::Selector;
 use tealr::{mlu::FromToLua, TypeName};

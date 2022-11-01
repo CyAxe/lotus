@@ -36,20 +36,22 @@ impl UserData for HttpMessage {
                 Ok(this.change_urlquery(payload, remove_content))
             },
         );
-        methods.add_method("getUrl",|_, this, ()| {
-            Ok(this.url.as_str().to_string())
-        });
+        methods.add_method("getUrl", |_, this, ()| Ok(this.url.as_str().to_string()));
         methods.add_method("getTxtParams", |_, this, ()| {
             Ok(this.url.query().unwrap().to_string())
         });
         methods.add_method("getParams", |_, this, ()| {
             let mut all_params = Vec::new();
-            this.url.query_pairs().collect::<HashMap<_,_>>().iter().for_each(|(param_name,_param_value)|{
-                all_params.push(param_name.to_string());
-            });
+            this.url
+                .query_pairs()
+                .collect::<HashMap<_, _>>()
+                .iter()
+                .for_each(|(param_name, _param_value)| {
+                    all_params.push(param_name.to_string());
+                });
             Ok(all_params)
         });
-        methods.add_method("urlJoin", |_, this, new_path: String|{
+        methods.add_method("urlJoin", |_, this, new_path: String| {
             Ok(this.urljoin(new_path))
         });
     }

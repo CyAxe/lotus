@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 use lotus::Lotus;
 use lotus::RequestOpts;
 mod args;

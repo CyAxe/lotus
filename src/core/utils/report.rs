@@ -16,11 +16,10 @@
  * limitations under the License.
  */
 
-
 use mlua::UserData;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone,Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct OutReport {
     pub risk: Option<String>,        // info, low, Medium, High, Ciritcal
     pub name: Option<String>,        // name of your bug
@@ -95,5 +94,4 @@ impl OutReport {
             evidence: None,
         }
     }
-
 }

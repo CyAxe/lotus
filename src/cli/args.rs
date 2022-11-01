@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 use clap::{App, Arg, ArgMatches};
 mod validator;
 
