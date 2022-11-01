@@ -25,6 +25,7 @@ use futures::{stream, StreamExt};
 use glob::glob;
 use log::{debug, error};
 use std::io::{self, BufRead};
+use std::fs::metadata;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -89,6 +90,17 @@ impl Lotus {
 
     fn get_scripts(&self) -> Vec<(String, String)> {
         let mut scripts = Vec::new();
+        //
+        // Reading one file instead of the dir scripts
+        match metadata(&self.script).unwrap().is_file() {
+            true => {
+                let script_path = &self.script.clone();
+                scripts.push((filename_to_string(&self.script).unwrap(),script_path.clone()));
+                return scripts
+            },
+            false => {}
+        };
+
         for entry in
             glob(format!("{}{}", Path::new(&self.script).to_str().unwrap(), "/*.lua").as_str())
                 .expect("Failed to read glob pattern")
