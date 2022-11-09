@@ -27,7 +27,7 @@ pub struct OutReport {
     pub url: Option<String>,         // the effected url
     pub param: Option<String>,       // the effected parameter`
     pub attack: Option<String>,      // the payload
-    pub evidence: Option<String>,    // matching payload
+    pub evidence: Option<String>,    // matching payload search pattern
                                      // TODO: Request: RequestOpts {url, method, timeout, etc...}
 }
 
