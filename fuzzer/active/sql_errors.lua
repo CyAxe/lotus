@@ -25,6 +25,7 @@ local function send_report(url,parameter,payload,matching_error)
     NewReport:setParam(parameter)
     NewReport:setAttack(payload)
     NewReport:setEvidence(matching_error)
+    print_report(NewReport)
 end
 
 function main(url) 

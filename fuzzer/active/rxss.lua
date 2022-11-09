@@ -9,6 +9,7 @@ local function send_report(url,parameter,payload)
     NewReport:setParam(parameter)
     NewReport:setAttack(payload)
     NewReport:setEvidence(generate_css_selector(payload))
+    print_report(NewReport)
 end
 
 function main(url)
@@ -35,7 +36,6 @@ function main(url)
                         local body = resp.body:GetStrOrNil()
                         local searcher = html_search(body,css_pattern)
                         if string.len(searcher) > 0 then
-                            println(string.format("RXSS: %s | %s | %s ",resp.url:GetStrOrNil(),current_payload,css_pattern))
                             send_report(resp.url:GetStrOrNil(),param_name,payload)
                             Reports:addReport(NewReport)
                         end
