@@ -63,13 +63,11 @@ impl Lotus {
                 let script_path = &self.script.clone();
                 scripts.push((
                     filename_to_string(&self.script).unwrap(),
-                    script_path.clone()
+                    script_path.clone(),
                 ));
                 scripts
             }
-            false => {
-                self.get_scripts()
-            }
+            false => self.get_scripts(),
         };
 
         // ProgressBar Settings
@@ -85,7 +83,8 @@ impl Lotus {
                         let lualoader = Arc::clone(&lualoader);
                         let script_path = match metadata(&self.script).unwrap().is_file() {
                             true => {
-                                let script_path = Path::new(&self.script).parent().unwrap().to_str().unwrap();
+                                let script_path =
+                                    Path::new(&self.script).parent().unwrap().to_str().unwrap();
                                 script_path.to_owned()
                             }
                             false => {

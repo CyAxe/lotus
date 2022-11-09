@@ -17,6 +17,7 @@
  */
 
 pub mod utils;
+use console::Style;
 use futures::lock::Mutex;
 use log::{debug, error, info, warn};
 use mlua::Lua;
@@ -118,6 +119,41 @@ impl<'a> LuaLoader<'a> {
 
     fn get_utilsfunc(&self, lua: &Lua) {
         // ProgressBar
+        let bar = self.bar.clone();
+        lua.globals()
+            .set(
+                "print_report",
+                lua.create_function(move |_, the_report: OutReport| {
+                    let good_msg = format!("[{}]", Style::new().green().apply_to("+").to_string());
+                    let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
+                    let report_msg = format!(
+                        "
+{GOOD} {NAME} on: {URL}
+{INFO} Description: {Description}
+{INFO} Vulnerable Parameter: {PARAM}
+{INFO} Risk: {RISK}
+{INFO} Used Payload: {ATTACK}
+{INFO} Matching Pattern: {MATCHING}
+#--------------------------------------------------#
+
+                                     ",
+                        GOOD = good_msg,
+                        INFO = info_msg,
+                        NAME = the_report.name.unwrap(),
+                        URL = the_report.url.unwrap(),
+                        Description = the_report.description.unwrap(),
+                        PARAM = the_report.param.unwrap(),
+                        RISK = the_report.risk.unwrap(),
+                        ATTACK = the_report.attack.unwrap(),
+                        MATCHING = format!("{}",Style::new().on_red().apply_to(the_report.evidence.unwrap())),
+                    );
+                    bar.println(report_msg);
+                    Ok(())
+                })
+                .unwrap(),
+            )
+            .unwrap();
+
         let bar = self.bar.clone();
         lua.globals()
             .set(
