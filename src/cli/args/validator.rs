@@ -1,5 +1,5 @@
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
 
 pub(crate) fn file_exists(file_path: &str) -> Result<(), String> {
     match Path::new(file_path).exists() {
@@ -10,13 +10,7 @@ pub(crate) fn file_exists(file_path: &str) -> Result<(), String> {
 
 pub(crate) fn valid_json(json_value: &str) -> Result<(), String> {
     match serde_json::from_str::<HashMap<String, String>>(json_value) {
-        Ok(_json_data) => {
-            Ok(())
-        },
-        Err(_err) => {
-            Err(
-                format!("Headers Value is not a Valid Json data")
-                )
-        }
+        Ok(_json_data) => Ok(()),
+        Err(_err) => Err(format!("Headers Value is not a Valid Json data")),
     }
 }

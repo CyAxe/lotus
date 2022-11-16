@@ -38,8 +38,8 @@ pub fn cmd_args() -> ArgMatches {
                 .validator(validator::valid_json)
                 .takes_value(true)
                 .default_value("{}")
-                .long("headers")
-            )
+                .long("headers"),
+        )
         .arg(
             Arg::with_name("redirects")
                 .help("Set limit of http redirects")

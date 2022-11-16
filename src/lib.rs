@@ -17,7 +17,7 @@
  */
 
 mod core;
-use crate::core::utils::{bar::create_progress, files::filename_to_string};
+use crate::core::utils::{cli::bar::create_progress, files::filename_to_string};
 use crate::core::LuaLoader;
 pub use crate::core::RequestOpts;
 use futures::{stream, StreamExt};
@@ -53,7 +53,19 @@ impl Lotus {
         let urls = stdin
             .lock()
             .lines()
-            .map(|x| x.unwrap())
+            .map(|x| { 
+                let the_url = x.unwrap();
+                match url::Url::parse(&the_url) {
+                    Ok(_url) => {
+
+                    },
+                    Err(_err) => {
+                        println!("Parsing URL Error: {the_url}");
+                        std::process::exit(1);
+                    }
+                }
+                the_url
+            })
             .collect::<Vec<String>>();
 
         let urls = urls.iter().map(|url| url.as_str()).collect::<Vec<&str>>();

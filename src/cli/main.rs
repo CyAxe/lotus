@@ -29,10 +29,14 @@ async fn main() -> Result<(), std::io::Error> {
         logger::init_log(args::cmd_args().value_of("log").unwrap()).unwrap();
     }
     let lottas = Lotus::init(args::cmd_args().value_of("scripts").unwrap().to_string());
-    let parsed_headers: HashMap<String,String> = serde_json::from_str(args::cmd_args().value_of("default_headers").unwrap()).unwrap();
+    let parsed_headers: HashMap<String, String> =
+        serde_json::from_str(args::cmd_args().value_of("default_headers").unwrap()).unwrap();
     let mut user_headers = HeaderMap::new();
-    parsed_headers.iter().for_each(|(headername,headervalue)| {
-        user_headers.insert( HeaderName::from_bytes(headername.as_bytes()).unwrap() , HeaderValue::from_bytes(headervalue.as_bytes()).unwrap());
+    parsed_headers.iter().for_each(|(headername, headervalue)| {
+        user_headers.insert(
+            HeaderName::from_bytes(headername.as_bytes()).unwrap(),
+            HeaderValue::from_bytes(headervalue.as_bytes()).unwrap(),
+        );
     });
     drop(parsed_headers);
     let request_opts = RequestOpts {
