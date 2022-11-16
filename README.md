@@ -27,6 +27,9 @@ You will then need to download the lua scripts from our [github repository](http
 $ echo http://testphp.vulnweb.com/listproducts.php?cat=1 | lotus --scripts lotus-scripts/active --output test_out.json
 ```
 
+![image](https://user-images.githubusercontent.com/45688522/202260525-46caeaeb-8687-4723-a406-aea30e0ea9c6.png)
+
+
 ### Lua API
 We are working on creating a new document for this list as soon as possible, as it has not been updated for a long time 
 
