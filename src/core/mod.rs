@@ -21,17 +21,17 @@ use console::Style;
 use futures::lock::Mutex;
 use log::{debug, error, info, warn};
 use mlua::Lua;
-use thirtyfour::prelude::*;
 use reqwest::header::HeaderMap;
+use thirtyfour::prelude::*;
 use url::Url;
 
 use utils::files::filename_to_string;
-use utils::html::{css_selector, html_parse, html_search};
-use utils::http as http_sender;
+use utils::parsing::html::{css_selector, html_parse, html_search};
+use utils::parsing::url::HttpMessage;
+use utils::network::http as http_sender;
+use utils::output::lua_report::report_script;
+use utils::output::report::{AllReports, OutReport};
 use utils::is_match;
-use utils::lua_report::report_script;
-use utils::report::{AllReports, OutReport};
-use utils::url::HttpMessage;
 
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -39,7 +39,6 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
-
 
 #[derive(Clone)]
 pub struct RequestOpts {
@@ -148,7 +147,10 @@ impl<'a> LuaLoader<'a> {
                         PARAM = the_report.param.unwrap(),
                         RISK = the_report.risk.unwrap(),
                         ATTACK = the_report.attack.unwrap(),
-                        MATCHING = format!("{}",Style::new().on_red().apply_to(the_report.evidence.unwrap())),
+                        MATCHING = format!(
+                            "{}",
+                            Style::new().on_red().apply_to(the_report.evidence.unwrap())
+                        ),
                     );
                     bar.println(report_msg);
                     Ok(())

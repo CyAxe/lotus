@@ -17,14 +17,11 @@
  */
 
 use log::debug;
-pub mod bar;
+pub mod cli;
 pub mod files;
-pub mod html;
-pub mod http;
-// pub mod oast;
-pub mod lua_report;
-pub mod report;
-pub mod url;
+pub mod parsing;
+pub mod network;
+pub mod output;
 
 /// check if the regex pattern is matching with this string or not without get the matched parts
 /// you can use it for sqli errors for example
