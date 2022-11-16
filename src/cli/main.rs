@@ -32,6 +32,14 @@ async fn main() -> Result<(), std::io::Error> {
     let parsed_headers: HashMap<String, String> =
         serde_json::from_str(args::cmd_args().value_of("default_headers").unwrap()).unwrap();
     let mut user_headers = HeaderMap::new();
+    user_headers.insert(
+        HeaderName::from_bytes("User-agent".as_bytes()).unwrap(),
+        HeaderValue::from_bytes(
+            "Mozilla/5.0 (X11; Manjaro; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0"
+                .as_bytes(),
+        )
+        .unwrap(),
+    );
     parsed_headers.iter().for_each(|(headername, headervalue)| {
         user_headers.insert(
             HeaderName::from_bytes(headername.as_bytes()).unwrap(),
