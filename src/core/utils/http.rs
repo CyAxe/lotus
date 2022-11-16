@@ -26,6 +26,7 @@ use tealr::{mlu::FromToLua, TypeName};
 
 #[derive(Clone)]
 pub struct Sender {
+    headers: HeaderMap,
     proxy: Option<String>,
     timeout: u64,
     redirects: u32,
@@ -98,8 +99,9 @@ impl UserData for Sender {
 impl Sender {
     /// Build your own http request module with user option
     ///
-    pub fn init(proxy: Option<String>, timeout: u64, redirects: u32) -> Sender {
+    pub fn init(headers: HeaderMap, proxy: Option<String>, timeout: u64, redirects: u32) -> Sender {
         Sender {
+            headers,
             timeout,
             redirects,
             proxy,
@@ -112,6 +114,7 @@ impl Sender {
                 Client::builder()
                     .timeout(Duration::from_secs(self.timeout))
                     .redirect(redirect::Policy::limited(self.redirects as usize))
+                    .default_headers(self.headers.clone())
                     .proxy(Proxy::all(the_proxy).unwrap())
                     .no_trust_dns()
                     .user_agent(

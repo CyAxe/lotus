@@ -22,6 +22,7 @@ use futures::lock::Mutex;
 use log::{debug, error, info, warn};
 use mlua::Lua;
 use thirtyfour::prelude::*;
+use reqwest::header::HeaderMap;
 use url::Url;
 
 use utils::files::filename_to_string;
@@ -39,8 +40,10 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 
+
 #[derive(Clone)]
 pub struct RequestOpts {
+    pub headers: HeaderMap,
     pub proxy: Option<String>,
     pub timeout: u64,
     pub redirects: u32,
@@ -285,6 +288,7 @@ impl<'a> LuaLoader<'a> {
             .set(
                 "http",
                 http_sender::Sender::init(
+                    self.request.headers.clone(),
                     self.request.proxy.clone(),
                     self.request.timeout,
                     self.request.redirects,

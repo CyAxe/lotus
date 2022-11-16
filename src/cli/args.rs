@@ -33,6 +33,14 @@ pub fn cmd_args() -> ArgMatches {
                 .required_unless_present("output"),
         )
         .arg(
+            Arg::with_name("default_headers")
+                .help("Default Request Headers")
+                .validator(validator::valid_json)
+                .takes_value(true)
+                .default_value("{}")
+                .long("headers")
+            )
+        .arg(
             Arg::with_name("redirects")
                 .help("Set limit of http redirects")
                 .long("redirects")

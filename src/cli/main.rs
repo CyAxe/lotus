@@ -18,6 +18,8 @@
 
 use lotus::Lotus;
 use lotus::RequestOpts;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use std::collections::HashMap;
 mod args;
 mod logger;
 
@@ -27,7 +29,14 @@ async fn main() -> Result<(), std::io::Error> {
         logger::init_log(args::cmd_args().value_of("log").unwrap()).unwrap();
     }
     let lottas = Lotus::init(args::cmd_args().value_of("scripts").unwrap().to_string());
+    let parsed_headers: HashMap<String,String> = serde_json::from_str(args::cmd_args().value_of("default_headers").unwrap()).unwrap();
+    let mut user_headers = HeaderMap::new();
+    parsed_headers.iter().for_each(|(headername,headervalue)| {
+        user_headers.insert( HeaderName::from_bytes(headername.as_bytes()).unwrap() , HeaderValue::from_bytes(headervalue.as_bytes()).unwrap());
+    });
+    drop(parsed_headers);
     let request_opts = RequestOpts {
+        headers: user_headers,
         proxy: match args::cmd_args().value_of("proxy") {
             Some(proxy) => Some(proxy.to_string()),
             None => None,
