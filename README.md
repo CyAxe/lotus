@@ -12,8 +12,8 @@ https://github.com/rusty-sec/lotus/issues/39
 :zap: Fast Web Security Scanner written in Rust based on Lua Scripts :waning_gibbous_moon: :crab: 
 
 
-Here at Lotus, we strive to make this process of automating your own web security module as simple and fast as possible. 
-There is still a lot of development taking place on this project at the moment, as there are a lot of features that haven't been implemented yet such as (OAST, reading headers, reading raw requests instead of URLs, crawler, custom report script, etc.), so we would appreciate any contributions you may be able to provide to this project so that it can be finalized sooner. If you have any additional questions, please feel free to visit the github repo issues page and join our [Discord Server](https://discord.gg/nBYDPTzjSq)
+Here at Lotus, we strive to make the process of automating your own web security module as simple and fast as possible
+Currently, there is a lot of work being done on this project, as there are a number of features that have not yet been implemented (OAST, reading headers, reading raw requests rather than URLs, crawler, custom report script, etc.), thus any contribution you may be able to make to this project will assist in ensuring its completion as soon as possible. Please feel free to view the github repository issues page and join our Discord server (https://discord.gg/nBYDPTzjSq) if you have any further questions.
 
 ### Usage
 It can be built from source, but ensure that you install the package `openssl-dev` before running this command
