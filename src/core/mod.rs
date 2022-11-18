@@ -28,7 +28,7 @@ use utils::network::http as http_sender;
 use utils::output::lua_report::report_script;
 use utils::output::report::AllReports;
 use utils::parsing::url::HttpMessage;
-use utils::{get_utilsfunc,http_func, get_matching_func};
+use utils::{get_matching_func, get_utilsfunc, http_func};
 
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -86,9 +86,9 @@ impl<'a> LuaLoader<'a> {
         let lua = Lua::new();
 
         // Adding Lotus Lua Function
-        get_utilsfunc(self.bar,&lua);
+        get_utilsfunc(self.bar, &lua);
         get_matching_func(&lua);
-        http_func(target_url,&lua);
+        http_func(target_url, &lua);
 
         match driver {
             None => {}
@@ -135,14 +135,14 @@ impl<'a> LuaLoader<'a> {
             .unwrap();
         debug!("MAIN FUNC DONE");
 
-        if report_code.len() > 0 {
+        if !report_code.is_empty() {
             // Still under development (not ready yet)
             report_script(filename_to_string(report_code).unwrap().as_str());
         } else {
             let final_report = lua.globals().get::<_, AllReports>("Reports");
             match final_report {
                 Ok(the_report) => {
-                    if the_report.clone().reports.len() > 0 {
+                    if !the_report.reports.is_empty() {
                         let results = serde_json::to_string(&the_report.reports).unwrap();
                         self.write_report(&results);
                     }

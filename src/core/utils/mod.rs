@@ -22,14 +22,14 @@ pub mod network;
 pub mod output;
 pub mod parsing;
 
-use log::{debug,info, warn, error};
-use mlua::Lua;
-use url::Url;
-use parsing::url::HttpMessage;
-use parsing::html::{css_selector, html_parse, html_search};
 use console::Style;
-use output::report::{OutReport, AllReports};
-use tokio::time::{Duration,sleep}; 
+use log::{debug, error, info, warn};
+use mlua::Lua;
+use output::report::{AllReports, OutReport};
+use parsing::html::{css_selector, html_parse, html_search};
+use parsing::url::HttpMessage;
+use tokio::time::{sleep, Duration};
+use url::Url;
 
 use std::fs::File;
 use std::io::Read;
@@ -51,7 +51,7 @@ pub fn is_match(pattern: String, resp: String) -> bool {
     }
 }
 
-pub fn http_func(target_url: &str,lua: &Lua) {
+pub fn http_func(target_url: &str, lua: &Lua) {
     lua.globals()
         .set(
             "HttpMessage",
@@ -78,7 +78,7 @@ pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
         .set(
             "print_report",
             lua.create_function(move |_, the_report: OutReport| {
-                let good_msg = format!("[{}]", Style::new().green().apply_to("+").to_string());
+                let good_msg = format!("[{}]", Style::new().green().apply_to("+"));
                 let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
                 let report_msg = format!(
                     "
@@ -116,7 +116,7 @@ pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
         .set(
             "println",
             lua.create_function(move |_, msg: String| {
-                bar.println(format!("{}", msg));
+                bar.println(&msg);
                 Ok(())
             })
             .unwrap(),
@@ -158,7 +158,6 @@ pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
         )
         .unwrap();
 
-
     lua.globals()
         .set(
             "read",
@@ -186,10 +185,8 @@ pub fn get_matching_func(lua: &Lua) {
     lua.globals()
         .set(
             "is_match",
-            lua.create_function(|_, (pattern, text): (String, String)| {
-                Ok(is_match(pattern, text))
-            })
-            .unwrap(),
+            lua.create_function(|_, (pattern, text): (String, String)| Ok(is_match(pattern, text)))
+                .unwrap(),
         )
         .unwrap();
     lua.globals()
@@ -220,4 +217,3 @@ pub fn get_matching_func(lua: &Lua) {
         )
         .unwrap();
 }
-

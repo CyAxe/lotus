@@ -36,7 +36,7 @@ impl UserData for Sender {
         methods.add_async_method(
             "send",
             |_, this, (method, url, req_body, req_headers): (String, String, mlua::Value, mlua::Value)| async move {
-                let body: String;
+                
                 let mut all_headers = HeaderMap::new();
                 match req_headers {
                     mlua::Value::Table(current_headers) => {
@@ -47,7 +47,7 @@ impl UserData for Sender {
                     _ => {
                     }
                 };
-                body = match req_body {
+                let body: String = match req_body {
                     mlua::Value::String(body) => {
                         body.to_str().unwrap().to_string()
                     },

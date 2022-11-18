@@ -25,7 +25,7 @@ mod logger;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    if args::cmd_args().is_present("log") == true {
+    if args::cmd_args().is_present("log") {
         logger::init_log(args::cmd_args().value_of("log").unwrap()).unwrap();
     }
     let lottas = Lotus::init(args::cmd_args().value_of("scripts").unwrap().to_string());
@@ -49,10 +49,7 @@ async fn main() -> Result<(), std::io::Error> {
     drop(parsed_headers);
     let request_opts = RequestOpts {
         headers: user_headers,
-        proxy: match args::cmd_args().value_of("proxy") {
-            Some(proxy) => Some(proxy.to_string()),
-            None => None,
-        },
+        proxy: args::cmd_args().value_of("proxy").map(|proxy| proxy.to_string()),
         timeout: args::cmd_args()
             .value_of("timeout")
             .unwrap()
@@ -81,8 +78,8 @@ async fn main() -> Result<(), std::io::Error> {
                 .trim()
                 .parse::<usize>()
                 .unwrap(),
-            &args::cmd_args().value_of("output").unwrap_or(""),
-            &args::cmd_args().value_of("out_script").unwrap_or(""),
+            args::cmd_args().value_of("output").unwrap_or(""),
+            args::cmd_args().value_of("out_script").unwrap_or("")
         )
         .await;
     Ok(())

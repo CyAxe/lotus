@@ -27,7 +27,7 @@ pub fn create_progress(bar: u64) -> ProgressBar {
                 "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}",
             )
             .expect("ProgressBar Error")
-            .tick_chars(format!("{}", "⣾⣽⣻⢿⡿⣟⣯⣷").as_str())
+            .tick_chars("⣾⣽⣻⢿⡿⣟⣯⣷".to_string().as_str())
             .progress_chars("#>-"),
     );
     bar

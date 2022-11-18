@@ -47,26 +47,22 @@ impl Sender {
 
     fn build_client(&self) -> Result<reqwest::Client, reqwest::Error> {
         match &self.proxy {
-            Some(the_proxy) => {
-                Client::builder()
-                    .timeout(Duration::from_secs(self.timeout))
-                    .redirect(redirect::Policy::limited(self.redirects as usize))
-                    .default_headers(self.headers.clone())
-                    .proxy(Proxy::all(the_proxy).unwrap())
-                    .no_trust_dns()
-                    .danger_accept_invalid_certs(true)
-                    .build()
-            }
-            None => {
-                Client::builder()
-                    .timeout(Duration::from_secs(self.timeout))
-                    .redirect(redirect::Policy::limited(self.redirects as usize))
-                    .no_proxy()
-                    .no_trust_dns()
-                    .default_headers(self.headers.clone())
-                    .danger_accept_invalid_certs(true)
-                    .build()
-            }
+            Some(the_proxy) => Client::builder()
+                .timeout(Duration::from_secs(self.timeout))
+                .redirect(redirect::Policy::limited(self.redirects as usize))
+                .default_headers(self.headers.clone())
+                .proxy(Proxy::all(the_proxy).unwrap())
+                .no_trust_dns()
+                .danger_accept_invalid_certs(true)
+                .build(),
+            None => Client::builder()
+                .timeout(Duration::from_secs(self.timeout))
+                .redirect(redirect::Policy::limited(self.redirects as usize))
+                .no_proxy()
+                .no_trust_dns()
+                .default_headers(self.headers.clone())
+                .danger_accept_invalid_certs(true)
+                .build(),
         }
     }
     /// Send http request to custom url with user options (proxy, headers, etc.)

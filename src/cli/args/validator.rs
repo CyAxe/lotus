@@ -11,6 +11,6 @@ pub(crate) fn file_exists(file_path: &str) -> Result<(), String> {
 pub(crate) fn valid_json(json_value: &str) -> Result<(), String> {
     match serde_json::from_str::<HashMap<String, String>>(json_value) {
         Ok(_json_data) => Ok(()),
-        Err(_err) => Err(format!("Headers Value is not a Valid Json data")),
+        Err(_err) => Err("Headers Value is not a Valid Json data".to_string()),
     }
 }

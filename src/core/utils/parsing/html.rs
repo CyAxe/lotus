@@ -48,9 +48,9 @@ pub fn css_selector(html: &str) -> String {
     document.tree.values().for_each(|node| {
         if node.as_element().is_some() {
             let element = node.as_element().unwrap();
-            let mut search = format!("{}", element.name());
+            let mut search = element.name().to_string();
             element.attrs.iter().for_each(|attr| {
-                if attr.1.to_string().len() > 0 {
+                if !attr.1.to_string().is_empty() {
                     search.push_str(&format!(
                         r#"[{}="{}"]"#,
                         attr.0.local,
