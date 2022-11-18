@@ -17,27 +17,21 @@
  */
 
 pub mod utils;
-use console::Style;
 use futures::lock::Mutex;
-use log::{debug, error, info, warn};
+use log::{debug, error};
 use mlua::Lua;
 use reqwest::header::HeaderMap;
 use thirtyfour::prelude::*;
-use url::Url;
 
 use utils::files::filename_to_string;
-use utils::parsing::html::{css_selector, html_parse, html_search};
-use utils::parsing::url::HttpMessage;
 use utils::network::http as http_sender;
 use utils::output::lua_report::report_script;
-use utils::output::report::{AllReports, OutReport};
-use utils::is_match;
+use utils::output::report::AllReports;
+use utils::parsing::url::HttpMessage;
+use utils::{get_utilsfunc,http_func, get_matching_func};
 
-use std::fs::File;
 use std::fs::OpenOptions;
-use std::io::Read;
 use std::io::Write;
-use std::path::Path;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -79,157 +73,6 @@ impl<'a> LuaLoader<'a> {
             .write_all(format!("{}\n", results).as_str().as_bytes())
             .expect("Could not write to file");
     }
-    fn get_matching_func(&self, lua: &Lua) {
-        // Regex Match
-        lua.globals()
-            .set(
-                "is_match",
-                lua.create_function(|_, (pattern, text): (String, String)| {
-                    Ok(is_match(pattern, text))
-                })
-                .unwrap(),
-            )
-            .unwrap();
-        lua.globals()
-            .set(
-                "generate_css_selector",
-                lua.create_function(|_, payload: String| Ok(css_selector(&payload)))
-                    .unwrap(),
-            )
-            .unwrap();
-
-        lua.globals()
-            .set(
-                "html_parse",
-                lua.create_function(|_, (html, payload): (String, String)| {
-                    Ok(html_parse(&html, &payload))
-                })
-                .unwrap(),
-            )
-            .unwrap();
-
-        lua.globals()
-            .set(
-                "html_search",
-                lua.create_function(|_, (html, pattern): (String, String)| {
-                    Ok(html_search(&html, &pattern))
-                })
-                .unwrap(),
-            )
-            .unwrap();
-    }
-
-    fn get_utilsfunc(&self, lua: &Lua) {
-        // ProgressBar
-        let bar = self.bar.clone();
-        lua.globals()
-            .set(
-                "print_report",
-                lua.create_function(move |_, the_report: OutReport| {
-                    let good_msg = format!("[{}]", Style::new().green().apply_to("+").to_string());
-                    let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
-                    let report_msg = format!(
-                        "
-{GOOD} {NAME} on: {URL}
-{INFO} Description: {Description}
-{INFO} Vulnerable Parameter: {PARAM}
-{INFO} Risk: {RISK}
-{INFO} Used Payload: {ATTACK}
-{INFO} Matching Pattern: {MATCHING}
-#--------------------------------------------------#
-
-                                     ",
-                        GOOD = good_msg,
-                        INFO = info_msg,
-                        NAME = the_report.name.unwrap(),
-                        URL = the_report.url.unwrap(),
-                        Description = the_report.description.unwrap(),
-                        PARAM = the_report.param.unwrap(),
-                        RISK = the_report.risk.unwrap(),
-                        ATTACK = the_report.attack.unwrap(),
-                        MATCHING = format!(
-                            "{}",
-                            Style::new().on_red().apply_to(the_report.evidence.unwrap())
-                        ),
-                    );
-                    bar.println(report_msg);
-                    Ok(())
-                })
-                .unwrap(),
-            )
-            .unwrap();
-
-        let bar = self.bar.clone();
-        lua.globals()
-            .set(
-                "println",
-                lua.create_function(move |_, msg: String| {
-                    bar.println(format!("{}", msg));
-                    Ok(())
-                })
-                .unwrap(),
-            )
-            .unwrap();
-
-        let log_info = lua
-            .create_function(|_, log_msg: String| {
-                info!("{}", log_msg);
-                Ok(())
-            })
-            .unwrap();
-        let log_warn = lua
-            .create_function(|_, log_msg: String| {
-                warn!("{}", log_msg);
-                Ok(())
-            })
-            .unwrap();
-        let log_debug = lua
-            .create_function(|_, log_msg: String| {
-                debug!("{}", log_msg);
-                Ok(())
-            })
-            .unwrap();
-        let log_error = lua
-            .create_function(|_, log_msg: String| {
-                error!("{}", log_msg);
-                Ok(())
-            })
-            .unwrap();
-
-        lua.globals()
-            .set(
-                "read",
-                lua.create_function(|_ctx, file_path: String| {
-                    if Path::new(&file_path).exists() {
-                        let mut file = File::open(&file_path)?;
-                        let mut file_content = String::new();
-                        file.read_to_string(&mut file_content)?;
-                        Ok(file_content)
-                    } else {
-                        Ok(0.to_string())
-                    }
-                })
-                .unwrap(),
-            )
-            .unwrap();
-        lua.globals().set("log_info", log_info).unwrap();
-        lua.globals().set("log_error", log_error).unwrap();
-        lua.globals().set("log_debug", log_debug).unwrap();
-        lua.globals().set("log_warn", log_warn).unwrap();
-    }
-
-    fn get_httpfunc(&self, lua: &Lua) {
-        lua.globals()
-            .set(
-                "sleep",
-                lua.create_async_function(|_, time: u64| async move {
-                    tokio::time::sleep(tokio::time::Duration::from_secs(time)).await;
-                    Ok(())
-                })
-                .unwrap(),
-            )
-            .unwrap();
-    }
 
     /// Start All Lua Scripts
     pub async fn run_scan(
@@ -241,26 +84,12 @@ impl<'a> LuaLoader<'a> {
         report_code: &'a str,
     ) -> mlua::Result<()> {
         let lua = Lua::new();
-        self.get_httpfunc(&lua);
-        self.get_utilsfunc(&lua);
-        self.get_matching_func(&lua);
-        lua.globals()
-            .set(
-                "HttpMessage",
-                HttpMessage {
-                    url: Url::parse(target_url).unwrap(),
-                },
-            )
-            .unwrap();
-        lua.globals()
-            .set(
-                "Reports",
-                AllReports {
-                    reports: Vec::new(),
-                },
-            )
-            .unwrap();
-        lua.globals().set("NewReport", OutReport::init()).unwrap();
+
+        // Adding Lotus Lua Function
+        get_utilsfunc(self.bar,&lua);
+        get_matching_func(&lua);
+        http_func(target_url,&lua);
+
         match driver {
             None => {}
             _ => {

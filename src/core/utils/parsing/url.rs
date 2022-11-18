@@ -25,7 +25,6 @@ pub struct HttpMessage {
     pub url: Url,
 }
 
-
 impl HttpMessage {
     pub fn change_urlquery(
         &self,

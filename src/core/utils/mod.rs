@@ -16,12 +16,24 @@
  * limitations under the License.
  */
 
-use log::debug;
 pub mod cli;
 pub mod files;
-pub mod parsing;
 pub mod network;
 pub mod output;
+pub mod parsing;
+
+use log::{debug,info, warn, error};
+use mlua::Lua;
+use url::Url;
+use parsing::url::HttpMessage;
+use parsing::html::{css_selector, html_parse, html_search};
+use console::Style;
+use output::report::{OutReport, AllReports};
+use tokio::time::{Duration,sleep}; 
+
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 
 /// check if the regex pattern is matching with this string or not without get the matched parts
 /// you can use it for sqli errors for example
@@ -38,3 +50,174 @@ pub fn is_match(pattern: String, resp: String) -> bool {
         false
     }
 }
+
+pub fn http_func(target_url: &str,lua: &Lua) {
+    lua.globals()
+        .set(
+            "HttpMessage",
+            HttpMessage {
+                url: Url::parse(target_url).unwrap(),
+            },
+        )
+        .unwrap();
+    lua.globals()
+        .set(
+            "Reports",
+            AllReports {
+                reports: Vec::new(),
+            },
+        )
+        .unwrap();
+    lua.globals().set("NewReport", OutReport::init()).unwrap();
+}
+
+pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
+    // ProgressBar
+    let bar = the_bar.clone();
+    lua.globals()
+        .set(
+            "print_report",
+            lua.create_function(move |_, the_report: OutReport| {
+                let good_msg = format!("[{}]", Style::new().green().apply_to("+").to_string());
+                let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
+                let report_msg = format!(
+                    "
+{GOOD} {NAME} on: {URL}
+{INFO} Description: {Description}
+{INFO} Vulnerable Parameter: {PARAM}
+{INFO} Risk: {RISK}
+{INFO} Used Payload: {ATTACK}
+{INFO} Matching Pattern: {MATCHING}
+#--------------------------------------------------#
+
+                                 ",
+                    GOOD = good_msg,
+                    INFO = info_msg,
+                    NAME = the_report.name.unwrap(),
+                    URL = the_report.url.unwrap(),
+                    Description = the_report.description.unwrap(),
+                    PARAM = the_report.param.unwrap(),
+                    RISK = the_report.risk.unwrap(),
+                    ATTACK = the_report.attack.unwrap(),
+                    MATCHING = format!(
+                        "{}",
+                        Style::new().on_red().apply_to(the_report.evidence.unwrap())
+                    ),
+                );
+                bar.println(report_msg);
+                Ok(())
+            })
+            .unwrap(),
+        )
+        .unwrap();
+
+    let bar = the_bar.clone();
+    lua.globals()
+        .set(
+            "println",
+            lua.create_function(move |_, msg: String| {
+                bar.println(format!("{}", msg));
+                Ok(())
+            })
+            .unwrap(),
+        )
+        .unwrap();
+
+    let log_info = lua
+        .create_function(|_, log_msg: String| {
+            info!("{}", log_msg);
+            Ok(())
+        })
+        .unwrap();
+    let log_warn = lua
+        .create_function(|_, log_msg: String| {
+            warn!("{}", log_msg);
+            Ok(())
+        })
+        .unwrap();
+    let log_debug = lua
+        .create_function(|_, log_msg: String| {
+            debug!("{}", log_msg);
+            Ok(())
+        })
+        .unwrap();
+    let log_error = lua
+        .create_function(|_, log_msg: String| {
+            error!("{}", log_msg);
+            Ok(())
+        })
+        .unwrap();
+    lua.globals()
+        .set(
+            "sleep",
+            lua.create_async_function(|_, time: u64| async move {
+                sleep(Duration::from_secs(time)).await;
+                Ok(())
+            })
+            .unwrap(),
+        )
+        .unwrap();
+
+
+    lua.globals()
+        .set(
+            "read",
+            lua.create_function(|_ctx, file_path: String| {
+                if Path::new(&file_path).exists() {
+                    let mut file = File::open(&file_path)?;
+                    let mut file_content = String::new();
+                    file.read_to_string(&mut file_content)?;
+                    Ok(file_content)
+                } else {
+                    Ok(0.to_string())
+                }
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    lua.globals().set("log_info", log_info).unwrap();
+    lua.globals().set("log_error", log_error).unwrap();
+    lua.globals().set("log_debug", log_debug).unwrap();
+    lua.globals().set("log_warn", log_warn).unwrap();
+}
+
+pub fn get_matching_func(lua: &Lua) {
+    // Regex Match
+    lua.globals()
+        .set(
+            "is_match",
+            lua.create_function(|_, (pattern, text): (String, String)| {
+                Ok(is_match(pattern, text))
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    lua.globals()
+        .set(
+            "generate_css_selector",
+            lua.create_function(|_, payload: String| Ok(css_selector(&payload)))
+                .unwrap(),
+        )
+        .unwrap();
+
+    lua.globals()
+        .set(
+            "html_parse",
+            lua.create_function(|_, (html, payload): (String, String)| {
+                Ok(html_parse(&html, &payload))
+            })
+            .unwrap(),
+        )
+        .unwrap();
+
+    lua.globals()
+        .set(
+            "html_search",
+            lua.create_function(|_, (html, pattern): (String, String)| {
+                Ok(html_search(&html, &pattern))
+            })
+            .unwrap(),
+        )
+        .unwrap();
+}
+

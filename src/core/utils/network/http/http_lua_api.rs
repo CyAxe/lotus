@@ -1,6 +1,6 @@
+use mlua::UserData;
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
-use mlua::UserData;
 
 #[derive(Clone)]
 pub struct Sender {

@@ -53,12 +53,10 @@ impl Lotus {
         let urls = stdin
             .lock()
             .lines()
-            .map(|x| { 
+            .map(|x| {
                 let the_url = x.unwrap();
                 match url::Url::parse(&the_url) {
-                    Ok(_url) => {
-
-                    },
+                    Ok(_url) => {}
                     Err(_err) => {
                         println!("Parsing URL Error: {the_url}");
                         std::process::exit(1);

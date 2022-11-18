@@ -16,15 +16,11 @@
  * limitations under the License.
  */
 
-use reqwest::{
-    header::HeaderMap,
-    redirect, Client, Method, Proxy,
-};
+use reqwest::{header::HeaderMap, redirect, Client, Method, Proxy};
 use std::{collections::HashMap, time::Duration};
 mod http_lua_api;
 pub use http_lua_api::Sender;
 use tealr::{mlu::FromToLua, TypeName};
-
 
 /// RespType for lua userdata
 #[derive(FromToLua, Clone, Debug, TypeName)]
@@ -36,7 +32,6 @@ pub enum RespType {
     Headers(HashMap<String, String>),
     Error(String),
 }
-
 
 impl Sender {
     /// Build your own http request module with user option
@@ -59,9 +54,6 @@ impl Sender {
                     .default_headers(self.headers.clone())
                     .proxy(Proxy::all(the_proxy).unwrap())
                     .no_trust_dns()
-                    .user_agent(
-                        "Mozilla/5.0 (X11; Manjaro; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0",
-                    )
                     .danger_accept_invalid_certs(true)
                     .build()
             }
@@ -71,9 +63,7 @@ impl Sender {
                     .redirect(redirect::Policy::limited(self.redirects as usize))
                     .no_proxy()
                     .no_trust_dns()
-                    .user_agent(
-                        "Mozilla/5.0 (X11; Manjaro; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0",
-                    )
+                    .default_headers(self.headers.clone())
                     .danger_accept_invalid_certs(true)
                     .build()
             }

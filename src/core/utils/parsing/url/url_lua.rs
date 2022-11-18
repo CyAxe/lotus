@@ -1,6 +1,6 @@
+use crate::core::HttpMessage;
 use mlua::UserData;
 use std::collections::HashMap;
-use crate::core::HttpMessage;
 
 impl UserData for HttpMessage {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
