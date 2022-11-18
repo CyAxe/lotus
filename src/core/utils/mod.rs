@@ -21,6 +21,7 @@ pub mod files;
 pub mod network;
 pub mod output;
 pub mod parsing;
+pub mod payloads;
 
 use console::Style;
 use log::{debug, error, info, warn};
@@ -49,6 +50,16 @@ pub fn is_match(pattern: String, resp: String) -> bool {
         debug!("MATCHING ERROR  {:?} | {:?}", pattern, re);
         false
     }
+}
+
+pub fn encoding_func(lua: &Lua) {
+    lua.globals().set("base64encode", lua.create_function(|_, data: String| {
+        Ok(base64::encode(data))
+    }).unwrap()).unwrap();
+
+    lua.globals().set("base64decode", lua.create_function(|_, data: String| {
+        Ok(base64::decode(data).unwrap())
+    }).unwrap()).unwrap();
 }
 
 pub fn http_func(target_url: &str, lua: &Lua) {

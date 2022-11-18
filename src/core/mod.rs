@@ -28,7 +28,7 @@ use utils::network::http as http_sender;
 use utils::output::lua_report::report_script;
 use utils::output::report::AllReports;
 use utils::parsing::url::HttpMessage;
-use utils::{get_matching_func, get_utilsfunc, http_func};
+use utils::{get_matching_func, get_utilsfunc, http_func, encoding_func};
 
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -89,6 +89,7 @@ impl<'a> LuaLoader<'a> {
         get_utilsfunc(self.bar, &lua);
         get_matching_func(&lua);
         http_func(target_url, &lua);
+        encoding_func(&lua);
 
         match driver {
             None => {}
