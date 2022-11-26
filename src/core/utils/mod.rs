@@ -27,7 +27,7 @@ use console::Style;
 use log::{debug, error, info, warn};
 use mlua::Lua;
 use output::report::{AllReports, OutReport};
-use parsing::html::{css_selector, html_parse, html_search};
+use parsing::html::{css_selector, html_parse, html_search, Location};
 use parsing::url::HttpMessage;
 use tokio::time::{sleep, Duration};
 use url::Url;
@@ -50,6 +50,13 @@ pub fn is_match(pattern: String, resp: String) -> bool {
         debug!("MATCHING ERROR  {:?} | {:?}", pattern, re);
         false
     }
+}
+
+pub fn payloads_func(lua: &Lua) {
+    lua.globals().set("XSSGenerator", lua.create_function(|_, (response, location, payload): (String, Location, String)| {
+        let xss_gen = payloads::xss::PayloadGen::new(response, location, payload);
+        Ok(xss_gen.analyze())
+    }).unwrap()).unwrap();
 }
 
 pub fn encoding_func(lua: &Lua) {
