@@ -38,15 +38,11 @@ impl UserData for Sender {
             |_, this, (method, url, req_body, req_headers): (String, String, mlua::Value, mlua::Value)| async move {
                 
                 let mut all_headers = HeaderMap::new();
-                match req_headers {
-                    mlua::Value::Table(current_headers) => {
-                        current_headers.pairs::<String,String>().for_each(|currentheader| {
-                            all_headers.insert(HeaderName::from_bytes(currentheader.clone().unwrap().0.as_bytes()).unwrap(), HeaderValue::from_bytes(currentheader.unwrap().1.as_bytes()).unwrap());
-                        });
-                    },
-                    _ => {
-                    }
-                };
+                if let mlua::Value::Table(current_headers) = req_headers {
+                    current_headers.pairs::<String,String>().for_each(|currentheader| {
+                        all_headers.insert(HeaderName::from_bytes(currentheader.clone().unwrap().0.as_bytes()).unwrap(), HeaderValue::from_bytes(currentheader.unwrap().1.as_bytes()).unwrap());
+                    });
+                }
                 let body: String = match req_body {
                     mlua::Value::String(body) => {
                         body.to_str().unwrap().to_string()
