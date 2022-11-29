@@ -18,7 +18,6 @@
 
 use clap::{App, Arg, ArgMatches};
 mod validator;
-
 pub fn cmd_args() -> ArgMatches {
     App::new("Lotus")
         .version("0.3-beta")
