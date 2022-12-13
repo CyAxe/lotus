@@ -1,9 +1,9 @@
 mod threads;
 
+use crate::lua_api::{encoding_func, get_matching_func, get_utilsfunc, http_func, payloads_func};
+use crate::network::http::Sender;
 use crate::RequestOpts;
 use mlua::Lua;
-use crate::lua_api::{get_utilsfunc, get_matching_func, http_func, payloads_func, encoding_func};
-use crate::network::http::Sender;
 use std::sync::{Arc, Mutex};
 use thirtyfour::prelude::*;
 
@@ -28,7 +28,7 @@ impl<'a> LuaLoader<'a> {
         }
     }
 
-    fn set_lua(&self, target_url: &str, lua: &Lua,  driver: Option<Arc<Mutex<WebDriver>>> ) {
+    fn set_lua(&self, target_url: &str, lua: &Lua, driver: Option<Arc<Mutex<WebDriver>>>) {
         // Adding Lotus Lua Function
         get_utilsfunc(self.bar, &lua);
         get_matching_func(&lua);
@@ -65,19 +65,37 @@ impl<'a> LuaLoader<'a> {
                 .unwrap();
         }
     }
-    pub async fn run_scan(&self, target_url: &str, driver: Option<Arc<Mutex<WebDriver>>>, script_code: &str,script_dir: &str) {
+    pub async fn run_scan(
+        &self,
+        target_url: &str,
+        driver: Option<Arc<Mutex<WebDriver>>>,
+        script_code: &str,
+        script_dir: &str,
+    ) {
         let lua = Lua::new();
         // settings lua api
-        self.set_lua(target_url,&lua, driver);
+        self.set_lua(target_url, &lua, driver);
         lua.globals().set("SCRIPT_PATH", script_dir).unwrap();
 
-
         // Handle this error please
-       lua.load(script_code).exec_async().await.unwrap();
-       let main_func = lua.globals().get::<_, mlua::Function>("main").unwrap();
-       main_func.call_async::<_, mlua::Value>(target_url)
-                .await
-                .unwrap();
-
+        lua.load(script_code).exec_async().await.unwrap();
+        let main_func = lua.globals().get::<_, mlua::Function>("main");
+        if main_func.is_err() {
+            log::error!("[{}] there is no main function, Skipping ..", script_dir);
+        } else {
+            let run_scan = main_func
+                .unwrap()
+                .call_async::<_, mlua::Value>(target_url)
+                .await;
+            if run_scan.is_err() {
+                log::error!(
+                    "[{}] Script Error : {:?}",
+                    script_dir,
+                    run_scan.unwrap_err()
+                );
+            } else {
+                println!("Saving output to {:?}", self.output_dir);
+            }
+        }
     }
 }
