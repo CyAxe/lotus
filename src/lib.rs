@@ -16,114 +16,70 @@
  * limitations under the License.
  */
 
-mod core;
-use crate::core::utils::{cli::bar::create_progress, files::filename_to_string};
-use crate::core::LuaLoader;
-pub use crate::core::RequestOpts;
-use futures::{stream, StreamExt};
+mod cli;
+mod parsing;
+mod scan;
+mod lua_api;
+mod network;
+mod payloads;
+mod output;
+
+use cli::errors::CliErrors;
 use glob::glob;
-use log::{debug, error};
-use std::fs::metadata;
-use std::io::{self, BufRead};
-use std::path::Path;
-use std::sync::Arc;
+use log::error;
+use parsing::files::filename_to_string;
+use cli::bar::create_progress;
+use reqwest::header::HeaderMap;
+use std::path::PathBuf;
+
+#[derive(Clone)]
+pub struct RequestOpts {
+    pub headers: HeaderMap,
+    pub proxy: Option<String>,
+    pub timeout: u64,
+    pub redirects: u32,
+}
 
 pub struct Lotus {
-    script: String,
+    pub script_path: PathBuf,
+    pub output: Option<PathBuf>,
+    pub workers: usize,
 }
 
 impl Lotus {
-    pub fn init(script: String) -> Self {
-        Lotus { script }
-    }
-
-    pub async fn start(
-        &self,
-        threads: usize,
-        request: RequestOpts,
-        script_threads: usize,
-        output_path: &str,
-        custom_report: &str,
-    ) {
-        if atty::is(atty::Stream::Stdin) {
-            println!("No Urls found in Stdin");
-            std::process::exit(0);
-        }
-        let stdin = io::stdin();
-        let urls = stdin
-            .lock()
-            .lines()
-            .map(|x| {
-                let the_url = x.unwrap();
-                match url::Url::parse(&the_url) {
-                    Ok(_url) => {}
-                    Err(_err) => {
-                        println!("Parsing URL Error: {the_url}");
-                        std::process::exit(1);
-                    }
+    pub async fn start(&self, urls: Vec<String>, request_option: RequestOpts) {
+        let loaded_scripts = {
+                if self.script_path.is_dir() {
+                    self.load_scripts()
+                } else {
+                    self.load_script()
                 }
-                the_url
-            })
-            .collect::<Vec<String>>();
-
-        let urls = urls.iter().map(|url| url.as_str()).collect::<Vec<&str>>();
-        let active = match metadata(&self.script).unwrap().is_file() {
-            true => {
-                let mut scripts = Vec::new();
-                let script_path = &self.script.clone();
-                scripts.push((
-                    filename_to_string(&self.script).unwrap(),
-                    script_path.clone(),
-                ));
-                scripts
-            }
-            false => self.get_scripts(),
         };
+        if loaded_scripts.is_err() {
+            eprintln!("Reading errors");// TODO
+            std::process::exit(1);
+        }
+        let bar = create_progress(urls.len() as u64 * loaded_scripts.as_ref().unwrap().len() as u64);
+        if loaded_scripts.is_err() {
+            eprintln!("Reading error bruh"); // TODO
+            std::process::exit(1);
+        }
 
-        // ProgressBar Settings
-        let bar = create_progress(urls.len() as u64 * active.len() as u64);
-        let lualoader = Arc::new(LuaLoader::new(&bar, request, output_path.to_string()));
-        stream::iter(urls.into_iter())
-            .map(move |url| {
-                let active = active.clone();
-                let lualoader = Arc::clone(&lualoader);
-                stream::iter(active.into_iter())
-                    .map(move |(script_out, script_name)| {
-                        debug!("RUNNING {} on {}", script_name, url);
-                        let lualoader = Arc::clone(&lualoader);
-                        let script_path = match metadata(&self.script).unwrap().is_file() {
-                            true => {
-                                let script_path =
-                                    Path::new(&self.script).parent().unwrap().to_str().unwrap();
-                                script_path.to_owned()
-                            }
-                            false => {
-                                let script_path = &self.script.clone();
-                                script_path.to_owned()
-                            }
-                        };
-                        async move {
-                            lualoader
-                                .run_scan(None, &script_out, &script_path, url, custom_report)
-                                .await
-                                .unwrap()
-                        }
-                    })
-                    .buffer_unordered(script_threads)
-                    .collect::<Vec<_>>()
-            })
-            .buffer_unordered(threads)
-            .collect::<Vec<_>>()
-            .await;
+        for target_script in loaded_scripts.unwrap() {
+            for url in &urls {
+                let lotus_obj = scan::LuaLoader::new(&bar,request_option.clone(), self.output.as_ref().unwrap().to_str().unwrap().to_string());
+                lotus_obj.run_scan(&url,None,&target_script.0,&target_script.1).await;
+            }
+        }
     }
 
-    fn get_scripts(&self) -> Vec<(String, String)> {
+    fn load_scripts(&self) -> Result<Vec<(String, String)>, CliErrors> {
         let mut scripts = Vec::new();
         //
         // Reading one file instead of the dir scripts
 
         for entry in
-            glob(format!("{}{}", Path::new(&self.script).to_str().unwrap(), "/*.lua").as_str())
+            glob(format!("{}{}", self.script_path.to_str().unwrap(), "/*.lua").as_str())
                 .expect("Failed to read glob pattern")
         {
             match entry {
@@ -134,6 +90,21 @@ impl Lotus {
                 Err(e) => error!("{:?}", e),
             }
         }
-        scripts
+        return Ok(scripts);
+    }
+
+    fn load_script(&self) -> Result<Vec<(String, String)>, CliErrors> {
+        let mut scripts = Vec::new();
+        let script_path = &self.script_path.clone();
+        let read_script_code = filename_to_string(script_path.to_str().unwrap());
+        if read_script_code.is_err() {
+            return Err(CliErrors::ReadingError);
+        } else {
+            scripts.push((
+                read_script_code.unwrap(),
+                script_path.to_str().unwrap().to_string(),
+            ));
+            return Ok(scripts);
+        }
     }
 }

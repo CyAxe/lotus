@@ -16,14 +16,18 @@
  * limitations under the License.
  */
 
-use log::debug;
+use log::{debug, error};
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::Read;
 
-pub fn filename_to_string(s: &str) -> io::Result<String> {
-    let mut file = File::open(s)?;
+pub fn filename_to_string(s: &str) -> Result<String, std::io::Error> {
+    let file = File::open(s);
     debug!("READING {:?}", s);
+    if file.is_err() {
+        error!("READING ERROR: {:?}", s);
+        return Err(file.unwrap_err());
+    }
     let mut s = String::new();
-    file.read_to_string(&mut s)?;
+    file.unwrap().read_to_string(&mut s)?;
     Ok(s)
 }

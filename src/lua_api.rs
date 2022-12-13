@@ -5,7 +5,7 @@
  * Copyright (c) 2022 - Khaled Nassar
  *
  * Please note that this file was originally released under the
- * GNU General Public License as published by the Free Software Foundation;
+ * GNU General Public License as ished by the Free Software Foundation;
  * either version 2 of the License, or (at your option) any later version.
  *
  *
@@ -16,19 +16,14 @@
  * limitations under the License.
  */
 
-pub mod cli;
-pub mod files;
-pub mod network;
-pub mod output;
-pub mod parsing;
-pub mod payloads;
+use crate::parsing::html::{css_selector, html_parse, html_search, Location};
+use crate::parsing::url::HttpMessage;
+use crate::payloads;
+use crate::output::report::{OutReport, AllReports};
 
 use console::Style;
 use log::{debug, error, info, warn};
 use mlua::Lua;
-use output::report::{AllReports, OutReport};
-use parsing::html::{css_selector, html_parse, html_search, Location};
-use parsing::url::HttpMessage;
 use tokio::time::{sleep, Duration};
 use url::Url;
 

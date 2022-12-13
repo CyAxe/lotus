@@ -1,103 +1,68 @@
-/*
- * This file is part of Lotus Project, an Web Security Scanner written in Rust based on Lua Scripts
- * For details, please see https://github.com/rusty-sec/lotus/
- *
- * Copyright (c) 2022 - Khaled Nassar
- *
- * Please note that this file was originally released under the
- * GNU General Public License as published by the Free Software Foundation;
- * either version 2 of the License, or (at your option) any later version.
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+use reqwest::header::HeaderMap;
+use reqwest::header::{HeaderName, HeaderValue};
+use std::collections::HashMap;
+use std::path::PathBuf;
+use structopt::StructOpt;
 
-use clap::{App, Arg, ArgMatches};
-mod validator;
-pub fn cmd_args() -> ArgMatches {
-    App::new("Lotus")
-        .version("0.3-beta")
-        .author("Khaled Nassar <knassar702@gmail.com>")
-        .about("Fast Web Security Scanner written in Rust based on Lua Scripts ")
-        .arg(
-            Arg::with_name("out_script")
-                .help("Use Custom Lua for reporting")
-                .long("--lua-report")
-                .validator(validator::file_exists)
-                .takes_value(true)
-                .required_unless_present("output"),
+fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
+    let parsed_json = serde_json::from_str::<HashMap<String, String>>(raw_headers);
+
+    if parsed_json.is_err() {
+        return Err(parsed_json.unwrap_err());
+    }
+    let mut user_headers = HeaderMap::new();
+    user_headers.insert(
+        HeaderName::from_bytes("User-agent".as_bytes()).unwrap(),
+        HeaderValue::from_bytes(
+            "Mozilla/5.0 (X11; Manjaro; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0"
+                .as_bytes(),
         )
-        .arg(
-            Arg::with_name("default_headers")
-                .help("Default Request Headers")
-                .validator(validator::valid_json)
-                .takes_value(true)
-                .default_value("{}")
-                .long("headers"),
-        )
-        .arg(
-            Arg::with_name("redirects")
-                .help("Set limit of http redirects")
-                .long("redirects")
-                .default_value("10"),
-        )
-        .arg(
-            Arg::with_name("timeout")
-                .help("Set Connection timeout")
-                .long("timeout")
-                .default_value("10"),
-        )
-        .arg(
-            Arg::with_name("proxy")
-                .help("Forward all connection through a proxy (eg: --proxy http://localhost:8080)")
-                .required(false)
-                .takes_value(true)
-                .validator(url::Url::parse)
-                .long("proxy"),
-        )
-        .arg(
-            Arg::with_name("workers")
-                .help("Number of works of urls")
-                .short('w')
-                .takes_value(true)
-                .default_value("10")
-                .long("workers"),
-        )
-        .arg(
-            Arg::with_name("log")
-                .help("Save all logs to custom file")
-                .takes_value(true)
-                .short('l')
-                .long("log"),
-        )
-        .arg(
-            Arg::with_name("script_threads")
-                .help("Workers for lua scripts")
-                .short('t')
-                .long("script-threads")
-                .takes_value(true)
-                .default_value("5"),
-        )
-        .arg(
-            Arg::with_name("scripts")
-                .help("Path of scripts dir")
-                .takes_value(true)
-                .short('s')
-                .long("scripts")
-                .required(true),
-        )
-        .arg(
-            Arg::with_name("output")
-                .help("Path of the JSON output fiel")
-                .required_if_eq("out_script", "")
-                .takes_value(true)
-                .long("output")
-                .short('o'),
-        )
-        .arg(Arg::with_name("nolog").help("no logging"))
-        .get_matches()
+        .unwrap(),
+    );
+    parsed_json
+        .unwrap()
+        .iter()
+        .for_each(|(headername, headervalue)| {
+            user_headers.insert(
+                HeaderName::from_bytes(headername.as_bytes()).unwrap(),
+                HeaderValue::from_bytes(headervalue.as_bytes()).unwrap(),
+            );
+        });
+    Ok(user_headers)
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(
+    name = "Lotus",
+    about = "Fast Web Security Scanner written in Rust based on Lua Scripts"
+)]
+pub struct Opts {
+    // redirects limit
+    #[structopt(short, long, default_value = "10")]
+    pub redirects: u32,
+
+    // threads
+    #[structopt(short = "w", long = "workers", default_value = "10")]
+    pub workers: usize,
+
+    // timeout
+    #[structopt(short = "t", long = "timeout", default_value = "10")]
+    pub timeout: u64,
+
+    /// Input file
+    #[structopt(parse(from_os_str))]
+    pub script_path: PathBuf,
+
+    /// Output file, stdout if not present
+    #[structopt(short = "o", long = "output", parse(from_os_str))]
+    pub output: Option<PathBuf>,
+
+    #[structopt(short = "p", long = "proxy")]
+    pub proxy: Option<String>,
+
+    #[structopt(long = "log")]
+    pub log: Option<PathBuf>,
+
+    #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}")]
+    pub headers: HeaderMap,
 }

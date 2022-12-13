@@ -1,4 +1,4 @@
-use crate::core::HttpMessage;
+use crate::parsing::url::HttpMessage;
 use mlua::UserData;
 use std::collections::HashMap;
 
