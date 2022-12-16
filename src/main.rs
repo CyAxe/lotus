@@ -47,14 +47,17 @@ async fn main() -> Result<(), std::io::Error> {
         script_path: args.script_path,
         output: args.output,
         workers: args.workers,
+        script_workers: args.scripts_workers
     };
-    lotus_obj.start(
-        urls.unwrap()
-            .iter()
-            .map(|url| url.to_string())
-            .collect::<Vec<String>>(),
-        req_opts,
-    ).await;
+    lotus_obj
+        .start(
+            urls.unwrap()
+                .iter()
+                .map(|url| url.to_string())
+                .collect::<Vec<String>>(),
+            req_opts,
+        )
+        .await;
     Ok(())
 }
 

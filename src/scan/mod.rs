@@ -1,4 +1,3 @@
-mod threads;
 
 use crate::lua_api::{encoding_func, get_matching_func, get_utilsfunc, http_func, payloads_func};
 use crate::network::http::Sender;
@@ -94,7 +93,7 @@ impl<'a> LuaLoader<'a> {
                     run_scan.unwrap_err()
                 );
             } else {
-                println!("Saving output to {:?}", self.output_dir);
+                log::debug!("Saving output to {:?}", self.output_dir);
             }
         }
     }

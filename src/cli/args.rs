@@ -45,6 +45,9 @@ pub struct Opts {
     #[structopt(short = "w", long = "workers", default_value = "10")]
     pub workers: usize,
 
+    #[structopt(short = "sw", long = "scripts-worker", default_value = "10")]
+    pub scripts_workers: usize,
+
     // timeout
     #[structopt(short = "t", long = "timeout", default_value = "10")]
     pub timeout: u64,
