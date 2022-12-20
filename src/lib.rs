@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#![allow(unused_imports)]
 mod cli;
 mod lua_api;
 mod network;
@@ -118,7 +119,7 @@ impl Lotus {
         let script_path = &self.script_path.clone();
         let read_script_code = filename_to_string(script_path.to_str().unwrap());
         if read_script_code.is_err() {
-            return Err(CliErrors::ReadingError);
+            Err(CliErrors::ReadingError)
         } else {
             scripts.push((
                 read_script_code.unwrap(),
