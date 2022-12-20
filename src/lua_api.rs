@@ -5,7 +5,7 @@
  * Copyright (c) 2022 - Khaled Nassar
  *
  * Please note that this file was originally released under the
- * GNU General Public License as published by the Free Software Foundation;
+ * GNU General Public License as ished by the Free Software Foundation;
  * either version 2 of the License, or (at your option) any later version.
  *
  *
@@ -16,19 +16,14 @@
  * limitations under the License.
  */
 
-pub mod cli;
-pub mod files;
-pub mod network;
-pub mod output;
-pub mod parsing;
-pub mod payloads;
+use crate::output::report::{AllReports, OutReport};
+use crate::parsing::html::{css_selector, html_parse, html_search, Location};
+use crate::parsing::url::HttpMessage;
+use crate::payloads;
 
 use console::Style;
 use log::{debug, error, info, warn};
 use mlua::Lua;
-use output::report::{AllReports, OutReport};
-use parsing::html::{css_selector, html_parse, html_search, Location};
-use parsing::url::HttpMessage;
 use tokio::time::{sleep, Duration};
 use url::Url;
 
@@ -53,20 +48,36 @@ pub fn is_match(pattern: String, resp: String) -> bool {
 }
 
 pub fn payloads_func(lua: &Lua) {
-    lua.globals().set("XSSGenerator", lua.create_function(|_, (response, location, payload): (String, Location, String)| {
-        let xss_gen = payloads::xss::PayloadGen::new(response, location, payload);
-        Ok(xss_gen.analyze())
-    }).unwrap()).unwrap();
+    lua.globals()
+        .set(
+            "XSSGenerator",
+            lua.create_function(
+                |_, (response, location, payload): (String, Location, String)| {
+                    let xss_gen = payloads::xss::PayloadGen::new(response, location, payload);
+                    Ok(xss_gen.analyze())
+                },
+            )
+            .unwrap(),
+        )
+        .unwrap();
 }
 
 pub fn encoding_func(lua: &Lua) {
-    lua.globals().set("base64encode", lua.create_function(|_, data: String| {
-        Ok(base64::encode(data))
-    }).unwrap()).unwrap();
+    lua.globals()
+        .set(
+            "base64encode",
+            lua.create_function(|_, data: String| Ok(base64::encode(data)))
+                .unwrap(),
+        )
+        .unwrap();
 
-    lua.globals().set("base64decode", lua.create_function(|_, data: String| {
-        Ok(base64::decode(data).unwrap())
-    }).unwrap()).unwrap();
+    lua.globals()
+        .set(
+            "base64decode",
+            lua.create_function(|_, data: String| Ok(base64::decode(data).unwrap()))
+                .unwrap(),
+        )
+        .unwrap();
 }
 
 pub fn http_func(target_url: &str, lua: &Lua) {

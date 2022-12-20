@@ -35,7 +35,6 @@ impl HttpMessage {
         let mut scan_params = HashMap::new();
         let mut result: HashMap<String, String> = HashMap::new();
         let mut param_list = Vec::new();
-
         url.query_pairs()
             .collect::<HashMap<_, _>>()
             .iter()

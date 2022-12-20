@@ -1,5 +1,5 @@
 mod xsspayloads;
-use crate::core::utils::parsing::html::{css_selector, Location};
+use crate::parsing::html::{css_selector, Location};
 use fancy_regex::Regex;
 use tealr::{mlu::FromToLua, TypeName};
 use xsspayloads::{get_attr, get_htmltags, get_jscmd, get_jsvalue};

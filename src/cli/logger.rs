@@ -17,7 +17,9 @@
  */
 
 // Lotus init logger
-pub fn init_log(log_path: &str) -> Result<(), std::io::Error> {
+use std::path::PathBuf;
+
+pub fn init_log(log_file: Option<PathBuf>) -> Result<(), std::io::Error> {
     let logger = fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
@@ -34,10 +36,15 @@ pub fn init_log(log_path: &str) -> Result<(), std::io::Error> {
         .level_for("isahc", log::LevelFilter::Warn)
         .level_for("selectors", log::LevelFilter::Warn)
         .level_for("html5ever", log::LevelFilter::Warn);
-    // Disalbe unwanted loggers
-    logger
-        .chain(fern::log_file(log_path).unwrap())
-        .apply()
-        .unwrap();
+    match log_file {
+        Some(log_path) => {
+            // Disalbe unwanted loggers
+            logger
+                .chain(fern::log_file(log_path).unwrap())
+                .apply()
+                .unwrap();
+        }
+        None => {}
+    }
     Ok(())
 }

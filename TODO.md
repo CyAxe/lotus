@@ -1,5 +1,6 @@
 ## TODO
-- RXSS: Check if the response is valid to html
-- Check for content-type of the response (eg: image or text)
-- add custom http headers and methods
-- SAVE THE REPORT FROM RETRUN FUNCTION  INSTEAD OF GOLBOAL ONE
+- Better threading handler
+- Custom Http Message handler
+```lua
+local Req = HttpMessage:SetPayload("XSS") -- http://app.com/?data=XSS&id=1
+```
