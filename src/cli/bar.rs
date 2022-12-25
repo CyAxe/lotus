@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-use indicatif::{ProgressBar, ProgressStyle};
 use console::Style;
+use indicatif::{ProgressBar, ProgressStyle};
 
 pub enum MessageLevel {
     Info,
     Warn,
-    Error
+    Error,
 }
 
 /// Lotus ProgressBar based on the length of `bar` parameter
@@ -40,20 +40,19 @@ pub fn create_progress(bar: u64) -> ProgressBar {
     bar
 }
 
-
 pub fn show_msg(message: &str, msglevel: MessageLevel) {
     let print_level = match msglevel {
         MessageLevel::Info => {
-            log::info!("{}",message);
-            format!("[{}]",Style::new().blue().apply_to("INFO"))
-        },
+            log::info!("{}", message);
+            format!("[{}]", Style::new().blue().apply_to("INFO"))
+        }
         MessageLevel::Warn => {
-            log::warn!("{}",message);
-            format!("[{}]",Style::new().yellow().apply_to("WARN"))
-        },
+            log::warn!("{}", message);
+            format!("[{}]", Style::new().yellow().apply_to("WARN"))
+        }
         MessageLevel::Error => {
-            log::error!("{}",message);
-            format!("[{}]",Style::new().red().apply_to("ERROR"))
+            log::error!("{}", message);
+            format!("[{}]", Style::new().red().apply_to("ERROR"))
         }
     };
     println!("{print_level} {message}");

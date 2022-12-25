@@ -68,7 +68,7 @@ pub trait SenderExt {
 }
 
 impl SenderExt for Sender {
-    fn make_curl(&self,url: String) -> String {
+    fn make_curl(&self,method: String,url: String) -> String {
         let mut curl_command = "curl".to_string();
         self.headers.iter().for_each(|(header_name, header_value)| {
             let header_command = format!(

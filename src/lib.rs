@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#![allow(unused_imports)]
 mod cli;
 mod lua_api;
 mod network;
@@ -26,14 +25,14 @@ mod payloads;
 mod scan;
 
 use cli::bar::create_progress;
+use cli::bar::{show_msg, MessageLevel};
 use cli::errors::CliErrors;
-use cli::bar::{MessageLevel,show_msg};
+use futures::{stream, StreamExt};
 use glob::glob;
 use log::error;
 use parsing::files::filename_to_string;
 use reqwest::header::HeaderMap;
 use std::path::PathBuf;
-use futures::{stream, StreamExt};
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
@@ -49,11 +48,11 @@ pub struct Lotus {
     pub output: Option<PathBuf>,
     pub workers: usize,
     pub script_workers: usize,
-    pub stop_after: Arc<Mutex<i32>>
+    pub stop_after: Arc<Mutex<i32>>,
 }
 
 impl Lotus {
-    pub async fn start(&self, urls: Vec<String>, request_option: RequestOpts,exit_after: i32) {
+    pub async fn start(&self, urls: Vec<String>, request_option: RequestOpts, exit_after: i32) {
         let loaded_scripts = {
             if self.script_path.is_dir() {
                 self.load_scripts()
@@ -75,7 +74,8 @@ impl Lotus {
         let lotus_obj = Arc::new(scan::LuaLoader::new(
             &bar,
             request_option.clone(),
-            self.output.as_ref().unwrap().to_str().unwrap().to_string()));
+            self.output.as_ref().unwrap().to_str().unwrap().to_string(),
+        ));
         stream::iter(urls)
             .map(move |url| {
                 let loaded_scripts = loaded_scripts.clone();
@@ -89,7 +89,7 @@ impl Lotus {
                                 log::debug!("Ignoring scripts");
                                 false
                             } else {
-                                log::debug!("Running {} script on {} url",script_name, url);
+                                log::debug!("Running {} script on {} url", script_name, url);
                                 true
                             }
                         };
@@ -97,14 +97,15 @@ impl Lotus {
                             if error_check == false {
                                 // Nothing
                             } else {
-                                let run_scan = lotus_loader.run_scan(url.as_str(),None,&script_out, &script_name).await;
+                                let run_scan = lotus_loader
+                                    .run_scan(url.as_str(), None, &script_out, &script_name)
+                                    .await;
                                 if run_scan.is_err() {
                                     log::error!("Script is raising error");
                                     let mut a = self.stop_after.lock().unwrap();
-                                    log::debug!("Errors Counter: {}",a);
+                                    log::debug!("Errors Counter: {}", a);
                                     *a += 1;
                                 }
-
                             }
                         }
                     })
@@ -112,7 +113,8 @@ impl Lotus {
                     .collect::<Vec<_>>()
             })
             .buffer_unordered(self.workers)
-            .collect::<Vec<_>>().await;
+            .collect::<Vec<_>>()
+            .await;
     }
 
     fn load_scripts(&self) -> Result<Vec<(String, String)>, CliErrors> {

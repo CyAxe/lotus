@@ -23,7 +23,7 @@ use cli::logger::init_log;
 use lotus::RequestOpts;
 use std::io;
 use std::io::BufRead;
-use std::sync::{Mutex, Arc};
+use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 
 #[tokio::main]
@@ -49,7 +49,7 @@ async fn main() -> Result<(), std::io::Error> {
         output: args.output,
         workers: args.workers,
         script_workers: args.scripts_workers,
-        stop_after: Arc::new(Mutex::new(1))
+        stop_after: Arc::new(Mutex::new(1)),
     };
     lotus_obj
         .start(
@@ -58,7 +58,7 @@ async fn main() -> Result<(), std::io::Error> {
                 .map(|url| url.to_string())
                 .collect::<Vec<String>>(),
             req_opts,
-            args.exit_after
+            args.exit_after,
         )
         .await;
     Ok(())

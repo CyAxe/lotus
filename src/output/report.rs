@@ -19,6 +19,29 @@
 use mlua::UserData;
 use serde::{Deserialize, Serialize};
 
+pub enum ReportType {
+    Bug(OutReport),
+    Cve(CveReport),
+    Info(InfoReport),
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct CveReport {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub url: Option<String>,
+    pub risk: Option<String>,
+    pub matchers: Option<Vec<String>>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct InfoReport {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub url: Option<String>,
+    pub infotype: Option<String>,
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 pub struct OutReport {
     pub risk: Option<String>,        // info, low, Medium, High, Ciritcal

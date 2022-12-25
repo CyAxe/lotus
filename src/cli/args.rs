@@ -69,5 +69,5 @@ pub struct Opts {
     #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}")]
     pub headers: HeaderMap,
     #[structopt(long = "exit-after-errors", default_value = "2000")]
-    pub exit_after: i32
+    pub exit_after: i32,
 }
