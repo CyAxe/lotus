@@ -1,8 +1,8 @@
-
 use crate::lua_api::{encoding_func, get_matching_func, get_utilsfunc, http_func, payloads_func};
 use crate::output::report::AllReports;
 use crate::network::http::Sender;
 use crate::RequestOpts;
+use crate::CliErrors;
 use mlua::Lua;
 use std::sync::{Arc, Mutex};
 use std::fs::OpenOptions;
@@ -84,14 +84,17 @@ impl<'a> LuaLoader<'a> {
         driver: Option<Arc<Mutex<WebDriver>>>,
         script_code: &str,
         script_dir: &str,
-    ) {
+    ) -> Result<(), mlua::Error> {
         let lua = Lua::new();
         // settings lua api
         self.set_lua(target_url, &lua, driver);
         lua.globals().set("SCRIPT_PATH", script_dir).unwrap();
 
         // Handle this error please
-        lua.load(script_code).exec_async().await.unwrap();
+        let run_code = lua.load(script_code).exec_async().await;
+        if run_code.is_err() {
+            return run_code
+        }
         let main_func = lua.globals().get::<_, mlua::Function>("main");
         if main_func.is_err() {
             log::error!("[{}] there is no main function, Skipping ..", script_dir);
@@ -117,5 +120,6 @@ impl<'a> LuaLoader<'a> {
                 }
             }
         }
+        Ok(())
     }
 }

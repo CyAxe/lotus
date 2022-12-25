@@ -27,13 +27,14 @@ mod scan;
 
 use cli::bar::create_progress;
 use cli::errors::CliErrors;
+use cli::bar::{MessageLevel,show_msg};
 use glob::glob;
 use log::error;
 use parsing::files::filename_to_string;
 use reqwest::header::HeaderMap;
 use std::path::PathBuf;
 use futures::{stream, StreamExt};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct RequestOpts {
@@ -47,11 +48,12 @@ pub struct Lotus {
     pub script_path: PathBuf,
     pub output: Option<PathBuf>,
     pub workers: usize,
-    pub script_workers: usize
+    pub script_workers: usize,
+    pub stop_after: Arc<Mutex<i32>>
 }
 
 impl Lotus {
-    pub async fn start(&self, urls: Vec<String>, request_option: RequestOpts) {
+    pub async fn start(&self, urls: Vec<String>, request_option: RequestOpts,exit_after: i32) {
         let loaded_scripts = {
             if self.script_path.is_dir() {
                 self.load_scripts()
@@ -60,17 +62,16 @@ impl Lotus {
             }
         };
         if loaded_scripts.is_err() {
-            eprintln!("Reading errors"); // TODO
+            show_msg("Loading scripts error", MessageLevel::Error);
             std::process::exit(1);
         }
         let bar =
             create_progress(urls.len() as u64 * loaded_scripts.as_ref().unwrap().len() as u64);
-        if loaded_scripts.is_err() {
-            eprintln!("Reading error bruh"); // TODO
+        let loaded_scripts = loaded_scripts.unwrap();
+        if self.output.is_none() {
+            show_msg("Output argument is missing", MessageLevel::Error);
             std::process::exit(1);
         }
-        let loaded_scripts = loaded_scripts.unwrap();
-
         let lotus_obj = Arc::new(scan::LuaLoader::new(
             &bar,
             request_option.clone(),
@@ -82,10 +83,29 @@ impl Lotus {
                 stream::iter(loaded_scripts.into_iter())
                     .map(move |(script_out, script_name)| {
                         let url = url.clone();
-                        log::debug!("Running {} script on {} url",script_name, url);
                         let lotus_loader = Arc::clone(&lotus_loader);
+                        let error_check = {
+                            if *self.stop_after.lock().unwrap() == exit_after {
+                                log::debug!("Ignoring scripts");
+                                false
+                            } else {
+                                log::debug!("Running {} script on {} url",script_name, url);
+                                true
+                            }
+                        };
                         async move {
-                            lotus_loader.run_scan(url.as_str(),None,&script_out, &script_name).await
+                            if error_check == false {
+                                // Nothing
+                            } else {
+                                let run_scan = lotus_loader.run_scan(url.as_str(),None,&script_out, &script_name).await;
+                                if run_scan.is_err() {
+                                    log::error!("Script is raising error");
+                                    let mut a = self.stop_after.lock().unwrap();
+                                    log::debug!("Errors Counter: {}",a);
+                                    *a += 1;
+                                }
+
+                            }
                         }
                     })
                     .buffer_unordered(self.script_workers)
