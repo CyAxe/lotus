@@ -61,28 +61,3 @@ impl UserData for Sender {
         );
     }
 }
-
-
-pub trait SenderExt {
-    fn make_curl(&self, url: String) -> String;
-}
-
-impl SenderExt for Sender {
-    fn make_curl(&self,method: String,url: String) -> String {
-        let mut curl_command = "curl".to_string();
-        self.headers.iter().for_each(|(header_name, header_value)| {
-            let header_command = format!(
-                " -H '{}: {}'",
-                header_name.as_str(),
-                header_value.to_str().unwrap()
-            );
-            curl_command.push_str(&header_command);
-        });
-        if self.proxy.is_some() {
-            curl_command.push_str(&format!(" -x {}",self.proxy.clone().unwrap()));
-        }
-        curl_command.push_str(&format!(" --connect-timeout {}",self.timeout));
-        curl_command.push_str(&format!(" {}",url));
-        curl_command
-    }
-}
