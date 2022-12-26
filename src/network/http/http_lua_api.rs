@@ -33,9 +33,6 @@ impl UserData for Sender {
             this.redirects = redirects;
             Ok(())
         });
-        methods.add_method_mut("make_curl", |_, this, url: String| {
-            Ok(this.make_curl(url))
-        });
         methods.add_async_method(
             "send",
             |_, this, (method, url, req_body, req_headers): (String, String, mlua::Value, mlua::Value)| async move {
@@ -59,5 +56,30 @@ impl UserData for Sender {
                 Ok(resp)
             },
         );
+    }
+}
+
+
+pub trait SenderExt {
+    fn make_curl(&self, url: String) -> String;
+}
+
+impl SenderExt for Sender {
+    fn make_curl(&self,method: String,url: String) -> String {
+        let mut curl_command = "curl".to_string();
+        self.headers.iter().for_each(|(header_name, header_value)| {
+            let header_command = format!(
+                " -H '{}: {}'",
+                header_name.as_str(),
+                header_value.to_str().unwrap()
+            );
+            curl_command.push_str(&header_command);
+        });
+        if self.proxy.is_some() {
+            curl_command.push_str(&format!(" -x {}",self.proxy.clone().unwrap()));
+        }
+        curl_command.push_str(&format!(" --connect-timeout {}",self.timeout));
+        curl_command.push_str(&format!(" {}",url));
+        curl_command
     }
 }
