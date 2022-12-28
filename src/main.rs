@@ -20,6 +20,7 @@ mod cli;
 use cli::args::Opts;
 use cli::errors::CliErrors;
 use cli::logger::init_log;
+use cli::bar::{show_msg, MessageLevel};
 use lotus::RequestOpts;
 use std::io;
 use std::io::BufRead;
@@ -34,7 +35,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     let urls = get_target_urls();
     if urls.is_err() {
-        eprintln!("EmptyStdin");
+        show_msg("No input in Stdin",MessageLevel::Error);
         std::process::exit(1);
     }
     // default request options
