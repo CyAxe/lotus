@@ -55,5 +55,9 @@ pub fn show_msg(message: &str, msglevel: MessageLevel) {
             format!("[{}]", Style::new().red().apply_to("ERROR"))
         }
     };
-    println!("{print_level} {message}");
+    if let MessageLevel::Error = msglevel {
+        eprintln!("{print_level} {message}");
+    } else {
+        println!("{print_level} {message}");
+    }
 }
