@@ -61,7 +61,7 @@ impl Lotus {
             }
         };
         if loaded_scripts.is_err() {
-            show_msg("Loading scripts error", MessageLevel::Error);
+            show_msg(&format!("Loading scripts error: {}",loaded_scripts.unwrap_err()), MessageLevel::Error);
             std::process::exit(1);
         }
         let bar =
