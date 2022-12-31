@@ -24,8 +24,8 @@ use crate::output::cve::CveReport;
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(tag = "report_type")]
 pub enum LotusReport {
-    Cve(CveReport),
-    Vuln(OutReport),
+    CVE(CveReport),
+    VULN(OutReport),
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -48,11 +48,11 @@ pub struct AllReports {
 impl UserData for AllReports {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut("addVulnReport", |_, this, the_report: OutReport| {
-            this.reports.push(LotusReport::Vuln(the_report));
+            this.reports.push(LotusReport::VULN(the_report));
             Ok(())
         });
         methods.add_method_mut("addCveReport", |_, this, the_report: CveReport| {
-            this.reports.push(LotusReport::Cve(the_report));
+            this.reports.push(LotusReport::CVE(the_report));
             Ok(())
         });
     }
