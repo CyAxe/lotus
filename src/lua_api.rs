@@ -16,7 +16,8 @@
  * limitations under the License.
  */
 
-use crate::output::report::{AllReports, OutReport};
+use crate::output::vuln::{AllReports, OutReport};
+use crate::output::cve::CveReport;
 use crate::parsing::html::{css_selector, html_parse, html_search, Location};
 use crate::parsing::url::HttpMessage;
 use crate::payloads;
@@ -93,11 +94,12 @@ pub fn http_func(target_url: &str, lua: &Lua) {
         .set(
             "Reports",
             AllReports {
-                reports: Vec::new(),
+                reports: Vec::new()
             },
         )
         .unwrap();
-    lua.globals().set("NewReport", OutReport::init()).unwrap();
+    lua.globals().set("VulnReport", OutReport::init()).unwrap();
+    lua.globals().set("CveReport", CveReport::init()).unwrap();
 }
 
 pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {

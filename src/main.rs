@@ -20,9 +20,11 @@ mod cli;
 use cli::args::Opts;
 use cli::errors::CliErrors;
 use cli::logger::init_log;
+use cli::bar::{show_msg, MessageLevel};
 use lotus::RequestOpts;
 use std::io;
 use std::io::BufRead;
+use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 
 #[tokio::main]
@@ -33,7 +35,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     let urls = get_target_urls();
     if urls.is_err() {
-        eprintln!("EmptyStdin");
+        show_msg("No input in Stdin",MessageLevel::Error);
         std::process::exit(1);
     }
     // default request options
@@ -47,7 +49,8 @@ async fn main() -> Result<(), std::io::Error> {
         script_path: args.script_path,
         output: args.output,
         workers: args.workers,
-        script_workers: args.scripts_workers
+        script_workers: args.scripts_workers,
+        stop_after: Arc::new(Mutex::new(1)),
     };
     lotus_obj
         .start(
@@ -56,6 +59,7 @@ async fn main() -> Result<(), std::io::Error> {
                 .map(|url| url.to_string())
                 .collect::<Vec<String>>(),
             req_opts,
+            args.exit_after,
         )
         .await;
     Ok(())
