@@ -110,27 +110,16 @@ impl<'a> LuaLoader<'a> {
                 );
             } else {
                 let script_report = lua.globals().get::<_, AllReports>("Reports").unwrap();
-                if !script_report.cvereports.is_empty() {
-                    let cve_results = serde_json::to_string(&script_report.cvereports).unwrap();
+                if !script_report.reports.is_empty() {
+                    let results = serde_json::to_string(&script_report.reports).unwrap();
                     log::debug!(
-                        "[{}] CVE Report Length {}",
+                        "[{}] Report Length {}",
                         script_dir,
-                        script_report.cvereports.len()
-                    );
-                    self.write_report(&cve_results);
-                } else {
-                    log::debug!("[{}] Script CVE report is empty", script_dir);
-                }
-                if !script_report.vulnreports.is_empty() {
-                    let results = serde_json::to_string(&script_report.vulnreports).unwrap();
-                    log::debug!(
-                        "[{}] VULN Report Length {}",
-                        script_dir,
-                        script_report.vulnreports.len()
+                        script_report.reports.len()
                     );
                     self.write_report(&results);
                 } else {
-                    log::debug!("[{}] Script VULN report is empty", script_dir);
+                    log::debug!("[{}] Script report is empty", script_dir);
                 }
             }
         }

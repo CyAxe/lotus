@@ -19,7 +19,6 @@
 use mlua::UserData;
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Clone, Deserialize, Serialize)]
 pub struct CveReport {
     pub name: Option<String>,

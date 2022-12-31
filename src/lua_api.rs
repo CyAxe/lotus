@@ -94,8 +94,7 @@ pub fn http_func(target_url: &str, lua: &Lua) {
         .set(
             "Reports",
             AllReports {
-                vulnreports: Vec::new(),
-                cvereports: Vec::new(),
+                reports: Vec::new()
             },
         )
         .unwrap();
