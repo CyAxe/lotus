@@ -1,1 +1,2 @@
-pub mod report;
+pub mod cve;
+pub mod vuln;

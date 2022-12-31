@@ -18,29 +18,7 @@
 
 use mlua::UserData;
 use serde::{Deserialize, Serialize};
-
-pub enum ReportType {
-    Bug(OutReport),
-    Cve(CveReport),
-    Info(InfoReport),
-}
-
-#[derive(Clone, Deserialize, Serialize)]
-pub struct CveReport {
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub url: Option<String>,
-    pub risk: Option<String>,
-    pub matchers: Option<Vec<String>>,
-}
-
-#[derive(Clone, Deserialize, Serialize)]
-pub struct InfoReport {
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub url: Option<String>,
-    pub infotype: Option<String>,
-}
+use crate::output::cve::CveReport;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct OutReport {
@@ -56,13 +34,18 @@ pub struct OutReport {
 
 #[derive(Clone)]
 pub struct AllReports {
-    pub reports: Vec<OutReport>,
+    pub vulnreports: Vec<OutReport>,
+    pub cvereports: Vec<CveReport>,
 }
 
 impl UserData for AllReports {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method_mut("addReport", |_, this, the_report: OutReport| {
-            this.reports.push(the_report);
+        methods.add_method_mut("addVulnReport", |_, this, the_report: OutReport| {
+            this.vulnreports.push(the_report);
+            Ok(())
+        });
+        methods.add_method_mut("addCveReport", |_, this, the_report: CveReport| {
+            this.cvereports.push(the_report);
             Ok(())
         });
     }
