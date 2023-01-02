@@ -65,6 +65,8 @@ pub struct Opts {
 
     #[structopt(long = "log",help = "Saving Lotus Logs for debugging")]
     pub log: Option<PathBuf>,
+    #[structopt(long = "urls", help = "Reading urls from text file", parse(from_os_str))]
+    pub urls: Option<PathBuf>,
 
     #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}", help = "Default Headers (eg: '{\"X-API\":\"123\"}')")]
     pub headers: HeaderMap,
