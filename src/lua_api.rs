@@ -20,6 +20,7 @@ use crate::output::vuln::{AllReports, OutReport};
 use crate::output::cve::CveReport;
 use crate::parsing::html::{css_selector, html_parse, html_search, Location};
 use crate::parsing::url::HttpMessage;
+use crate::threads::LuaThreader;
 use crate::payloads;
 
 use console::Style;
@@ -31,6 +32,7 @@ use url::Url;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
+use std::sync::{Arc, Mutex};
 
 /// check if the regex pattern is matching with this string or not without get the matched parts
 /// you can use it for sqli errors for example
@@ -105,6 +107,7 @@ pub fn http_func(target_url: &str, lua: &Lua) {
 pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
     // ProgressBar
     let bar = the_bar.clone();
+    lua.globals().set("LuaThreader", LuaThreader { stop: Arc::new(Mutex::new(false))}).unwrap();
     lua.globals()
         .set(
             "print_report",

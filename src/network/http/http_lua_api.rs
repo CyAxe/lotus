@@ -1,6 +1,7 @@
 use mlua::UserData;
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
+//use std::borrow::BorrowMut;
 
 #[derive(Clone)]
 pub struct Sender {
@@ -36,7 +37,6 @@ impl UserData for Sender {
         methods.add_async_method(
             "send",
             |_, this, (method, url, req_body, req_headers): (String, String, mlua::Value, mlua::Value)| async move {
-                
                 let mut all_headers = HeaderMap::new();
                 if let mlua::Value::Table(current_headers) = req_headers {
                     current_headers.pairs::<String,String>().for_each(|currentheader| {
