@@ -6,6 +6,7 @@ use mlua::Lua;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
+use std::path::Path;
 use thirtyfour::prelude::*;
 
 #[derive(Clone)]
@@ -88,6 +89,11 @@ impl<'a> LuaLoader<'a> {
         // settings lua api
         self.set_lua(target_url, &lua, driver);
         lua.globals().set("SCRIPT_PATH", script_dir).unwrap();
+        lua.globals().set("JOIN_SCRIPT_DIR", lua.create_function(|c_lua, new_path: String| {
+            let script_path = c_lua.globals().get::<_, String>("SCRIPT_PATH").unwrap();
+            let the_path = Path::new(&script_path);
+            Ok(the_path.parent().unwrap().join(new_path).to_str().unwrap().to_string())
+        }).unwrap()).unwrap();
 
         // Handle this error please
         let run_code = lua.load(script_code).exec_async().await;
