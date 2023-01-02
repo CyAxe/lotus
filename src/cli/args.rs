@@ -38,36 +38,36 @@ fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
 )]
 pub struct Opts {
     // redirects limit
-    #[structopt(short, long, default_value = "10")]
+    #[structopt(short, long, default_value = "10", help="Number of allowed http redirects")]
     pub redirects: u32,
 
     // threads
-    #[structopt(short = "w", long = "workers", default_value = "10")]
+    #[structopt(short = "w", long = "workers", default_value = "10", help = "Number of workers")]
     pub workers: usize,
 
-    #[structopt(short = "sw", long = "scripts-worker", default_value = "10")]
+    #[structopt(short = "sw", long = "scripts-worker", default_value = "10", help = "How many scripts to run at the same time for one url")]
     pub scripts_workers: usize,
 
     // timeout
-    #[structopt(short = "t", long = "timeout", default_value = "10")]
+    #[structopt(short = "t", long = "timeout", default_value = "10", help = "Connection timeout")]
     pub timeout: u64,
 
     /// Input file
-    #[structopt(parse(from_os_str))]
+    #[structopt(parse(from_os_str), help = "Scripts path")]
     pub script_path: PathBuf,
 
     /// Output file, stdout if not present
-    #[structopt(short = "o", long = "output", parse(from_os_str))]
+    #[structopt(short = "o", long = "output", parse(from_os_str), help="output json file" )]
     pub output: Option<PathBuf>,
 
-    #[structopt(short = "p", long = "proxy")]
+    #[structopt(short = "p", long = "proxy", help = "Set http proxy for all connections")]
     pub proxy: Option<String>,
 
-    #[structopt(long = "log")]
+    #[structopt(long = "log",help = "Saving Lotus Logs for debugging")]
     pub log: Option<PathBuf>,
 
-    #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}")]
+    #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}", help = "Default Headers (eg: '{\"X-API\":\"123\"}')")]
     pub headers: HeaderMap,
-    #[structopt(long = "exit-after-errors", default_value = "2000")]
+    #[structopt(long = "exit-after-errors", default_value = "2000", help = "Exit after X number of script errors")]
     pub exit_after: i32,
 }
