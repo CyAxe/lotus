@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
-mod cli;
 mod lua_api;
 mod network;
 mod output;
 mod parsing;
 mod payloads;
 mod scan;
+mod threads;
+mod cli;
 
-use cli::bar::create_progress;
-use cli::bar::{show_msg, MessageLevel};
+use cli::bar::{show_msg,create_progress, MessageLevel};
 use cli::errors::CliErrors;
 use futures::{stream, StreamExt};
 use glob::glob;

@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-mod cli;
 mod parsing;
+mod cli;
 use parsing::files::filename_to_string;
 use cli::args::Opts;
 use cli::errors::CliErrors;
