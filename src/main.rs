@@ -17,6 +17,8 @@
  */
 
 mod cli;
+mod parsing;
+use parsing::files::filename_to_string;
 use cli::args::Opts;
 use cli::errors::CliErrors;
 use cli::logger::init_log;
@@ -24,6 +26,7 @@ use cli::bar::{show_msg, MessageLevel};
 use lotus::RequestOpts;
 use std::io;
 use std::io::BufRead;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 
@@ -33,7 +36,7 @@ async fn main() -> Result<(), std::io::Error> {
     // setup logger
     init_log(args.log).unwrap();
 
-    let urls = get_target_urls();
+    let urls = get_target_urls(args.urls);
     if urls.is_err() {
         show_msg("No input in Stdin",MessageLevel::Error);
         std::process::exit(1);
@@ -65,22 +68,31 @@ async fn main() -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn get_target_urls() -> Result<Vec<String>, CliErrors> {
-    if atty::is(atty::Stream::Stdin) {
-        Err(CliErrors::EmptyStdin)
+fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {
+    if url_file.is_some() {
+        let urls = filename_to_string(url_file.unwrap().to_str().unwrap());
+        if urls.is_ok() {
+            Ok(urls.unwrap().lines().map(|url| url.to_string()).collect::<Vec<String>>())
+        } else {
+            Err(CliErrors::ReadingError)
+        }
     } else {
-        let stdin = io::stdin();
-        Ok(stdin
-            .lock()
-            .lines()
-            .map(|x| {
-                let the_url = x.unwrap();
-                match url::Url::parse(&the_url) {
-                    Ok(_url) => {}
-                    Err(_err) => {}
-                }
-                the_url
-            })
-            .collect::<Vec<String>>())
+        if atty::is(atty::Stream::Stdin) {
+            Err(CliErrors::EmptyStdin)
+        } else {
+            let stdin = io::stdin();
+            Ok(stdin
+                .lock()
+                .lines()
+                .map(|x| {
+                    let the_url = x.unwrap();
+                    match url::Url::parse(&the_url) {
+                        Ok(_url) => {}
+                        Err(_err) => {}
+                    }
+                    the_url
+                })
+                .collect::<Vec<String>>())
+        }
     }
 }
