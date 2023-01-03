@@ -16,19 +16,24 @@
  * limitations under the License.
  */
 
-mod parsing;
-mod cli;
-use parsing::files::filename_to_string;
-use cli::args::Opts;
-use cli::errors::CliErrors;
-use cli::logger::init_log;
-use cli::bar::{show_msg, MessageLevel};
-use lotus::RequestOpts;
-use std::io;
-use std::io::BufRead;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use lotus::{
+    RequestOpts,
+    cli::{
+        args::Opts,
+        errors::CliErrors,
+        logger::init_log,
+        bar::{show_msg,MessageLevel}
+    },
+    lua::parsing::files::filename_to_string
+};
+use std::{
+    io,
+    io::BufRead,
+    path::PathBuf,
+    sync::{Arc, Mutex}
+};
 use structopt::StructOpt;
+
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {

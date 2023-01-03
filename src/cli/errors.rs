@@ -6,4 +6,6 @@ pub enum CliErrors {
     EmptyStdin,
     #[error("File not found")]
     ReadingError,
+    #[error("RegexError")]
+    RegexError
 }

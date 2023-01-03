@@ -1,12 +1,18 @@
-use crate::lua_api::{encoding_func, get_matching_func, get_utilsfunc, http_func, payloads_func};
-use crate::network::http::Sender;
-use crate::output::vuln::AllReports;
-use crate::RequestOpts;
+use crate::{
+    lua::{
+        loader::{encoding_func, get_matching_func, get_utilsfunc, http_func, payloads_func},
+        network::http::Sender,
+        output::vuln::AllReports
+    },
+    RequestOpts
+};
 use mlua::Lua;
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::sync::{Arc, Mutex};
-use std::path::Path;
+use std::{
+    fs::OpenOptions,
+    io::Write,
+    sync::{Arc, Mutex},
+    path::Path
+};
 use thirtyfour::prelude::*;
 
 #[derive(Clone)]

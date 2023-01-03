@@ -18,7 +18,7 @@
 
 use mlua::UserData;
 use serde::{Deserialize, Serialize};
-use crate::output::cve::CveReport;
+use crate::lua::output::cve::CveReport;
 
 
 #[derive(Clone, Deserialize, Serialize)]

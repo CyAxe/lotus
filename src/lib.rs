@@ -16,22 +16,20 @@
  * limitations under the License.
  */
 
-mod lua_api;
-mod network;
-mod output;
-mod parsing;
-mod payloads;
-mod scan;
-mod threads;
-mod cli;
+pub mod lua;
+pub mod cli;
 
+use lua::scan::LuaLoader;
+use lua::parsing::files::filename_to_string;
 use cli::bar::{show_msg,create_progress, MessageLevel};
 use cli::errors::CliErrors;
+
+use reqwest::header::HeaderMap;
 use futures::{stream, StreamExt};
+
 use glob::glob;
 use log::error;
-use parsing::files::filename_to_string;
-use reqwest::header::HeaderMap;
+
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
@@ -71,7 +69,7 @@ impl Lotus {
             show_msg("Output argument is missing", MessageLevel::Error);
             std::process::exit(1);
         }
-        let lotus_obj = Arc::new(scan::LuaLoader::new(
+        let lotus_obj = Arc::new(LuaLoader::new(
             &bar,
             request_option.clone(),
             self.output.as_ref().unwrap().to_str().unwrap().to_string(),

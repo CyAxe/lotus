@@ -16,23 +16,33 @@
  * limitations under the License.
  */
 
-use crate::output::vuln::{AllReports, OutReport};
-use crate::output::cve::CveReport;
-use crate::parsing::html::{css_selector, html_parse, html_search, Location};
-use crate::parsing::url::HttpMessage;
-use crate::threads::LuaThreader;
-use crate::payloads;
+use crate::{
+    cli::errors::CliErrors,
+    lua::{
+        payloads,
+        output::vuln::{AllReports, OutReport},
+        output::cve::CveReport,
+        parsing::{
+            html::{css_selector, html_parse, html_search, Location},
+            url::HttpMessage
+        },
+        threads::LuaThreader
+    }
+};
+
+use log::{debug, error, info, warn};
+use tokio::time::{sleep, Duration};
 
 use console::Style;
-use log::{debug, error, info, warn};
 use mlua::Lua;
-use tokio::time::{sleep, Duration};
 use url::Url;
 
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::{
+    fs::File,
+    io::Read,
+    path::Path,
+    sync::{Arc, Mutex}
+};
 
 /// check if the regex pattern is matching with this string or not without get the matched parts
 /// you can use it for sqli errors for example
@@ -40,13 +50,19 @@ use std::sync::{Arc, Mutex};
 /// assert_eq!(true,is_match("\d","1"));
 /// assert_eq!(false,is_match("\d\d","1"))
 /// ```
-pub fn is_match(pattern: String, resp: String) -> bool {
+pub fn is_match(pattern: String, resp: String) -> Result<bool, CliErrors> {
     let re = fancy_regex::Regex::new(&pattern);
     if let Ok(..) = re {
-        re.unwrap().is_match(&resp).unwrap_or(false)
+        let matched = re.unwrap().is_match(&resp);
+        if matched.is_err() {
+            error!("Cannot match with resp value: {}",resp);
+            Err(CliErrors::RegexError)
+        } else {
+            Ok(matched.unwrap())
+        }
     } else {
-        debug!("MATCHING ERROR  {:?} | {:?}", pattern, re);
-        false
+        error!("Regex Pattern ERROR  {:?} | {:?}", pattern, re);
+        Err(CliErrors::RegexError)
     }
 }
 
@@ -219,8 +235,14 @@ pub fn get_matching_func(lua: &Lua) {
     lua.globals()
         .set(
             "is_match",
-            lua.create_function(|_, (pattern, text): (String, String)| Ok(is_match(pattern, text)))
-                .unwrap(),
+            lua.create_function(|_, (pattern, text): (String, String)| {
+                let try_match = is_match(pattern, text);
+                if try_match.is_err() {
+                    Ok(())
+                } else {
+                    Ok(())
+                }
+            }).unwrap(),
         )
         .unwrap();
     lua.globals()
