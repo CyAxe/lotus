@@ -1,6 +1,6 @@
-use futures::{StreamExt, stream};
-use std::sync::{Arc, Mutex};
+use futures::{stream, StreamExt};
 use mlua::UserData;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct LuaThreader {
@@ -36,8 +36,6 @@ impl UserData for LuaThreader {
             this.stop = Arc::new(Mutex::new(true));
             Ok(())
         });
-        methods.add_method("is_stop", |_, this, ()| {
-            Ok(*this.stop.lock().unwrap())
-        });
+        methods.add_method("is_stop", |_, this, ()| Ok(*this.stop.lock().unwrap()));
     }
 }

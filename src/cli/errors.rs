@@ -7,5 +7,5 @@ pub enum CliErrors {
     #[error("File not found")]
     ReadingError,
     #[error("RegexError")]
-    RegexError
+    RegexError,
 }

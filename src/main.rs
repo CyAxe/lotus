@@ -17,23 +17,22 @@
  */
 
 use lotus::{
-    RequestOpts,
     cli::{
         args::Opts,
+        bar::{show_msg, MessageLevel},
         errors::CliErrors,
         logger::init_log,
-        bar::{show_msg,MessageLevel}
     },
-    lua::parsing::files::filename_to_string
+    lua::parsing::files::filename_to_string,
+    RequestOpts,
 };
 use std::{
     io,
     io::BufRead,
     path::PathBuf,
-    sync::{Arc, Mutex}
+    sync::{Arc, Mutex},
 };
 use structopt::StructOpt;
-
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -43,7 +42,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     let urls = get_target_urls(args.urls);
     if urls.is_err() {
-        show_msg("No input in Stdin",MessageLevel::Error);
+        show_msg("No input in Stdin", MessageLevel::Error);
         std::process::exit(1);
     }
     // default request options
@@ -77,7 +76,11 @@ fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> 
     if url_file.is_some() {
         let urls = filename_to_string(url_file.unwrap().to_str().unwrap());
         if urls.is_ok() {
-            Ok(urls.unwrap().lines().map(|url| url.to_string()).collect::<Vec<String>>())
+            Ok(urls
+                .unwrap()
+                .lines()
+                .map(|url| url.to_string())
+                .collect::<Vec<String>>())
         } else {
             Err(CliErrors::ReadingError)
         }

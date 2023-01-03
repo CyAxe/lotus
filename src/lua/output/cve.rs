@@ -28,7 +28,6 @@ pub struct CveReport {
     pub matchers: Option<Vec<String>>,
 }
 
-
 impl UserData for CveReport {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut("setRisk", |_, this, risk: String| {
@@ -53,19 +52,17 @@ impl UserData for CveReport {
             this.matchers = Some(matchers);
             Ok(())
         });
-
     }
 }
 
 impl CveReport {
     pub fn init() -> CveReport {
-        CveReport { 
+        CveReport {
             name: None,
             description: None,
             url: None,
             risk: None,
-            matchers: None
+            matchers: None,
         }
     }
 }
-

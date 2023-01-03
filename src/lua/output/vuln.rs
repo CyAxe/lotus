@@ -16,10 +16,9 @@
  * limitations under the License.
  */
 
+use crate::lua::output::cve::CveReport;
 use mlua::UserData;
 use serde::{Deserialize, Serialize};
-use crate::lua::output::cve::CveReport;
-
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(tag = "report_type")]

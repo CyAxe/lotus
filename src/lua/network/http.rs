@@ -154,9 +154,9 @@ impl SenderExt for Sender {
             curl_command.push_str(&header_command);
         });
         if self.proxy.is_none() {
-            curl_command.push_str(&format!("-x {}",self.proxy.clone().unwrap()));
+            curl_command.push_str(&format!("-x {}", self.proxy.clone().unwrap()));
         }
-        curl_command.push_str(&format!("--connect-timeout {}",self.timeout));
+        curl_command.push_str(&format!("--connect-timeout {}", self.timeout));
         curl_command
     }
 }

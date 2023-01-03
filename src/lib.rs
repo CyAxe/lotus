@@ -16,22 +16,25 @@
  * limitations under the License.
  */
 
-pub mod lua;
 pub mod cli;
+pub mod lua;
 
-use lua::scan::LuaLoader;
-use lua::parsing::files::filename_to_string;
-use cli::bar::{show_msg,create_progress, MessageLevel};
-use cli::errors::CliErrors;
+use cli::{
+    bar::{create_progress, show_msg, MessageLevel},
+    errors::CliErrors,
+};
+use lua::{parsing::files::filename_to_string, scan::LuaLoader};
 
-use reqwest::header::HeaderMap;
 use futures::{stream, StreamExt};
+use reqwest::header::HeaderMap;
 
 use glob::glob;
 use log::error;
 
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::{
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 #[derive(Clone)]
 pub struct RequestOpts {
@@ -59,7 +62,10 @@ impl Lotus {
             }
         };
         if loaded_scripts.is_err() {
-            show_msg(&format!("Loading scripts error: {}",loaded_scripts.unwrap_err()), MessageLevel::Error);
+            show_msg(
+                &format!("Loading scripts error: {}", loaded_scripts.unwrap_err()),
+                MessageLevel::Error,
+            );
             std::process::exit(1);
         }
         let bar =

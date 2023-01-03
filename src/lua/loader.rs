@@ -19,15 +19,15 @@
 use crate::{
     cli::errors::CliErrors,
     lua::{
-        payloads,
-        output::vuln::{AllReports, OutReport},
         output::cve::CveReport,
+        output::vuln::{AllReports, OutReport},
         parsing::{
             html::{css_selector, html_parse, html_search, Location},
-            url::HttpMessage
+            url::HttpMessage,
         },
-        threads::LuaThreader
-    }
+        payloads,
+        threads::LuaThreader,
+    },
 };
 
 use log::{debug, error, info, warn};
@@ -41,7 +41,7 @@ use std::{
     fs::File,
     io::Read,
     path::Path,
-    sync::{Arc, Mutex}
+    sync::{Arc, Mutex},
 };
 
 /// check if the regex pattern is matching with this string or not without get the matched parts
@@ -55,7 +55,7 @@ pub fn is_match(pattern: String, resp: String) -> Result<bool, CliErrors> {
     if let Ok(..) = re {
         let matched = re.unwrap().is_match(&resp);
         if matched.is_err() {
-            error!("Cannot match with resp value: {}",resp);
+            error!("Cannot match with resp value: {}", resp);
             Err(CliErrors::RegexError)
         } else {
             Ok(matched.unwrap())
@@ -112,7 +112,7 @@ pub fn http_func(target_url: &str, lua: &Lua) {
         .set(
             "Reports",
             AllReports {
-                reports: Vec::new()
+                reports: Vec::new(),
             },
         )
         .unwrap();
@@ -123,7 +123,14 @@ pub fn http_func(target_url: &str, lua: &Lua) {
 pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
     // ProgressBar
     let bar = the_bar.clone();
-    lua.globals().set("LuaThreader", LuaThreader { stop: Arc::new(Mutex::new(false))}).unwrap();
+    lua.globals()
+        .set(
+            "LuaThreader",
+            LuaThreader {
+                stop: Arc::new(Mutex::new(false)),
+            },
+        )
+        .unwrap();
     lua.globals()
         .set(
             "print_report",
@@ -242,7 +249,8 @@ pub fn get_matching_func(lua: &Lua) {
                 } else {
                     Ok(())
                 }
-            }).unwrap(),
+            })
+            .unwrap(),
         )
         .unwrap();
     lua.globals()
