@@ -21,6 +21,7 @@ use std::{collections::HashMap, time::Duration};
 mod http_lua_api;
 pub use http_lua_api::Sender;
 use tealr::{mlu::FromToLua, TypeName};
+use mlua::ExternalError;
 
 /// RespType for lua userdata
 #[derive(FromToLua, Clone, Debug, TypeName)]
@@ -93,7 +94,7 @@ impl Sender {
         url: String,
         body: String,
         headers: HeaderMap,
-    ) -> HashMap<String, RespType> {
+    ) -> Result<HashMap<String, RespType>, mlua::Error> {
         let mut resp_data: HashMap<String, RespType> = HashMap::new();
         match self
             .build_client()
@@ -123,16 +124,11 @@ impl Sender {
                     "body".to_string(),
                     RespType::Str(resp.text().await.unwrap()),
                 );
-                resp_data.insert("errors".to_string(), RespType::NoErrors);
                 resp_data.insert("headers".to_string(), RespType::Headers(resp_headers));
-                resp_data
+                Ok(resp_data)
             }
             Err(err) => {
-                resp_data.insert("status".to_string(), RespType::Emtpy);
-                resp_data.insert("body".to_string(), RespType::Emtpy);
-                resp_data.insert("errors".to_string(), RespType::Error(err.to_string()));
-                resp_data.insert("headers".to_string(), RespType::Headers(HashMap::new()));
-                resp_data
+                Err(err.to_lua_err())
             }
         }
     }

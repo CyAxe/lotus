@@ -53,7 +53,11 @@ impl UserData for Sender {
                 };
 
                 let resp = this.send(&method, url, body, all_headers).await;
-                Ok(resp)
+                if resp.is_ok(){
+                    Ok(resp.unwrap())
+                } else {
+                    Err(resp.unwrap_err())
+                }
             },
         );
     }
