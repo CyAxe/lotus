@@ -8,4 +8,6 @@ pub enum CliErrors {
     ReadingError,
     #[error("RegexError")]
     RegexError,
+    #[error("RegexPatternError")]
+    RegexPatternError,
 }

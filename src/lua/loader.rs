@@ -34,7 +34,7 @@ use log::{debug, error, info, warn};
 use tokio::time::{sleep, Duration};
 
 use console::Style;
-use mlua::Lua;
+use mlua::{Lua, ExternalError};
 use url::Url;
 
 use std::{
@@ -61,8 +61,8 @@ pub fn is_match(pattern: String, resp: String) -> Result<bool, CliErrors> {
             Ok(matched.unwrap())
         }
     } else {
-        error!("Regex Pattern ERROR  {:?} | {:?}", pattern, re);
-        Err(CliErrors::RegexError)
+        error!("Regex Pattern ERROR  {:?}", pattern);
+        Err(CliErrors::RegexPatternError)
     }
 }
 
@@ -245,9 +245,9 @@ pub fn get_matching_func(lua: &Lua) {
             lua.create_function(|_, (pattern, text): (String, String)| {
                 let try_match = is_match(pattern, text);
                 if try_match.is_err() {
-                    Ok(())
+                    Err(try_match.unwrap_err().to_lua_err())
                 } else {
-                    Ok(())
+                    Ok(try_match.unwrap())
                 }
             })
             .unwrap(),
