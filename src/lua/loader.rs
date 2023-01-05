@@ -225,7 +225,7 @@ pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
                     file.read_to_string(&mut file_content)?;
                     Ok(file_content)
                 } else {
-                    Ok(0.to_string())
+                    Err(CliErrors::ReadingError.to_lua_err())
                 }
             })
             .unwrap(),
