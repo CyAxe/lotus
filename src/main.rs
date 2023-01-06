@@ -97,18 +97,22 @@ fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> 
             Err(CliErrors::EmptyStdin)
         } else {
             let stdin = io::stdin();
-            Ok(stdin
+            let mut urls: Vec<String> = Vec::new();
+            stdin
                 .lock()
                 .lines()
-                .map(|x| {
+                .for_each(|x| {
                     let the_url = x.unwrap();
                     match url::Url::parse(&the_url) {
-                        Ok(_url) => {}
-                        Err(_err) => {}
-                    }
-                    the_url
-                })
-                .collect::<Vec<String>>())
+                        Ok(..) => {
+                            urls.push(the_url);
+                        }
+                        Err(..) => {
+                            log::error!("Cannot Parse {} url, ignoring ..",the_url);
+                        }
+                    };
+                });
+            Ok(urls)
         }
     }
 }
