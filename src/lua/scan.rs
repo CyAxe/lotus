@@ -116,22 +116,27 @@ impl<'a> LuaLoader<'a> {
         // Handle this error please
         let run_code = lua.load(script_code).exec_async().await;
         if run_code.is_err() {
+            self.bar.inc(1);
+            self.bar.println("Script Error");
             return run_code;
         }
         let main_func = lua.globals().get::<_, mlua::Function>("main");
         if main_func.is_err() {
             log::error!("[{}] there is no main function, Skipping ..", script_dir);
+            self.bar.println(format!("[{}] there is no main function, Skipping ..", script_dir));
         } else {
             let run_scan = main_func
                 .unwrap()
                 .call_async::<_, mlua::Value>(target_url)
                 .await;
+            self.bar.inc(1);
             if run_scan.is_err() {
                 log::error!(
                     "[{}] Script Error : {:?}",
                     script_dir,
                     run_scan.unwrap_err()
                 );
+                self.bar.println("Script ERROR");
             } else {
                 let script_report = lua.globals().get::<_, AllReports>("Reports").unwrap();
                 if !script_report.reports.is_empty() {

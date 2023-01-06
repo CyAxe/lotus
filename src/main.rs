@@ -42,7 +42,15 @@ async fn main() -> Result<(), std::io::Error> {
 
     let urls = get_target_urls(args.urls);
     if urls.is_err() {
-        show_msg("No input in Stdin", MessageLevel::Error);
+        match urls {
+            Err(CliErrors::EmptyStdin) => {
+                show_msg("No input in Stdin", MessageLevel::Error);
+            },
+            Err(CliErrors::ReadingError) => {
+                show_msg("Cannot Read the urls file", MessageLevel::Error);
+            },
+            _ => {}
+        };
         std::process::exit(1);
     }
     // default request options

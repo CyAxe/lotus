@@ -105,7 +105,8 @@ impl Lotus {
                                     .run_scan(url.as_str(), None, &script_out, &script_name)
                                     .await;
                                 if run_scan.is_err() {
-                                    log::error!("Script is raising error");
+                                    log::error!("script error: {}",&run_scan.clone().unwrap_err().to_string());
+                                    show_msg(&run_scan.unwrap_err().to_string(), MessageLevel::Error);
                                     let mut a = self.stop_after.lock().unwrap();
                                     log::debug!("Errors Counter: {}", a);
                                     *a += 1;
