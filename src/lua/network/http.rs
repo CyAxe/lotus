@@ -118,7 +118,7 @@ impl Sender {
                 resp_data.insert("url".to_string(), RespType::Str(url));
                 resp_data.insert(
                     "status".to_string(),
-                    RespType::Str(resp.status().to_string()),
+                    RespType::Int(resp.status().as_u16() as i32),
                 );
                 resp_data.insert(
                     "body".to_string(),
