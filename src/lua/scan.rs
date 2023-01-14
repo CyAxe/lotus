@@ -123,7 +123,10 @@ impl<'a> LuaLoader<'a> {
         let main_func = lua.globals().get::<_, mlua::Function>("main");
         if main_func.is_err() {
             log::error!("[{}] there is no main function, Skipping ..", script_dir);
-            self.bar.println(format!("[{}] there is no main function, Skipping ..", script_dir));
+            self.bar.println(format!(
+                "[{}] there is no main function, Skipping ..",
+                script_dir
+            ));
         } else {
             let run_scan = main_func
                 .unwrap()
@@ -134,9 +137,9 @@ impl<'a> LuaLoader<'a> {
                 log::error!(
                     "[{}] Script Error : {:?}",
                     script_dir,
-                    run_scan.unwrap_err()
+                    run_scan.clone().unwrap_err()
                 );
-                self.bar.println("Script ERROR");
+                self.bar.println(format!("Script ERROR: {:?}",run_scan.unwrap_err()));
             } else {
                 let script_report = lua.globals().get::<_, AllReports>("Reports").unwrap();
                 if !script_report.reports.is_empty() {

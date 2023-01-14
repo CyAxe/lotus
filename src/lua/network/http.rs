@@ -20,8 +20,8 @@ use reqwest::{header::HeaderMap, redirect, Client, Method, Proxy};
 use std::{collections::HashMap, time::Duration};
 mod http_lua_api;
 pub use http_lua_api::Sender;
-use tealr::{mlu::FromToLua, TypeName};
 use mlua::ExternalError;
+use tealr::{mlu::FromToLua, TypeName};
 
 /// RespType for lua userdata
 #[derive(FromToLua, Clone, Debug, TypeName)]
@@ -127,32 +127,7 @@ impl Sender {
                 resp_data.insert("headers".to_string(), RespType::Headers(resp_headers));
                 Ok(resp_data)
             }
-            Err(err) => {
-                Err(err.to_lua_err())
-            }
+            Err(err) => Err(err.to_lua_err()),
         }
-    }
-}
-
-pub trait SenderExt {
-    fn make_curl(&self) -> String;
-}
-
-impl SenderExt for Sender {
-    fn make_curl(&self) -> String {
-        let mut curl_command = "curl ".to_string();
-        self.headers.iter().for_each(|(header_name, header_value)| {
-            let header_command = format!(
-                "-H '{}: {}'",
-                header_name.as_str(),
-                header_value.to_str().unwrap()
-            );
-            curl_command.push_str(&header_command);
-        });
-        if self.proxy.is_none() {
-            curl_command.push_str(&format!("-x {}", self.proxy.clone().unwrap()));
-        }
-        curl_command.push_str(&format!("--connect-timeout {}", self.timeout));
-        curl_command
     }
 }
