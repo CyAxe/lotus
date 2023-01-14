@@ -20,12 +20,20 @@ use mlua::UserData;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Deserialize, Serialize)]
+pub enum ReportMatchers {
+    RawResponse(String),
+    ResposneHeaders(String),
+    ResponseBody(String),
+    General(String),
+}
+
+#[derive(Clone, Deserialize, Serialize)]
 pub struct CveReport {
     pub name: Option<String>,
     pub description: Option<String>,
     pub url: Option<String>,
     pub risk: Option<String>,
-    pub matchers: Option<Vec<String>>,
+    pub matchers: Vec<ReportMatchers>,
 }
 
 impl UserData for CveReport {
@@ -48,10 +56,19 @@ impl UserData for CveReport {
             Ok(())
         });
 
-        methods.add_method_mut("setMatchers", |_, this, matchers: Vec<String>| {
-            this.matchers = Some(matchers);
-            Ok(())
-        });
+        methods.add_method_mut(
+            "addMatcher",
+            |_, this, (matcher_string, matching_type): (String, i32)| {
+                let matcher_data = match matching_type {
+                    1 => ReportMatchers::RawResponse(matcher_string),
+                    2 => ReportMatchers::ResposneHeaders(matcher_string),
+                    3 => ReportMatchers::ResponseBody(matcher_string),
+                    _ => ReportMatchers::General(matcher_string),
+                };
+                this.matchers.push(matcher_data);
+                Ok(())
+            },
+        );
     }
 }
 
@@ -62,7 +79,7 @@ impl CveReport {
             description: None,
             url: None,
             risk: None,
-            matchers: None,
+            matchers: vec![],
         }
     }
 }
