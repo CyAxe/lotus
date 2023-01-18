@@ -131,9 +131,15 @@ pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
             },
         )
         .unwrap();
-    lua.globals().set("str_startswith", lua.create_function(|_, (str_one, str_two): (String, String)| {
-        Ok(str_one.starts_with(&str_two))
-    }).unwrap()).unwrap();
+    lua.globals()
+        .set(
+            "str_startswith",
+            lua.create_function(|_, (str_one, str_two): (String, String)| {
+                Ok(str_one.starts_with(&str_two))
+            })
+            .unwrap(),
+        )
+        .unwrap();
     lua.globals()
         .set(
             "print_report",

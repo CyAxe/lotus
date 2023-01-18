@@ -36,11 +36,40 @@ use structopt::StructOpt;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    let args = Opts::from_args();
-    // setup logger
-    init_log(args.log).unwrap();
+    let (urls, exit_after, req_opts, lotus_obj) = match Opts::from_args() {
+        Opts::URLS {
+            redirects,
+            workers,
+            scripts_workers,
+            timeout,
+            script_path,
+            output,
+            proxy,
+            log,
+            urls,
+            headers,
+            exit_after,
+        } => {
+            // setup logger
+            init_log(log).unwrap();
+            let req_opts = RequestOpts {
+                headers,
+                proxy,
+                timeout,
+                redirects,
+            };
+            let lotus_obj = lotus::Lotus {
+                script_path,
+                output,
+                workers,
+                script_workers: scripts_workers,
+                stop_after: Arc::new(Mutex::new(1)),
+            };
+            let urls = get_target_urls(urls);
+            (urls, exit_after, req_opts, lotus_obj)
+        }
+    };
 
-    let urls = get_target_urls(args.urls);
     if urls.is_err() {
         match urls {
             Err(CliErrors::EmptyStdin) => {
@@ -53,20 +82,6 @@ async fn main() -> Result<(), std::io::Error> {
         };
         std::process::exit(1);
     }
-    // default request options
-    let req_opts = RequestOpts {
-        headers: args.headers,
-        proxy: args.proxy,
-        timeout: args.timeout,
-        redirects: args.redirects,
-    };
-    let lotus_obj = lotus::Lotus {
-        script_path: args.script_path,
-        output: args.output,
-        workers: args.workers,
-        script_workers: args.scripts_workers,
-        stop_after: Arc::new(Mutex::new(1)),
-    };
     lotus_obj
         .start(
             urls.unwrap()
@@ -74,7 +89,7 @@ async fn main() -> Result<(), std::io::Error> {
                 .map(|url| url.to_string())
                 .collect::<Vec<String>>(),
             req_opts,
-            args.exit_after,
+            exit_after,
         )
         .await;
     Ok(())

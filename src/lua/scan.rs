@@ -139,7 +139,8 @@ impl<'a> LuaLoader<'a> {
                     script_dir,
                     run_scan.clone().unwrap_err()
                 );
-                self.bar.println(format!("Script ERROR: {:?}",run_scan.unwrap_err()));
+                self.bar
+                    .println(format!("Script ERROR: {:?}", run_scan.unwrap_err()));
             } else {
                 let script_report = lua.globals().get::<_, AllReports>("Reports").unwrap();
                 if !script_report.reports.is_empty() {

@@ -24,7 +24,7 @@ $ cargo install --git=https://github.com/rusty-sec/lotus/
 You will then need to download the lua scripts from our [github repository](https://github.com/rusty-sec/lotus-scripts) and run the following command
 
 ```
-$ echo http://testphp.vulnweb.com/listproducts.php?cat=1 | lotus lotus-scripts/active -o test_out.json
+$ echo http://testphp.vulnweb.com/listproducts.php?cat=1 | lotus urls lotus-scripts/active -o test_out.json
 ```
 
 ![image](https://user-images.githubusercontent.com/45688522/202260525-46caeaeb-8687-4723-a406-aea30e0ea9c6.png)
