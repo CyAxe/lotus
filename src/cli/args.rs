@@ -3,6 +3,7 @@ use reqwest::header::{HeaderName, HeaderValue};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use crate::cli::errors::CliErrors;
 
 fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
     let parsed_json = serde_json::from_str::<HashMap<String, String>>(raw_headers);
@@ -31,12 +32,45 @@ fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
     Ok(user_headers)
 }
 
+
+fn get_script_type(script_type: &str) -> Result<ScriptType,CliErrors> {
+    let script_type = match script_type {
+        "fuzz" => ScriptType::Fuzz,
+        "cve" => ScriptType::CVE,
+        "passive" => ScriptType::PASSIVE,
+        "service" => ScriptType::SERVICE,
+        _ => {
+            ScriptType::NotSupported
+        }
+    };
+    if script_type == ScriptType::NotSupported {
+        Err(CliErrors::UnsupportedScript)
+    } else {
+        Ok(script_type)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ScriptType {
+    Fuzz,
+    CVE,
+    PASSIVE,
+    SERVICE,
+    NotSupported
+}
+
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "Lotus",
     about = "Fast Web Security Scanner written in Rust based on Lua Scripts"
 )]
 pub enum Opts {
+    NEW {
+        #[structopt(short, long, parse(try_from_str = get_script_type))]
+        scan_type: ScriptType,
+        #[structopt(short, long)]
+        file_name: PathBuf
+    },
     URLS {
         // redirects limit
         #[structopt(

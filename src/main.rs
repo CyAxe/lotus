@@ -22,6 +22,7 @@ use lotus::{
         bar::{show_msg, MessageLevel},
         errors::CliErrors,
         logger::init_log,
+        default_scripts::{FUZZ_EXAMPLE, write_file},
     },
     lua::parsing::files::filename_to_string,
     RequestOpts,
@@ -67,6 +68,21 @@ async fn main() -> Result<(), std::io::Error> {
             };
             let urls = get_target_urls(urls);
             (urls, exit_after, req_opts, lotus_obj)
+        },
+        Opts::NEW { scan_type, file_name } => {
+            match scan_type {
+                Fuzz => {
+                    let write_script_file = write_file(file_name, FUZZ_EXAMPLE);
+                    if let Err(CliErrors::FileExists) = write_script_file {
+                        show_msg("File Exists, cannot overwrite it, please rename/remove it or try another name", MessageLevel::Error);
+                    } else if let Err(CliErrors::WritingError) = write_script_file {
+                        show_msg(CliErrors::WritingError.to_string().as_str(), MessageLevel::Error);
+                    }
+                },
+                _ => {
+                }
+            };
+            std::process::exit(0);
         }
     };
 
