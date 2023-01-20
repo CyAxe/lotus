@@ -15,5 +15,5 @@ pub enum CliErrors {
     #[error("RegexPatternError")]
     RegexPatternError,
     #[error("Unsupported script type")]
-    UnsupportedScript
+    UnsupportedScript,
 }

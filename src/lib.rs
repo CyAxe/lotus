@@ -53,8 +53,7 @@ pub struct Lotus {
 }
 
 impl Lotus {
-
-    fn get_scripts(&self) -> Vec<(String,String)> {
+    fn get_scripts(&self) -> Vec<(String, String)> {
         let loaded_scripts = {
             if self.script_path.is_dir() {
                 self.load_scripts()
@@ -106,8 +105,7 @@ impl Lotus {
     }
     pub async fn start(&self, urls: Vec<String>, request_option: RequestOpts, exit_after: i32) {
         let loaded_scripts = self.get_scripts();
-        let bar =
-            create_progress(urls.len() as u64 * loaded_scripts.len() as u64);
+        let bar = create_progress(urls.len() as u64 * loaded_scripts.len() as u64);
         if self.output.is_none() {
             show_msg("Output argument is missing", MessageLevel::Error);
             std::process::exit(1);
