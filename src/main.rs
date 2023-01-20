@@ -93,8 +93,9 @@ async fn main() -> Result<(), std::io::Error> {
                     CliErrors::WritingError.to_string().as_str(),
                     MessageLevel::Error,
                 );
+            } else {
+                show_msg("A copy of the Example file has been created", MessageLevel::Info);
             }
-            show_msg("A copy of the Example file has been created", MessageLevel::Info);
             show_msg("Exit ..", MessageLevel::Info);
             std::process::exit(0);
         }
