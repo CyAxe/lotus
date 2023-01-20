@@ -8,6 +8,12 @@ pub enum CliErrors {
     ReadingError,
     #[error("RegexError")]
     RegexError,
+    #[error("Cannot change the file content")]
+    WritingError,
+    #[error("File Exists already")]
+    FileExists,
     #[error("RegexPatternError")]
     RegexPatternError,
+    #[error("Unsupported script type")]
+    UnsupportedScript,
 }

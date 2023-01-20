@@ -53,7 +53,7 @@ pub struct Lotus {
 }
 
 impl Lotus {
-    pub async fn start(&self, urls: Vec<String>, request_option: RequestOpts, exit_after: i32) {
+    fn get_scripts(&self) -> Vec<(String, String)> {
         let loaded_scripts = {
             if self.script_path.is_dir() {
                 self.load_scripts()
@@ -68,9 +68,44 @@ impl Lotus {
             );
             std::process::exit(1);
         }
-        let bar =
-            create_progress(urls.len() as u64 * loaded_scripts.as_ref().unwrap().len() as u64);
-        let loaded_scripts = loaded_scripts.unwrap();
+        loaded_scripts.unwrap()
+    }
+    fn load_scripts(&self) -> Result<Vec<(String, String)>, CliErrors> {
+        let mut scripts = Vec::new();
+        //
+        // Reading one file instead of the dir scripts
+
+        for entry in glob(format!("{}{}", self.script_path.to_str().unwrap(), "/*.lua").as_str())
+            .expect("Failed to read glob pattern")
+        {
+            match entry {
+                Ok(path) => scripts.push((
+                    filename_to_string(path.to_str().unwrap()).unwrap(),
+                    path.file_name().unwrap().to_str().unwrap().to_string(),
+                )),
+                Err(e) => error!("{:?}", e),
+            }
+        }
+        return Ok(scripts);
+    }
+
+    fn load_script(&self) -> Result<Vec<(String, String)>, CliErrors> {
+        let mut scripts = Vec::new();
+        let script_path = &self.script_path.clone();
+        let read_script_code = filename_to_string(script_path.to_str().unwrap());
+        if read_script_code.is_err() {
+            Err(CliErrors::ReadingError)
+        } else {
+            scripts.push((
+                read_script_code.unwrap(),
+                script_path.to_str().unwrap().to_string(),
+            ));
+            return Ok(scripts);
+        }
+    }
+    pub async fn start(&self, urls: Vec<String>, request_option: RequestOpts, exit_after: i32) {
+        let loaded_scripts = self.get_scripts();
+        let bar = create_progress(urls.len() as u64 * loaded_scripts.len() as u64);
         if self.output.is_none() {
             show_msg("Output argument is missing", MessageLevel::Error);
             std::process::exit(1);
@@ -126,39 +161,5 @@ impl Lotus {
             .buffer_unordered(self.workers)
             .collect::<Vec<_>>()
             .await;
-    }
-
-    fn load_scripts(&self) -> Result<Vec<(String, String)>, CliErrors> {
-        let mut scripts = Vec::new();
-        //
-        // Reading one file instead of the dir scripts
-
-        for entry in glob(format!("{}{}", self.script_path.to_str().unwrap(), "/*.lua").as_str())
-            .expect("Failed to read glob pattern")
-        {
-            match entry {
-                Ok(path) => scripts.push((
-                    filename_to_string(path.to_str().unwrap()).unwrap(),
-                    path.file_name().unwrap().to_str().unwrap().to_string(),
-                )),
-                Err(e) => error!("{:?}", e),
-            }
-        }
-        return Ok(scripts);
-    }
-
-    fn load_script(&self) -> Result<Vec<(String, String)>, CliErrors> {
-        let mut scripts = Vec::new();
-        let script_path = &self.script_path.clone();
-        let read_script_code = filename_to_string(script_path.to_str().unwrap());
-        if read_script_code.is_err() {
-            Err(CliErrors::ReadingError)
-        } else {
-            scripts.push((
-                read_script_code.unwrap(),
-                script_path.to_str().unwrap().to_string(),
-            ));
-            return Ok(scripts);
-        }
     }
 }
