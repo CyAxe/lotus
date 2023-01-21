@@ -24,6 +24,7 @@ pub enum ReportMatchers {
     RawResponse(String),
     ResposneHeaders(String),
     ResponseBody(String),
+    StatusCode(String),
     General(String),
 }
 
@@ -63,6 +64,7 @@ impl UserData for CveReport {
                     1 => ReportMatchers::RawResponse(matcher_string),
                     2 => ReportMatchers::ResposneHeaders(matcher_string),
                     3 => ReportMatchers::ResponseBody(matcher_string),
+                    4 => ReportMatchers::StatusCode(matcher_string),
                     _ => ReportMatchers::General(matcher_string),
                 };
                 this.matchers.push(matcher_data);

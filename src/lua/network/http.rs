@@ -69,15 +69,6 @@ impl Sender {
     /// Send http request to custom url with user options (proxy, headers, etc.)
     /// the response should be HashMap with RespType enum
     ///
-    ///
-    /// ```rust
-    /// let mut headers = HashMap::new();
-    /// headers.insert("API-KEY".into(),"123".into());
-    /// let resp = http.send("PUT","http://example.com","post_id=1",headers)
-    /// ```
-    ///
-    /// ***
-    ///
     /// for Lua API
     /// ```lua
     /// local resp = http:send("GET","http://google.com")

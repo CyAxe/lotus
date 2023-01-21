@@ -45,11 +45,6 @@ use std::{
 };
 
 /// check if the regex pattern is matching with this string or not without get the matched parts
-/// you can use it for sqli errors for example
-/// ```rust
-/// assert_eq!(true,is_match("\d","1"));
-/// assert_eq!(false,is_match("\d\d","1"))
-/// ```
 pub fn is_match(pattern: String, resp: String) -> Result<bool, CliErrors> {
     let re = fancy_regex::Regex::new(&pattern);
     if let Ok(..) = re {
@@ -140,6 +135,11 @@ pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
             .unwrap(),
         )
         .unwrap();
+    lua.globals()
+        .set("str_contains", lua.create_function(|_, (str_one, str_two): (String, String)|{
+            Ok(str_one.contains(&str_two))
+        }).unwrap()
+        ).unwrap();
     lua.globals()
         .set(
             "print_report",

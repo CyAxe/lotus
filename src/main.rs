@@ -94,7 +94,10 @@ async fn main() -> Result<(), std::io::Error> {
                     MessageLevel::Error,
                 );
             } else {
-                show_msg("A copy of the Example file has been created", MessageLevel::Info);
+                show_msg(
+                    "A copy of the Example file has been created",
+                    MessageLevel::Info,
+                );
             }
             show_msg("Exit ..", MessageLevel::Info);
             std::process::exit(0);
