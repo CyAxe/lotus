@@ -1,10 +1,6 @@
-use std::{
-    path::PathBuf,
-    io,
-    io::BufRead
-};
-use crate::CliErrors;
 use crate::filename_to_string;
+use crate::CliErrors;
+use std::{io, io::BufRead, path::PathBuf};
 
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {
     if url_file.is_some() {
