@@ -1,3 +1,4 @@
+SCAN_TYPE = 2
 local function send_report(url,parameter,payload,matching_error)
     VulnReport:setName("SQL Injection")
     VulnReport:setDescription("https://owasp.org/www-community/attacks/SQL_Injection")

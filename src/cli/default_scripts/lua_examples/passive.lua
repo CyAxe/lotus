@@ -1,3 +1,4 @@
+SCAN_TYPE = 2
 local function send_report(url) 
     CveReport:setName("CVE-555-555")
     CveReport:setDescription("http://example.com")
