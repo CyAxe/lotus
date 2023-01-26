@@ -11,6 +11,8 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
             hosts.push(host);
         }
     });
+    hosts.sort();
+    hosts.dedup();
     hosts
 }
 
@@ -43,6 +45,8 @@ pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErro
                     }
                 };
             });
+            urls.sort();
+            urls.dedup();
             Ok(urls)
         }
     }
