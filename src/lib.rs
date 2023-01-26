@@ -23,7 +23,9 @@ use cli::{
     bar::{create_progress, show_msg, MessageLevel},
     errors::CliErrors,
 };
-use lua::{parsing::files::filename_to_string, scan::LuaLoader};
+use mlua::Lua;
+use mlua::ExternalError;
+use lua::{parsing::files::filename_to_string, scan::LuaLoader, loader::{encoding_func, get_matching_func, get_utilsfunc, http_func, payloads_func}};
 
 use futures::{stream, StreamExt};
 use reqwest::header::HeaderMap;
@@ -42,6 +44,11 @@ pub struct RequestOpts {
     pub proxy: Option<String>,
     pub timeout: u64,
     pub redirects: u32,
+}
+
+pub enum ScanTypes {
+    URLS,
+    HOSTS,
 }
 
 pub struct Lotus {
@@ -103,9 +110,51 @@ impl Lotus {
             return Ok(scripts);
         }
     }
-    pub async fn start(&self, urls: Vec<String>, request_option: RequestOpts, exit_after: i32) {
-        let loaded_scripts = self.get_scripts();
-        let bar = create_progress(urls.len() as u64 * loaded_scripts.len() as u64);
+    fn valid_scripts(&self, scripts: Vec<(String,String)>, number_scantype: bool) -> Vec<(String,String)> {
+        let target_url = "http://example.com";
+        let lua_eng = Lua::new();
+        get_matching_func(&lua_eng);
+        http_func(target_url, &lua_eng);
+        encoding_func(&lua_eng);
+        payloads_func(&lua_eng);
+        let mut used_scripts: Vec<(String, String)> = Vec::new();
+        scripts.iter().for_each(|(script_code, script_path)| {
+            let code = lua_eng.load(script_code).exec();
+            if code.is_err() {
+            } else {
+                let global = lua_eng.globals();
+                let scan_type = global.get::<_, usize>("scan_type".to_string());
+                if scan_type.is_err() {
+                    show_msg(&format!("Unvalid Script Type {}: {}", script_path, scan_type.unwrap_err().to_string()), MessageLevel::Error);
+                } else {
+                    let scan_type = scan_type.unwrap();
+                    if let scan_type = number_scantype {
+                        used_scripts.push((script_code.into(), script_path.into()));
+                    }
+                }
+            }
+        });
+        used_scripts
+    }
+    pub async fn start(
+        &self,
+        target_data: Vec<String>,
+        request_option: RequestOpts,
+        scan_type: ScanTypes,
+        exit_after: i32,
+    ) {
+        let loaded_scripts = {
+            if let ScanTypes::HOSTS = scan_type {
+                let scripts = self.get_scripts();
+                let loaded_scripts = self.valid_scripts(scripts,true);
+                loaded_scripts
+            } else {
+                let scripts = self.get_scripts();
+                let loaded_scripts = self.valid_scripts(scripts,false);
+                loaded_scripts
+            }
+        };
+        let bar = create_progress(target_data.len() as u64 * loaded_scripts.len() as u64);
         if self.output.is_none() {
             show_msg("Output argument is missing", MessageLevel::Error);
             std::process::exit(1);
@@ -115,20 +164,20 @@ impl Lotus {
             request_option.clone(),
             self.output.as_ref().unwrap().to_str().unwrap().to_string(),
         ));
-        stream::iter(urls)
-            .map(move |url| {
+        stream::iter(target_data)
+            .map(move |script_data| {
                 let loaded_scripts = loaded_scripts.clone();
                 let lotus_loader = Arc::clone(&lotus_obj);
                 stream::iter(loaded_scripts.into_iter())
                     .map(move |(script_out, script_name)| {
-                        let url = url.clone();
+                        let script_data = script_data.clone();
                         let lotus_loader = Arc::clone(&lotus_loader);
                         let error_check = {
                             if *self.stop_after.lock().unwrap() == exit_after {
                                 log::debug!("Ignoring scripts");
                                 false
                             } else {
-                                log::debug!("Running {} script on {} url", script_name, url);
+                                log::debug!("Running {} script on {} ", script_name, script_data);
                                 true
                             }
                         };
@@ -137,7 +186,7 @@ impl Lotus {
                                 // Nothing
                             } else {
                                 let run_scan = lotus_loader
-                                    .run_scan(url.as_str(), None, &script_out, &script_name)
+                                    .run_scan(script_data.as_str(), None, &script_out, &script_name)
                                     .await;
                                 if run_scan.is_err() {
                                     log::error!(

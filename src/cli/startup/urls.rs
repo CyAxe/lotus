@@ -1,5 +1,5 @@
 use crate::cli::args::Opts;
-use crate::cli::input::get_target_urls;
+use crate::cli::input::{get_target_hosts, get_target_urls};
 use crate::cli::logger::init_log;
 use crate::show_msg;
 use crate::CliErrors;
@@ -10,14 +10,19 @@ use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 
 pub struct UrlArgs {
-    pub urls: Vec<String>,
+    pub target_data: TargetData,
     pub exit_after: i32,
     pub req_opts: RequestOpts,
     pub lotus_obj: Lotus,
 }
 
+pub struct TargetData {
+    pub urls: Vec<String>,
+    pub hosts: Vec<String>,
+}
+
 pub fn args_urls() -> UrlArgs {
-    let (urls, exit_after, req_opts, lotus_obj) = match Opts::from_args() {
+    let (urls, hosts, exit_after, req_opts, lotus_obj) = match Opts::from_args() {
         Opts::URLS {
             redirects,
             workers,
@@ -59,8 +64,13 @@ pub fn args_urls() -> UrlArgs {
                 };
                 std::process::exit(1);
             }
-            let urls = urls.unwrap();
-            (urls, exit_after, req_opts, lotus_obj)
+            let urls_vec = urls
+                .unwrap()
+                .iter()
+                .map(|url| url.to_string())
+                .collect::<Vec<String>>();
+            let hosts = get_target_hosts(urls_vec.clone());
+            (urls_vec, hosts, exit_after, req_opts, lotus_obj)
         }
         _ => {
             std::process::exit(1);
@@ -68,7 +78,7 @@ pub fn args_urls() -> UrlArgs {
     };
 
     UrlArgs {
-        urls,
+        target_data: TargetData { urls, hosts },
         exit_after,
         req_opts,
         lotus_obj,

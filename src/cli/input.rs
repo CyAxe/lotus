@@ -1,6 +1,18 @@
 use crate::filename_to_string;
 use crate::CliErrors;
 use std::{io, io::BufRead, path::PathBuf};
+use url::Url;
+
+pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
+    let mut hosts = Vec::new();
+    urls.iter().for_each(|x| {
+        let host = Url::parse(x).unwrap().host().unwrap().to_string();
+        if !hosts.contains(&host) {
+            hosts.push(host);
+        }
+    });
+    urls
+}
 
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {
     if url_file.is_some() {

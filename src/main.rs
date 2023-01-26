@@ -16,10 +16,16 @@
  * limitations under the License.
  */
 
-use lotus::cli::{
-    args::Opts,
-    startup::{new::new_args, urls::args_urls},
+use lotus::{
+    cli::{
+        args::Opts,
+        startup::{new::new_args, urls::args_urls},
+    },
+    ScanTypes,
 };
+use tokio::sync::RwLock;
+use futures::stream::{self, StreamExt};
+use futures::{channel::mpsc, sink::SinkExt};
 use structopt::StructOpt;
 
 #[tokio::main]
@@ -27,15 +33,36 @@ async fn main() -> Result<(), std::io::Error> {
     match Opts::from_args() {
         Opts::URLS { .. } => {
             let opts = args_urls();
-            opts.lotus_obj
-                .start(
-                    opts.urls
-                        .iter()
-                        .map(|url| url.to_string())
-                        .collect::<Vec<String>>(),
-                    opts.req_opts,
+            let scan_futures = vec![
+                opts.lotus_obj.start(
+                    opts.target_data.urls,
+                    opts.req_opts.clone(),
+                    ScanTypes::URLS,
                     opts.exit_after,
-                )
+                ),
+                opts.lotus_obj.start(
+                    opts.target_data.hosts,
+                    opts.req_opts,
+                    ScanTypes::HOSTS,
+                    opts.exit_after,
+                ),
+            ];
+            let (mut sink, futures_stream) = mpsc::unbounded();
+            let num_futures = RwLock::new(scan_futures.len());
+            sink.send_all(&mut stream::iter(scan_futures.into_iter().map(Ok)))
+                .await
+                .unwrap();
+            let sink_lock = RwLock::new(sink);
+            futures_stream
+                .for_each_concurrent(2, |fut| async {
+                    fut.await;
+                    let mut num_futures = num_futures.write().await;
+                    *num_futures -= 1;
+                    if *num_futures <= 0 {
+                        // Close the sink to exit the for_each_concurrent
+                        sink_lock.write().await.close().await.unwrap();
+                    }
+                })
                 .await;
         }
         Opts::NEW {

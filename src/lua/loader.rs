@@ -95,6 +95,62 @@ pub fn encoding_func(lua: &Lua) {
 }
 
 pub fn http_func(target_url: &str, lua: &Lua) {
+    let log_info = lua
+        .create_function(|_, log_msg: String| {
+            info!("{}", log_msg);
+            Ok(())
+        })
+        .unwrap();
+    let log_warn = lua
+        .create_function(|_, log_msg: String| {
+            warn!("{}", log_msg);
+            Ok(())
+        })
+        .unwrap();
+    let log_debug = lua
+        .create_function(|_, log_msg: String| {
+            debug!("{}", log_msg);
+            Ok(())
+        })
+        .unwrap();
+    let log_error = lua
+        .create_function(|_, log_msg: String| {
+            error!("{}", log_msg);
+            Ok(())
+        })
+        .unwrap();
+    lua.globals()
+        .set(
+            "sleep",
+            lua.create_async_function(|_, time: u64| async move {
+                sleep(Duration::from_secs(time)).await;
+                Ok(())
+            })
+            .unwrap(),
+        )
+        .unwrap();
+
+    lua.globals()
+        .set(
+            "readfile",
+            lua.create_function(|_ctx, file_path: String| {
+                if Path::new(&file_path).exists() {
+                    let mut file = File::open(&file_path)?;
+                    let mut file_content = String::new();
+                    file.read_to_string(&mut file_content)?;
+                    Ok(file_content)
+                } else {
+                    Err(CliErrors::ReadingError.to_lua_err())
+                }
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    lua.globals().set("log_info", log_info).unwrap();
+    lua.globals().set("log_error", log_error).unwrap();
+    lua.globals().set("log_debug", log_debug).unwrap();
+    lua.globals().set("log_warn", log_warn).unwrap();
+
     lua.globals()
         .set(
             "HttpMessage",
@@ -193,61 +249,6 @@ pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
         )
         .unwrap();
 
-    let log_info = lua
-        .create_function(|_, log_msg: String| {
-            info!("{}", log_msg);
-            Ok(())
-        })
-        .unwrap();
-    let log_warn = lua
-        .create_function(|_, log_msg: String| {
-            warn!("{}", log_msg);
-            Ok(())
-        })
-        .unwrap();
-    let log_debug = lua
-        .create_function(|_, log_msg: String| {
-            debug!("{}", log_msg);
-            Ok(())
-        })
-        .unwrap();
-    let log_error = lua
-        .create_function(|_, log_msg: String| {
-            error!("{}", log_msg);
-            Ok(())
-        })
-        .unwrap();
-    lua.globals()
-        .set(
-            "sleep",
-            lua.create_async_function(|_, time: u64| async move {
-                sleep(Duration::from_secs(time)).await;
-                Ok(())
-            })
-            .unwrap(),
-        )
-        .unwrap();
-
-    lua.globals()
-        .set(
-            "read",
-            lua.create_function(|_ctx, file_path: String| {
-                if Path::new(&file_path).exists() {
-                    let mut file = File::open(&file_path)?;
-                    let mut file_content = String::new();
-                    file.read_to_string(&mut file_content)?;
-                    Ok(file_content)
-                } else {
-                    Err(CliErrors::ReadingError.to_lua_err())
-                }
-            })
-            .unwrap(),
-        )
-        .unwrap();
-    lua.globals().set("log_info", log_info).unwrap();
-    lua.globals().set("log_error", log_error).unwrap();
-    lua.globals().set("log_debug", log_debug).unwrap();
-    lua.globals().set("log_warn", log_warn).unwrap();
 }
 
 pub fn get_matching_func(lua: &Lua) {
