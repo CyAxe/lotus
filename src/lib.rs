@@ -127,11 +127,14 @@ impl Lotus {
         payloads_func(&lua_eng);
         let mut used_scripts: Vec<(String, String)> = Vec::new();
         scripts.iter().for_each(|(script_code, script_path)| {
+            lua_eng.globals().set("SCRIPT_PATH", script_path.to_string()).unwrap();
             let code = lua_eng.load(script_code).exec();
             if code.is_err() {
+                show_msg(&format!("Unable to load {} script", script_path), MessageLevel::Error);
+                log::error!("Script Loading Error {} : {}",script_path, code.unwrap_err());
             } else {
                 let global = lua_eng.globals();
-                let scan_type = global.get::<_, usize>("scan_type".to_string());
+                let scan_type = global.get::<_, usize>("SCAN_TYPE".to_string());
                 if scan_type.is_err() {
                     show_msg(&format!("Unvalid Script Type {}: {}", script_path, scan_type.unwrap_err().to_string()), MessageLevel::Error);
                 } else {
@@ -152,14 +155,14 @@ impl Lotus {
     ) {
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
-                log::debug!("Running Host scan ");
                 let scripts = self.get_scripts();
                 let loaded_scripts = self.valid_scripts(scripts,1);
+                log::debug!("Running Host scan {:?}",loaded_scripts.len());
                 loaded_scripts
             } else {
-                log::debug!("Running URL scan ");
                 let scripts = self.get_scripts();
                 let loaded_scripts = self.valid_scripts(scripts,2);
+                log::debug!("Running URL scan {:?}",loaded_scripts.len());
                 loaded_scripts
             }
         };

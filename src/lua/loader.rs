@@ -95,6 +95,24 @@ pub fn encoding_func(lua: &Lua) {
 }
 
 pub fn http_func(target_url: Option<&str>, lua: &Lua) {
+    lua.globals()
+    .set(
+        "JOIN_SCRIPT_DIR",
+        lua.create_function(|c_lua, new_path: String| {
+            let script_path = c_lua.globals().get::<_, String>("SCRIPT_PATH").unwrap();
+            let the_path = Path::new(&script_path);
+            Ok(the_path
+                .parent()
+                .unwrap()
+                .join(new_path)
+                .to_str()
+                .unwrap()
+                .to_string())
+        })
+        .unwrap(),
+    )
+    .unwrap();
+
     let log_info = lua
         .create_function(|_, log_msg: String| {
             info!("{}", log_msg);
