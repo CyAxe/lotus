@@ -5,6 +5,7 @@ use crate::{
         output::vuln::AllReports,
     },
     RequestOpts,
+    ScanTypes
 };
 use mlua::Lua;
 use std::{
@@ -36,7 +37,7 @@ impl<'a> LuaLoader<'a> {
         }
     }
 
-    fn set_lua(&self, target_url: &str, lua: &Lua, driver: Option<Arc<Mutex<WebDriver>>>) {
+    fn set_lua(&self, target_url: Option<&str>, lua: &Lua, driver: Option<Arc<Mutex<WebDriver>>>) {
         // Adding Lotus Lua Function
         get_utilsfunc(self.bar, &lua);
         get_matching_func(&lua);
@@ -86,14 +87,20 @@ impl<'a> LuaLoader<'a> {
 
     pub async fn run_scan(
         &self,
-        target_url: &str,
+        target_url: Option<&str>,
+        target_type: Arc<ScanTypes>,
         driver: Option<Arc<Mutex<WebDriver>>>,
         script_code: &str,
         script_dir: &str,
     ) -> Result<(), mlua::Error> {
         let lua = Lua::new();
         // settings lua api
-        self.set_lua(target_url, &lua, driver);
+        if let ScanTypes::HOSTS = *target_type {
+            self.set_lua(None, &lua, driver);
+            lua.globals().set("TARGET_HOST", target_url.unwrap()).unwrap();
+        } else {
+            self.set_lua(target_url, &lua, driver);
+        }
         lua.globals().set("SCRIPT_PATH", script_dir).unwrap();
         lua.globals()
             .set(
@@ -130,7 +137,7 @@ impl<'a> LuaLoader<'a> {
         } else {
             let run_scan = main_func
                 .unwrap()
-                .call_async::<_, mlua::Value>(target_url)
+                .call_async::<_, mlua::Value>(mlua::Value::Nil)
                 .await;
             self.bar.inc(1);
             if run_scan.is_err() {

@@ -11,7 +11,7 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
             hosts.push(host);
         }
     });
-    urls
+    hosts
 }
 
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {

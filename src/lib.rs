@@ -24,8 +24,7 @@ use cli::{
     errors::CliErrors,
 };
 use mlua::Lua;
-use mlua::ExternalError;
-use lua::{parsing::files::filename_to_string, scan::LuaLoader, loader::{encoding_func, get_matching_func, get_utilsfunc, http_func, payloads_func}};
+use lua::{parsing::files::filename_to_string, scan::LuaLoader, loader::{encoding_func, get_matching_func, http_func, payloads_func}};
 
 use futures::{stream, StreamExt};
 use reqwest::header::HeaderMap;
@@ -46,6 +45,7 @@ pub struct RequestOpts {
     pub redirects: u32,
 }
 
+#[derive(Clone,Copy)]
 pub enum ScanTypes {
     URLS,
     HOSTS,
@@ -110,11 +110,19 @@ impl Lotus {
             return Ok(scripts);
         }
     }
-    fn valid_scripts(&self, scripts: Vec<(String,String)>, number_scantype: bool) -> Vec<(String,String)> {
-        let target_url = "http://example.com";
+    fn valid_scripts(&self, scripts: Vec<(String,String)>, number_scantype: usize) -> Vec<(String,String)> {
         let lua_eng = Lua::new();
         get_matching_func(&lua_eng);
-        http_func(target_url, &lua_eng);
+        match number_scantype {
+            1 => {
+                lua_eng.globals().set("TARGET_HOST", "example.com").unwrap();
+                http_func(None, &lua_eng);
+            },
+            2 => {
+                http_func(Some("http://example.com"), &lua_eng);
+            }
+            _ => {}
+        }
         encoding_func(&lua_eng);
         payloads_func(&lua_eng);
         let mut used_scripts: Vec<(String, String)> = Vec::new();
@@ -127,8 +135,7 @@ impl Lotus {
                 if scan_type.is_err() {
                     show_msg(&format!("Unvalid Script Type {}: {}", script_path, scan_type.unwrap_err().to_string()), MessageLevel::Error);
                 } else {
-                    let scan_type = scan_type.unwrap();
-                    if let scan_type = number_scantype {
+                    if scan_type.unwrap() == number_scantype {
                         used_scripts.push((script_code.into(), script_path.into()));
                     }
                 }
@@ -145,12 +152,14 @@ impl Lotus {
     ) {
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
+                log::debug!("Running Host scan ");
                 let scripts = self.get_scripts();
-                let loaded_scripts = self.valid_scripts(scripts,true);
+                let loaded_scripts = self.valid_scripts(scripts,1);
                 loaded_scripts
             } else {
+                log::debug!("Running URL scan ");
                 let scripts = self.get_scripts();
-                let loaded_scripts = self.valid_scripts(scripts,false);
+                let loaded_scripts = self.valid_scripts(scripts,2);
                 loaded_scripts
             }
         };
@@ -164,14 +173,17 @@ impl Lotus {
             request_option.clone(),
             self.output.as_ref().unwrap().to_str().unwrap().to_string(),
         ));
+        let scan_type = Arc::new(scan_type);
         stream::iter(target_data)
             .map(move |script_data| {
                 let loaded_scripts = loaded_scripts.clone();
                 let lotus_loader = Arc::clone(&lotus_obj);
+                let scan_type = Arc::clone(&scan_type);
                 stream::iter(loaded_scripts.into_iter())
                     .map(move |(script_out, script_name)| {
                         let script_data = script_data.clone();
                         let lotus_loader = Arc::clone(&lotus_loader);
+                        let scan_type = Arc::clone(&scan_type);
                         let error_check = {
                             if *self.stop_after.lock().unwrap() == exit_after {
                                 log::debug!("Ignoring scripts");
@@ -186,7 +198,7 @@ impl Lotus {
                                 // Nothing
                             } else {
                                 let run_scan = lotus_loader
-                                    .run_scan(script_data.as_str(), None, &script_out, &script_name)
+                                    .run_scan(Some(script_data.as_str()), scan_type,None,&script_out, &script_name)
                                     .await;
                                 if run_scan.is_err() {
                                     log::error!(

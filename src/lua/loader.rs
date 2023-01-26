@@ -94,7 +94,7 @@ pub fn encoding_func(lua: &Lua) {
         .unwrap();
 }
 
-pub fn http_func(target_url: &str, lua: &Lua) {
+pub fn http_func(target_url: Option<&str>, lua: &Lua) {
     let log_info = lua
         .create_function(|_, log_msg: String| {
             info!("{}", log_msg);
@@ -151,14 +151,16 @@ pub fn http_func(target_url: &str, lua: &Lua) {
     lua.globals().set("log_debug", log_debug).unwrap();
     lua.globals().set("log_warn", log_warn).unwrap();
 
-    lua.globals()
-        .set(
-            "HttpMessage",
-            HttpMessage {
-                url: Url::parse(target_url).unwrap(),
-            },
-        )
-        .unwrap();
+    if target_url.is_some(){
+        lua.globals()
+            .set(
+                "HttpMessage",
+                HttpMessage {
+                    url: Url::parse(target_url.unwrap()).unwrap(),
+                },
+            )
+            .unwrap();
+    }
     lua.globals()
         .set(
             "Reports",
