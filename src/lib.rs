@@ -135,7 +135,6 @@ impl Lotus {
         payloads_func(&lua_eng);
         let mut used_scripts: Vec<(String, String)> = Vec::new();
         scripts.iter().for_each(|(script_code, script_path)| {
-            println!("{}", script_path);
             lua_eng
                 .globals()
                 .set("SCRIPT_PATH", script_path.to_string())
