@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+use futures::stream::{self, StreamExt};
+use futures::{channel::mpsc, sink::SinkExt};
 use lotus::{
     cli::{
         args::Opts,
@@ -23,10 +25,8 @@ use lotus::{
     },
     ScanTypes,
 };
-use tokio::sync::RwLock;
-use futures::stream::{self, StreamExt};
-use futures::{channel::mpsc, sink::SinkExt};
 use structopt::StructOpt;
+use tokio::sync::RwLock;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {

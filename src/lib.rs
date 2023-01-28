@@ -23,8 +23,12 @@ use cli::{
     bar::{create_progress, show_msg, MessageLevel},
     errors::CliErrors,
 };
+use lua::{
+    loader::{encoding_func, get_matching_func, http_func, payloads_func},
+    parsing::files::filename_to_string,
+    scan::LuaLoader,
+};
 use mlua::Lua;
-use lua::{parsing::files::filename_to_string, scan::LuaLoader, loader::{encoding_func, get_matching_func, http_func, payloads_func}};
 
 use futures::{stream, StreamExt};
 use reqwest::header::HeaderMap;
@@ -45,7 +49,7 @@ pub struct RequestOpts {
     pub redirects: u32,
 }
 
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub enum ScanTypes {
     URLS,
     HOSTS,
@@ -110,14 +114,18 @@ impl Lotus {
             return Ok(scripts);
         }
     }
-    fn valid_scripts(&self, scripts: Vec<(String,String)>, number_scantype: usize) -> Vec<(String,String)> {
+    fn valid_scripts(
+        &self,
+        scripts: Vec<(String, String)>,
+        number_scantype: usize,
+    ) -> Vec<(String, String)> {
         let lua_eng = Lua::new();
         get_matching_func(&lua_eng);
         match number_scantype {
             1 => {
                 lua_eng.globals().set("TARGET_HOST", "example.com").unwrap();
                 http_func(None, &lua_eng);
-            },
+            }
             2 => {
                 http_func(Some("http://example.com"), &lua_eng);
             }
@@ -127,16 +135,34 @@ impl Lotus {
         payloads_func(&lua_eng);
         let mut used_scripts: Vec<(String, String)> = Vec::new();
         scripts.iter().for_each(|(script_code, script_path)| {
-            lua_eng.globals().set("SCRIPT_PATH", script_path.to_string()).unwrap();
+            println!("{}", script_path);
+            lua_eng
+                .globals()
+                .set("SCRIPT_PATH", script_path.to_string())
+                .unwrap();
             let code = lua_eng.load(script_code).exec();
             if code.is_err() {
-                show_msg(&format!("Unable to load {} script", script_path), MessageLevel::Error);
-                log::error!("Script Loading Error {} : {}",script_path, code.unwrap_err());
+                show_msg(
+                    &format!("Unable to load {} script", script_path),
+                    MessageLevel::Error,
+                );
+                log::error!(
+                    "Script Loading Error {} : {}",
+                    script_path,
+                    code.unwrap_err()
+                );
             } else {
                 let global = lua_eng.globals();
                 let scan_type = global.get::<_, usize>("SCAN_TYPE".to_string());
                 if scan_type.is_err() {
-                    show_msg(&format!("Unvalid Script Type {}: {}", script_path, scan_type.unwrap_err().to_string()), MessageLevel::Error);
+                    show_msg(
+                        &format!(
+                            "Unvalid Script Type {}: {}",
+                            script_path,
+                            scan_type.unwrap_err().to_string()
+                        ),
+                        MessageLevel::Error,
+                    );
                 } else {
                     if scan_type.unwrap() == number_scantype {
                         used_scripts.push((script_code.into(), script_path.into()));
@@ -156,13 +182,13 @@ impl Lotus {
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
                 let scripts = self.get_scripts();
-                let loaded_scripts = self.valid_scripts(scripts,1);
-                log::debug!("Running Host scan {:?}",loaded_scripts.len());
+                let loaded_scripts = self.valid_scripts(scripts, 1);
+                log::debug!("Running Host scan {:?}", loaded_scripts.len());
                 loaded_scripts
             } else {
                 let scripts = self.get_scripts();
-                let loaded_scripts = self.valid_scripts(scripts,2);
-                log::debug!("Running URL scan {:?}",loaded_scripts.len());
+                let loaded_scripts = self.valid_scripts(scripts, 2);
+                log::debug!("Running URL scan {:?}", loaded_scripts.len());
                 loaded_scripts
             }
         };
@@ -201,7 +227,13 @@ impl Lotus {
                                 // Nothing
                             } else {
                                 let run_scan = lotus_loader
-                                    .run_scan(Some(script_data.as_str()), scan_type,None,&script_out, &script_name)
+                                    .run_scan(
+                                        Some(script_data.as_str()),
+                                        scan_type,
+                                        None,
+                                        &script_out,
+                                        &script_name,
+                                    )
                                     .await;
                                 if run_scan.is_err() {
                                     log::error!(

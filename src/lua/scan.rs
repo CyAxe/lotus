@@ -4,8 +4,7 @@ use crate::{
         network::http::Sender,
         output::vuln::AllReports,
     },
-    RequestOpts,
-    ScanTypes
+    RequestOpts, ScanTypes
 };
 use mlua::Lua;
 use std::{
@@ -96,7 +95,9 @@ impl<'a> LuaLoader<'a> {
         // settings lua api
         if let ScanTypes::HOSTS = *target_type {
             self.set_lua(None, &lua, driver);
-            lua.globals().set("TARGET_HOST", target_url.unwrap()).unwrap();
+            lua.globals()
+                .set("TARGET_HOST", target_url.unwrap())
+                .unwrap();
         } else {
             self.set_lua(target_url, &lua, driver);
         }

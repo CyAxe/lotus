@@ -25,8 +25,8 @@ use crate::{
             html::{css_selector, html_parse, html_search, Location},
             url::HttpMessage,
         },
+        threads::{ParamScan,LuaThreader},
         payloads,
-        threads::LuaThreader,
     },
 };
 
@@ -96,22 +96,22 @@ pub fn encoding_func(lua: &Lua) {
 
 pub fn http_func(target_url: Option<&str>, lua: &Lua) {
     lua.globals()
-    .set(
-        "JOIN_SCRIPT_DIR",
-        lua.create_function(|c_lua, new_path: String| {
-            let script_path = c_lua.globals().get::<_, String>("SCRIPT_PATH").unwrap();
-            let the_path = Path::new(&script_path);
-            Ok(the_path
-                .parent()
-                .unwrap()
-                .join(new_path)
-                .to_str()
-                .unwrap()
-                .to_string())
-        })
-        .unwrap(),
-    )
-    .unwrap();
+        .set(
+            "JOIN_SCRIPT_DIR",
+            lua.create_function(|c_lua, new_path: String| {
+                let script_path = c_lua.globals().get::<_, String>("SCRIPT_PATH").unwrap();
+                let the_path = Path::new(&script_path);
+                Ok(the_path
+                    .parent()
+                    .unwrap()
+                    .join(new_path)
+                    .to_str()
+                    .unwrap()
+                    .to_string())
+            })
+            .unwrap(),
+        )
+        .unwrap();
 
     let log_info = lua
         .create_function(|_, log_msg: String| {
@@ -169,7 +169,7 @@ pub fn http_func(target_url: Option<&str>, lua: &Lua) {
     lua.globals().set("log_debug", log_debug).unwrap();
     lua.globals().set("log_warn", log_warn).unwrap();
 
-    if target_url.is_some(){
+    if target_url.is_some() {
         lua.globals()
             .set(
                 "HttpMessage",
@@ -194,6 +194,10 @@ pub fn http_func(target_url: Option<&str>, lua: &Lua) {
 pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
     // ProgressBar
     let bar = the_bar.clone();
+    lua.globals()
+        .set("ParamScan", ParamScan {
+            finds: Arc::new(Mutex::new(false))
+        }).unwrap();
     lua.globals()
         .set(
             "LuaThreader",
@@ -268,7 +272,6 @@ pub fn get_utilsfunc<'prog>(the_bar: &'prog indicatif::ProgressBar, lua: &Lua) {
             .unwrap(),
         )
         .unwrap();
-
 }
 
 pub fn get_matching_func(lua: &Lua) {
