@@ -20,6 +20,10 @@ impl ParamScan {
 
 impl UserData for ParamScan {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method("start_scan",|_, this, ()| {
+            *this.finds.lock().unwrap() = false;
+            Ok(())
+        });
         methods.add_async_method(
             "add_scan",
             |_,
