@@ -24,7 +24,7 @@ use cli::{
     errors::CliErrors,
 };
 use lua::{
-    loader::{encoding_func, get_matching_func, http_func, payloads_func},
+    loader::LuaRunTime,
     parsing::files::filename_to_string,
     scan::LuaLoader,
 };
@@ -116,30 +116,37 @@ impl Lotus {
     }
     fn valid_scripts(
         &self,
+        bar: indicatif::ProgressBar,
         scripts: Vec<(String, String)>,
         number_scantype: usize,
     ) -> Vec<(String, String)> {
-        let lua_eng = Lua::new();
-        get_matching_func(&lua_eng);
+        let mut test_target_url: Option<&str> = None;
+        let mut test_target_host: Option<&str> = None;
         match number_scantype {
             1 => {
-                lua_eng.globals().set("TARGET_HOST", "example.com").unwrap();
-                http_func(None, &lua_eng);
+                test_target_host = Some("example.com");
             }
             2 => {
-                http_func(Some("http://example.com"), &lua_eng);
+                test_target_url = Some("example.com");
             }
             _ => {}
         }
-        encoding_func(&lua_eng);
-        payloads_func(&lua_eng);
+        let lua_eng = LuaRunTime {
+            lua: &Lua::new(),
+            prog: &bar
+        };
+        lua_eng.setup(test_target_url);
+        if test_target_host.is_some() {
+            lua_eng.lua.globals().set("TARGET_HOST", "example.com").unwrap();
+        }
         let mut used_scripts: Vec<(String, String)> = Vec::new();
         scripts.iter().for_each(|(script_code, script_path)| {
             lua_eng
+                .lua
                 .globals()
                 .set("SCRIPT_PATH", script_path.to_string())
                 .unwrap();
-            let code = lua_eng.load(script_code).exec();
+            let code = lua_eng.lua.load(script_code).exec();
             if code.is_err() {
                 show_msg(
                     &format!("Unable to load {} script", script_path),
@@ -151,7 +158,7 @@ impl Lotus {
                     code.unwrap_err()
                 );
             } else {
-                let global = lua_eng.globals();
+                let global = lua_eng.lua.globals();
                 let scan_type = global.get::<_, usize>("SCAN_TYPE".to_string());
                 if scan_type.is_err() {
                     show_msg(
@@ -178,15 +185,16 @@ impl Lotus {
         scan_type: ScanTypes,
         exit_after: i32,
     ) {
+        let bar = create_progress(target_data.len() as u64); // fake bar for testing
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
                 let scripts = self.get_scripts();
-                let loaded_scripts = self.valid_scripts(scripts, 1);
+                let loaded_scripts = self.valid_scripts(bar,scripts, 1);
                 log::debug!("Running Host scan {:?}", loaded_scripts.len());
                 loaded_scripts
             } else {
                 let scripts = self.get_scripts();
-                let loaded_scripts = self.valid_scripts(scripts, 2);
+                let loaded_scripts = self.valid_scripts(bar,scripts, 2);
                 log::debug!("Running URL scan {:?}", loaded_scripts.len());
                 loaded_scripts
             }

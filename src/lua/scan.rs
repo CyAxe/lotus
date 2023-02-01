@@ -1,6 +1,6 @@
 use crate::{
     lua::{
-        loader::{encoding_func, get_matching_func, get_utilsfunc, http_func, payloads_func},
+        loader::LuaRunTime,
         network::http::Sender,
         output::vuln::AllReports,
     },
@@ -37,11 +37,11 @@ impl<'a> LuaLoader<'a> {
 
     fn set_lua(&self, target_url: Option<&str>, lua: &Lua, driver: Option<Arc<Mutex<WebDriver>>>) {
         // Adding Lotus Lua Function
-        get_utilsfunc(self.bar, &lua);
-        get_matching_func(&lua);
-        http_func(target_url, &lua);
-        encoding_func(&lua);
-        payloads_func(&lua);
+        let lua_eng = LuaRunTime {
+            lua,
+            prog: &self.bar 
+        };
+        lua_eng.setup(target_url);
         // HTTP Sender
         lua.globals()
             .set(
