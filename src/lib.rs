@@ -127,7 +127,7 @@ impl Lotus {
                 test_target_host = Some("example.com");
             }
             2 => {
-                test_target_url = Some("example.com");
+                test_target_url = Some("https://example.com");
             }
             _ => {}
         }
@@ -135,9 +135,11 @@ impl Lotus {
             lua: &Lua::new(),
             prog: &bar
         };
-        lua_eng.setup(test_target_url);
         if test_target_host.is_some() {
+            lua_eng.setup(None);
             lua_eng.lua.globals().set("TARGET_HOST", "example.com").unwrap();
+        } else {
+            lua_eng.setup(test_target_url);
         }
         let mut used_scripts: Vec<(String, String)> = Vec::new();
         scripts.iter().for_each(|(script_code, script_path)| {

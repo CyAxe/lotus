@@ -10,6 +10,7 @@ pub struct LuaThreader {
 #[derive(Clone)]
 pub struct ParamScan {
     pub finds: Arc<Mutex<bool>>,
+    pub accept_nil: Arc<Mutex<bool>>
 }
 
 impl ParamScan {
@@ -23,6 +24,13 @@ impl UserData for ParamScan {
         methods.add_method("start_scan",|_, this, ()| {
             *this.finds.lock().unwrap() = false;
             Ok(())
+        });
+        methods.add_method("accept_nil", |_, this, accept_nil: bool| {
+            *this.accept_nil.lock().unwrap() = accept_nil;
+            Ok(())
+        });
+        methods.add_method("is_accept_nil", |_, this, ()| {
+            Ok(*this.accept_nil.lock().unwrap())
         });
         methods.add_async_method(
             "add_scan",

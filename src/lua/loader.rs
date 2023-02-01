@@ -164,7 +164,7 @@ impl LuaRunTime<'_, '_> {
         self.lua.globals().set("log_debug", log_debug).unwrap();
         self.lua.globals().set("log_warn", log_warn).unwrap();
 
-        if target_url.is_some() {
+        if !target_url.is_none() {
             self.lua.globals()
                 .set(
                     "HttpMessage",
@@ -190,7 +190,8 @@ impl LuaRunTime<'_, '_> {
         let bar = self.prog.clone();
         self.lua.globals()
             .set("ParamScan", ParamScan {
-                finds: Arc::new(Mutex::new(false))
+                finds: Arc::new(Mutex::new(false)),
+                accept_nil: Arc::new(Mutex::new(false))
             }).unwrap();
         self.lua.globals()
             .set(
@@ -219,14 +220,44 @@ impl LuaRunTime<'_, '_> {
             )
             .unwrap();
         self.lua.globals()
+            .set("print_cve_report", self.lua.create_function(move |_, the_report: CveReport| {
+                    let good_msg = format!("[{}]", Style::new().green().apply_to("+"));
+                    let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
+                    let report_msg = format!(
+                        "
+    {GOOD} {NAME} on: {URL}
+    {INFO} SCAN TYPE: CVE
+    {INFO} Description: {Description}
+    {INFO} Risk: {RISK}
+    {INFO} Matching Pattern: {MATCHING}
+    #--------------------------------------------------#
+
+                                     ",
+                        GOOD = good_msg,
+                        INFO = info_msg,
+                        NAME = the_report.name.unwrap(),
+                        URL = the_report.url.unwrap(),
+                        Description = the_report.description.unwrap(),
+                        RISK = the_report.risk.unwrap(),
+                        MATCHING = format!(
+                            "{:?}",
+                            the_report.matchers
+                        ),
+                    );
+                    bar.println(report_msg);
+                    Ok(())
+            }).unwrap()).unwrap();
+        let bar = self.prog.clone();
+        self.lua.globals()
             .set(
-                "print_report",
+                "print_vuln_report",
                 self.lua.create_function(move |_, the_report: OutReport| {
                     let good_msg = format!("[{}]", Style::new().green().apply_to("+"));
                     let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
                     let report_msg = format!(
                         "
     {GOOD} {NAME} on: {URL}
+    {INFO} SCAN TYPE: VULN
     {INFO} Description: {Description}
     {INFO} Vulnerable Parameter: {PARAM}
     {INFO} Risk: {RISK}
