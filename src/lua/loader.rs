@@ -225,12 +225,12 @@ impl LuaRunTime<'_, '_> {
                     let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
                     let report_msg = format!(
                         "
-    {GOOD} {NAME} on: {URL}
-    {INFO} SCAN TYPE: CVE
-    {INFO} Description: {Description}
-    {INFO} Risk: {RISK}
-    {INFO} Matching Pattern: {MATCHING}
-    #--------------------------------------------------#
+{GOOD} {NAME} on: {URL}
+{INFO} SCAN TYPE: CVE
+{INFO} Description: {Description}
+{INFO} Risk: {RISK}
+{INFO} Matching Pattern: {MATCHING}
+#--------------------------------------------------#
 
                                      ",
                         GOOD = good_msg,
@@ -256,14 +256,14 @@ impl LuaRunTime<'_, '_> {
                     let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
                     let report_msg = format!(
                         "
-    {GOOD} {NAME} on: {URL}
-    {INFO} SCAN TYPE: VULN
-    {INFO} Description: {Description}
-    {INFO} Vulnerable Parameter: {PARAM}
-    {INFO} Risk: {RISK}
-    {INFO} Used Payload: {ATTACK}
-    {INFO} Matching Pattern: {MATCHING}
-    #--------------------------------------------------#
+{GOOD} {NAME} on: {URL}
+{INFO} SCAN TYPE: VULN
+{INFO} Description: {Description}
+{INFO} Vulnerable Parameter: {PARAM}
+{INFO} Risk: {RISK}
+{INFO} Used Payload: {ATTACK}
+{INFO} Matching Pattern: {MATCHING}
+#--------------------------------------------------#
 
                                      ",
                         GOOD = good_msg,
