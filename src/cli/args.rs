@@ -62,12 +62,14 @@ pub enum ScriptType {
     about = "Fast Web Security Scanner written in Rust based on Lua Scripts"
 )]
 pub enum Opts {
+    #[structopt(about = "Create a lua example code based on the type of scan")]
     NEW {
-        #[structopt(short, long, parse(try_from_str = get_script_type))]
+        #[structopt(short = "-s", long, parse(try_from_str = get_script_type))]
         scan_type: ScriptType,
-        #[structopt(short, long)]
+        #[structopt(short = "f", long)]
         file_name: PathBuf,
     },
+    #[structopt(about = "Use CVE, VULN scripts to scan the given URLs")]
     URLS {
         // redirects limit
         #[structopt(
