@@ -41,29 +41,43 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+/// Lotus HTTP Options 
 #[derive(Clone)]
 pub struct RequestOpts {
+    /// Default Headers
     pub headers: HeaderMap,
+    /// Custom http Proxy
     pub proxy: Option<String>,
+    /// Request Timeout 
     pub timeout: u64,
+    /// Limits of http redirects
     pub redirects: u32,
 }
 
+/// Scanning type For `SCAN_TYPE` in lua scripts 
 #[derive(Clone, Copy)]
 pub enum ScanTypes {
+    /// URLS Scanning under ID number 2
     URLS,
+    /// HOSTS Scanning under ID number 1
     HOSTS,
 }
 
 pub struct Lotus {
+    /// Script Path
     pub script_path: PathBuf,
+    /// Output Path
     pub output: Option<PathBuf>,
+    /// Workers Option
     pub workers: usize,
+    /// How many url per script
     pub script_workers: usize,
+    /// Stop After X of errors
     pub stop_after: Arc<Mutex<i32>>,
 }
 
 impl Lotus {
+    /// Return Vector of scripts name and code with both methods
     fn get_scripts(&self) -> Vec<(String, String)> {
         let loaded_scripts = {
             if self.script_path.is_dir() {
@@ -81,11 +95,10 @@ impl Lotus {
         }
         loaded_scripts.unwrap()
     }
+    /// Use glob patterns to get script path and content based on script path or directory
+    /// This Function will return a Tuples in Vector with script path and content
     fn load_scripts(&self) -> Result<Vec<(String, String)>, CliErrors> {
         let mut scripts = Vec::new();
-        //
-        // Reading one file instead of the dir scripts
-
         for entry in glob(format!("{}{}", self.script_path.to_str().unwrap(), "/*.lua").as_str())
             .expect("Failed to read glob pattern")
         {
@@ -100,6 +113,7 @@ impl Lotus {
         return Ok(scripts);
     }
 
+    /// Loading script based on the script path (without glob)
     fn load_script(&self) -> Result<Vec<(String, String)>, CliErrors> {
         let mut scripts = Vec::new();
         let script_path = &self.script_path.clone();
@@ -114,6 +128,15 @@ impl Lotus {
             return Ok(scripts);
         }
     }
+    /// Validating the script code by running the scripts with example input based on the script
+    /// type `example.com` or `https:///example.com`
+    /// this function may removing some scripts from the list if it contains errors 
+    /// or it doesn't have a `main` function
+    /// make sure your lua script contains `SCAN_TYPE` and `main` Function
+    /// -----
+    /// * `bar` - ProgressBar
+    /// * `scripts` - The Scripts Vector contains Vec<(script_path, script_code)>
+    /// * `number_scantype` - The Scanning type number | 1 = HOST , 2 = URL
     fn valid_scripts(
         &self,
         bar: indicatif::ProgressBar,
@@ -180,6 +203,11 @@ impl Lotus {
         });
         used_scripts
     }
+    /// Run The Lua Script with real target
+    /// * `target_data` - Vector with target urls
+    /// * `request_option` - RequestOpts contains some http request options like (proxy , timeout)
+    /// * `scan_type` - scan type if its host or url scanning
+    /// * `exit_after` - exit after how many of errors
     pub async fn start(
         &self,
         target_data: Vec<String>,

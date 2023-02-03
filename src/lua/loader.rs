@@ -44,12 +44,14 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+/// Setup The Lua Runtime
 pub struct LuaRunTime<'prog, 'lua> {
     pub lua: &'lua Lua,
     pub prog: &'prog indicatif::ProgressBar
 }
 
 impl LuaRunTime<'_, '_> {
+    /// * `target_url` - The Target URL
     pub fn setup(&self,target_url: Option<&str>) {
         self.http_func(target_url);
         self.payloads_func();
@@ -57,6 +59,7 @@ impl LuaRunTime<'_, '_> {
         self.encoding_func();
         self.get_matching_func();
     }
+    /// Setting up the payload functions
     pub fn payloads_func(&self) {
         self.lua.globals()
             .set(
@@ -71,6 +74,8 @@ impl LuaRunTime<'_, '_> {
             )
             .unwrap();
     }
+
+    /// Setup the encoding function
     pub fn encoding_func(&self) {
         self.lua.globals()
             .set(
@@ -89,6 +94,7 @@ impl LuaRunTime<'_, '_> {
             .unwrap();
     }
 
+    /// Setup the http functions
     pub fn http_func(&self,target_url: Option<&str>) {
         self.lua.globals()
             .set(
@@ -185,6 +191,7 @@ impl LuaRunTime<'_, '_> {
         self.lua.globals().set("VulnReport", OutReport::init()).unwrap();
         self.lua.globals().set("CveReport", CveReport::init()).unwrap();
     }
+    /// Setup Lotus utils functions
     pub fn get_utilsfunc<'prog, 'lua>(&self) {
         // ProgressBar
         let bar = self.prog.clone();

@@ -14,6 +14,7 @@ use std::{
 };
 use thirtyfour::prelude::*;
 
+
 #[derive(Clone)]
 pub struct LuaLoader<'a> {
     output_dir: String,
@@ -22,6 +23,9 @@ pub struct LuaLoader<'a> {
 }
 
 /// Start Lotus by adding the ProgressBar and http request options
+/// * `bar` - ProgressBar
+/// * `request` - Request Options
+/// * `output_dir` - output file
 impl<'a> LuaLoader<'a> {
     pub fn new(
         bar: &'a indicatif::ProgressBar,
@@ -35,6 +39,7 @@ impl<'a> LuaLoader<'a> {
         }
     }
 
+    /// Set Lua Functions for http and matching
     fn set_lua(&self, target_url: Option<&str>, lua: &Lua, driver: Option<Arc<Mutex<WebDriver>>>) {
         // Adding Lotus Lua Function
         let lua_eng = LuaRunTime {
@@ -83,6 +88,9 @@ impl<'a> LuaLoader<'a> {
             .expect("Could not write to file");
     }
 
+    /// Run The Targeted Script on the target url 
+    /// * `target_url` - Target url
+    /// * `target_type` - the input type if its HOST or URL 
     pub async fn run_scan(
         &self,
         target_url: Option<&str>,
