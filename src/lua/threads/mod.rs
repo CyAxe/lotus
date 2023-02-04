@@ -1,3 +1,4 @@
+pub mod runner;
 use futures::{stream, StreamExt};
 use mlua::UserData;
 use std::sync::{Arc, Mutex};

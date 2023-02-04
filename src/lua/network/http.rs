@@ -1,19 +1,19 @@
 /*
- * This file is part of Lotus Project, an Web Security Scanner written in Rust based on Lua Scripts
- * For details, please see https://github.com/rusty-sec/lotus/
+ * this file is part of lotus project, an web security scanner written in rust based on lua scripts
+ * for details, please see https://github.com/rusty-sec/lotus/
  *
- * Copyright (c) 2022 - Khaled Nassar
+ * copyright (c) 2022 - khaled nassar
  *
- * Please note that this file was originally released under the
- * GNU General Public License as published by the Free Software Foundation;
- * either version 2 of the License, or (at your option) any later version.
+ * please note that this file was originally released under the
+ * gnu general public license as published by the free software foundation;
+ * either version 2 of the license, or (at your option) any later version.
  *
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * unless required by applicable law or agreed to in writing, software
+ * distributed under the license is distributed on an "as is" basis,
+ * without warranties or conditions of any kind, either express or implied.
+ * see the license for the specific language governing permissions and
+ * limitations under the license.
  */
 
 use reqwest::{header::HeaderMap, redirect, Client, Method, Proxy};
