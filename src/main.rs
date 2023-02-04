@@ -33,6 +33,7 @@ async fn main() -> Result<(), std::io::Error> {
         },
         Opts::URLS { .. } => {
             let opts = args_urls();
+            // Open two threads for URL/HOST scanning
             let scan_futures = vec![
                 opts.lotus_obj.start(
                     opts.target_data.urls,

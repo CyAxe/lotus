@@ -16,11 +16,14 @@ pub async fn scan_futures<T: Future<Output = ()>>(scan_futures: Vec<T>, workers:
             fut.await;
             let mut num_futures = num_futures.write().await;
             if call_back.is_some(){
-                call_back.unwrap()()
+                log::debug!("Running the Callback function for TASK {}", *num_futures);
+                call_back.unwrap()();
+                log::debug!("The Callback has been finished for TASK {}", *num_futures);
             }
             *num_futures -= 1;
             if *num_futures <= 0 {
                 // Close the sink to exit the for_each_concurrent
+                log::debug!("Running");
                 sink_lock.write().await.close().await.unwrap();
             }
         })

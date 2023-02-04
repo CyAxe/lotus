@@ -34,6 +34,14 @@ pub enum RespType {
     Error(String),
 }
 
+#[derive(Debug, FromToLua, TypeName)]
+pub struct HttpResponse {
+    url: String,
+    status: i32,
+    body: String,
+    headers: HashMap<String, String>,
+}
+
 impl Sender {
     /// Build your own http request module with user option
     ///
@@ -85,8 +93,7 @@ impl Sender {
         url: String,
         body: String,
         headers: HeaderMap,
-    ) -> Result<HashMap<String, RespType>, mlua::Error> {
-        let mut resp_data: HashMap<String, RespType> = HashMap::new();
+    ) -> Result<HttpResponse, mlua::Error> {
         match self
             .build_client()
             .unwrap()
@@ -106,17 +113,13 @@ impl Sender {
                             header_value.to_str().unwrap().to_string(),
                         );
                     });
-                resp_data.insert("url".to_string(), RespType::Str(url));
-                resp_data.insert(
-                    "status".to_string(),
-                    RespType::Int(resp.status().as_u16() as i32),
-                );
-                resp_data.insert(
-                    "body".to_string(),
-                    RespType::Str(resp.text().await.unwrap()),
-                );
-                resp_data.insert("headers".to_string(), RespType::Headers(resp_headers));
-                Ok(resp_data)
+                let resp_data_struct = HttpResponse {
+                    url,
+                    status: resp.status().as_u16() as i32,
+                    body: resp.text().await.unwrap(),
+                    headers: resp_headers
+                };
+                Ok(resp_data_struct)
             }
             Err(err) => Err(err.to_lua_err()),
         }
