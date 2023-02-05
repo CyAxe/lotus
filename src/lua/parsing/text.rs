@@ -1,5 +1,4 @@
 use crate::lua::network::http::HttpResponse;
-use std::collections::HashMap;
 use mlua::UserData;
 use tealr::TypeName;
 
