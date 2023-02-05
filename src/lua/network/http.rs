@@ -36,10 +36,10 @@ pub enum RespType {
 
 #[derive(Debug, FromToLua, TypeName)]
 pub struct HttpResponse {
-    url: String,
-    status: i32,
-    body: String,
-    headers: HashMap<String, String>,
+    pub url: String,
+    pub status: i32,
+    pub body: String,
+    pub headers: HashMap<String, String>,
 }
 
 impl Sender {
@@ -117,7 +117,7 @@ impl Sender {
                     url,
                     status: resp.status().as_u16() as i32,
                     body: resp.text().await.unwrap(),
-                    headers: resp_headers
+                    headers: resp_headers,
                 };
                 Ok(resp_data_struct)
             }

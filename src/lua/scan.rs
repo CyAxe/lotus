@@ -1,10 +1,6 @@
 use crate::{
-    lua::{
-        loader::LuaRunTime,
-        network::http::Sender,
-        output::vuln::AllReports,
-    },
-    RequestOpts, ScanTypes
+    lua::{loader::LuaRunTime, network::http::Sender, output::vuln::AllReports},
+    RequestOpts, ScanTypes,
 };
 use mlua::Lua;
 use std::{
@@ -13,7 +9,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 use thirtyfour::prelude::*;
-
 
 #[derive(Clone)]
 pub struct LuaLoader<'a> {
@@ -44,7 +39,7 @@ impl<'a> LuaLoader<'a> {
         // Adding Lotus Lua Function
         let lua_eng = LuaRunTime {
             lua,
-            prog: &self.bar 
+            prog: &self.bar,
         };
         lua_eng.setup(target_url);
         // HTTP Sender
@@ -88,9 +83,9 @@ impl<'a> LuaLoader<'a> {
             .expect("Could not write to file");
     }
 
-    /// Run The Targeted Script on the target url 
+    /// Run The Targeted Script on the target url
     /// * `target_url` - Target url
-    /// * `target_type` - the input type if its HOST or URL 
+    /// * `target_type` - the input type if its HOST or URL
     pub async fn run_scan(
         &self,
         target_url: Option<&str>,

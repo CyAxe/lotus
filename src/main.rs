@@ -29,8 +29,7 @@ use structopt::StructOpt;
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     match Opts::from_args() {
-        Opts::SITEMAP { .. } => {
-        },
+        Opts::SITEMAP { .. } => {}
         Opts::URLS { .. } => {
             let opts = args_urls();
             // Open two threads for URL/HOST scanning
@@ -48,7 +47,7 @@ async fn main() -> Result<(), std::io::Error> {
                     opts.exit_after,
                 ),
             ];
-            runner::scan_futures(scan_futures,2,None).await;
+            runner::scan_futures(scan_futures, 2, None).await;
         }
         Opts::NEW {
             scan_type,

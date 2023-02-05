@@ -11,7 +11,7 @@ pub struct LuaThreader {
 #[derive(Clone)]
 pub struct ParamScan {
     pub finds: Arc<Mutex<bool>>,
-    pub accept_nil: Arc<Mutex<bool>>
+    pub accept_nil: Arc<Mutex<bool>>,
 }
 
 impl ParamScan {
@@ -22,7 +22,7 @@ impl ParamScan {
 
 impl UserData for ParamScan {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("start_scan",|_, this, ()| {
+        methods.add_method("start_scan", |_, this, ()| {
             *this.finds.lock().unwrap() = false;
             Ok(())
         });
@@ -82,9 +82,7 @@ impl UserData for ParamScan {
             this.stop_scan();
             Ok(())
         });
-        methods.add_method("is_stop", |_, this, () | {
-            Ok(*this.finds.lock().unwrap())
-        });
+        methods.add_method("is_stop", |_, this, ()| Ok(*this.finds.lock().unwrap()));
     }
 }
 

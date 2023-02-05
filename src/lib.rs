@@ -23,11 +23,7 @@ use cli::{
     bar::{create_progress, show_msg, MessageLevel},
     errors::CliErrors,
 };
-use lua::{
-    loader::LuaRunTime,
-    parsing::files::filename_to_string,
-    scan::LuaLoader,
-};
+use lua::{loader::LuaRunTime, parsing::files::filename_to_string, scan::LuaLoader};
 use mlua::Lua;
 
 use futures::{stream, StreamExt};
@@ -41,20 +37,20 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-/// Lotus HTTP Options 
+/// Lotus HTTP Options
 #[derive(Clone)]
 pub struct RequestOpts {
     /// Default Headers
     pub headers: HeaderMap,
     /// Custom http Proxy
     pub proxy: Option<String>,
-    /// Request Timeout 
+    /// Request Timeout
     pub timeout: u64,
     /// Limits of http redirects
     pub redirects: u32,
 }
 
-/// Scanning type For `SCAN_TYPE` in lua scripts 
+/// Scanning type For `SCAN_TYPE` in lua scripts
 #[derive(Clone, Copy)]
 pub enum ScanTypes {
     /// URLS Scanning under ID number 2
@@ -130,7 +126,7 @@ impl Lotus {
     }
     /// Validating the script code by running the scripts with example input based on the script
     /// type `example.com` or `https:///example.com`
-    /// this function may removing some scripts from the list if it contains errors 
+    /// this function may removing some scripts from the list if it contains errors
     /// or it doesn't have a `main` function
     /// make sure your lua script contains `SCAN_TYPE` and `main` Function
     /// -----
@@ -156,11 +152,15 @@ impl Lotus {
         }
         let lua_eng = LuaRunTime {
             lua: &Lua::new(),
-            prog: &bar
+            prog: &bar,
         };
         if test_target_host.is_some() {
             lua_eng.setup(None);
-            lua_eng.lua.globals().set("TARGET_HOST", "example.com").unwrap();
+            lua_eng
+                .lua
+                .globals()
+                .set("TARGET_HOST", "example.com")
+                .unwrap();
         } else {
             lua_eng.setup(test_target_url);
         }
@@ -219,12 +219,12 @@ impl Lotus {
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
                 let scripts = self.get_scripts();
-                let loaded_scripts = self.valid_scripts(bar,scripts, 1);
+                let loaded_scripts = self.valid_scripts(bar, scripts, 1);
                 log::debug!("Running Host scan {:?}", loaded_scripts.len());
                 loaded_scripts
             } else {
                 let scripts = self.get_scripts();
-                let loaded_scripts = self.valid_scripts(bar,scripts, 2);
+                let loaded_scripts = self.valid_scripts(bar, scripts, 2);
                 log::debug!("Running URL scan {:?}", loaded_scripts.len());
                 loaded_scripts
             }

@@ -63,8 +63,7 @@ pub enum ScriptType {
 )]
 pub enum Opts {
     #[structopt(about = "Use Full requests as a sitemap to scan with JSON")]
-    SITEMAP {
-    },
+    SITEMAP {},
     #[structopt(about = "Create a lua example code based on the type of scan")]
     NEW {
         #[structopt(short = "-s", long, parse(try_from_str = get_script_type))]

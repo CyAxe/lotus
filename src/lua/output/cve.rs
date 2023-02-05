@@ -19,7 +19,7 @@
 use mlua::UserData;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone,Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum ReportMatchers {
     RawResponse(String),
     ResposneHeaders(String),
