@@ -221,20 +221,9 @@ impl LuaRunTime<'_, '_> {
     pub fn get_utilsfunc<'prog, 'lua>(&self) {
         // ProgressBar
         let bar = self.prog.clone();
-        use std::collections::HashMap;
         self.lua
             .globals()
-            .set(
-                "ResponseMatcher",
-                ResponseMatcher {
-                    response: super::network::http::HttpResponse {
-                        url: "".to_string(),
-                        status: 0,
-                        headers: HashMap::new(),
-                        body: "".to_string(),
-                    },
-                },
-            )
+            .set("ResponseMatcher", ResponseMatcher {})
             .unwrap();
         self.lua
             .globals()
