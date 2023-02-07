@@ -2,6 +2,7 @@ use crate::filename_to_string;
 use crate::CliErrors;
 use std::{io, io::BufRead, path::PathBuf};
 use url::Url;
+pub mod load_scripts;
 
 pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     let mut hosts = Vec::new();

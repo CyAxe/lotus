@@ -17,3 +17,10 @@ pub enum CliErrors {
     #[error("Unsupported script type")]
     UnsupportedScript,
 }
+
+
+#[derive(Error, Debug)]
+pub enum Network {
+    #[error("Connection Timeout")]
+    ConnectionTimeout,
+}
