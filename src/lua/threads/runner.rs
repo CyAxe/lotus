@@ -3,7 +3,7 @@ use futures::Future;
 use futures::{channel::mpsc, sink::SinkExt};
 use tokio::sync::RwLock;
 
-pub async fn iter_futures_tuple<F, Fut>(target_iter: Vec<(String, String)>, target_function: F, workers: usize ,call_back: Option<F>) where F: FnOnce((String, String)) -> Fut + Clone ,
+pub async fn iter_futures_tuple<F, Fut>(target_iter: Vec<(String, String)>, target_function: F, workers: usize) where F: FnOnce((String, String)) -> Fut + Clone ,
 Fut: Future<Output = ()> 
 {
     stream::iter(target_iter)
@@ -13,7 +13,7 @@ Fut: Future<Output = ()>
         async move {target_function(out).await}}).await;
 }
 
-pub async fn iter_futures<F, Fut>(target_iter: Vec<String>, target_function: F, workers: usize ,call_back: Option<F>) where F: FnOnce(String) -> Fut + Clone ,
+pub async fn iter_futures<F, Fut>(target_iter: Vec<String>, target_function: F, workers: usize) where F: FnOnce(String) -> Fut + Clone ,
 Fut: Future<Output = ()> 
 {
     stream::iter(target_iter)

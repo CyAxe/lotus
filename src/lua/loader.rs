@@ -21,7 +21,6 @@ use crate::{
     lua::{
         output::cve::CveReport,
         output::vuln::{AllReports, OutReport},
-        network::socket::tcp_sender,
         parsing::{
             html::{css_selector, html_parse, html_search, Location},
             text::ResponseMatcher,
@@ -105,12 +104,6 @@ impl LuaRunTime<'_, '_> {
 
     /// Setup the http functions
     pub fn http_func(&self, target_url: Option<&str>) {
-        self.lua.globals()
-            .set("TCP_SENDER", self.lua.create_function(|_, (host, message): (String, String)| {
-               tcp_sender(&host, message.as_bytes());
-               Ok(()) 
-            }).unwrap()
-        ).unwrap();
         self.lua
             .globals()
             .set(

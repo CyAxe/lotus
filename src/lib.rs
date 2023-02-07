@@ -153,7 +153,7 @@ impl Lotus {
                         *a += 1;
                     }
                 }
-            }, self.script_workers, None).await;
-        },self.workers, None).await;
+            }, self.script_workers).await;
+        },self.workers).await;
     }
 }
