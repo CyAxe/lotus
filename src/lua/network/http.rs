@@ -113,10 +113,12 @@ impl Sender {
                             header_value.to_str().unwrap().to_string(),
                         );
                     });
+                let status = resp.status().as_u16() as i32;
+                let body = resp.text().await.unwrap();
                 let resp_data_struct = HttpResponse {
                     url,
-                    status: resp.status().as_u16() as i32,
-                    body: resp.text().await.unwrap(),
+                    status,
+                    body,
                     headers: resp_headers,
                 };
                 Ok(resp_data_struct)

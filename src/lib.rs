@@ -20,7 +20,7 @@ pub mod cli;
 pub mod lua;
 
 use cli::{
-    bar::{create_progress, show_msg, MessageLevel},
+    bar::{BAR,show_msg, MessageLevel},
     errors::CliErrors,
     input::load_scripts::{get_scripts, valid_scripts}
 };
@@ -85,27 +85,25 @@ impl Lotus {
         scan_type: ScanTypes,
         exit_after: i32,
     ) {
-        let bar = create_progress(target_data.len() as u64); // fake bar for testing
+        BAR.lock().unwrap().suspend(||{});
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
                 let scripts = get_scripts(self.script_path.clone());
-                let loaded_scripts = valid_scripts(bar, scripts, 1);
+                let loaded_scripts = valid_scripts( scripts, 1);
                 log::debug!("Running Host scan {:?}", loaded_scripts.len());
                 loaded_scripts
             } else {
                 let scripts = get_scripts(self.script_path.clone());
-                let loaded_scripts = valid_scripts(bar, scripts, 2);
+                let loaded_scripts = valid_scripts( scripts, 2);
                 log::debug!("Running URL scan {:?}", loaded_scripts.len());
                 loaded_scripts
             }
         };
-        let bar = create_progress(target_data.len() as u64 * loaded_scripts.len() as u64);
         if self.output.is_none() {
             show_msg("Output argument is missing", MessageLevel::Error);
             std::process::exit(1);
         }
         let lotus_obj = Arc::new(LuaLoader::new(
-            &bar,
             request_option.clone(),
             self.output.as_ref().unwrap().to_str().unwrap().to_string(),
         ));

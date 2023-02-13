@@ -65,7 +65,6 @@ fn load_script(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors>
 /// * `scripts` - The Scripts Vector contains Vec<(script_path, script_code)>
 /// * `number_scantype` - The Scanning type number | 1 = HOST , 2 = URL
 pub fn valid_scripts(
-    bar: indicatif::ProgressBar,
     scripts: Vec<(String, String)>,
     number_scantype: usize,
 ) -> Vec<(String, String)> {
@@ -82,7 +81,6 @@ pub fn valid_scripts(
     }
     let lua_eng = LuaRunTime {
         lua: &Lua::new(),
-        prog: &bar,
     };
     if test_target_host.is_some() {
         lua_eng.setup(None);

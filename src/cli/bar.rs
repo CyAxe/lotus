@@ -17,7 +17,9 @@
  */
 
 use console::Style;
+use lazy_static::lazy_static;
 use indicatif::{ProgressBar, ProgressStyle};
+use std::sync::{Arc, Mutex};
 
 pub enum MessageLevel {
     Info,
@@ -25,10 +27,15 @@ pub enum MessageLevel {
     Error,
 }
 
+lazy_static! {
+    pub static ref BAR: Arc<Mutex<ProgressBar>> = Arc::new(Mutex::new(ProgressBar::new(0)));
+}
+
 /// Lotus ProgressBar based on the length of `bar` parameter
-pub fn create_progress(bar: u64) -> ProgressBar {
-    let bar = ProgressBar::new(bar);
-    bar.set_style(
+pub fn create_progress(bar: u64) {
+    let bar_length = BAR.lock().unwrap().length().unwrap();
+    BAR.lock().unwrap().set_length(bar + bar_length);
+    BAR.lock().unwrap().set_style(
         ProgressStyle::default_bar()
             .template(
                 "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}",
@@ -37,7 +44,6 @@ pub fn create_progress(bar: u64) -> ProgressBar {
             .tick_chars("⣾⣽⣻⢿⡿⣟⣯⣷".to_string().as_str())
             .progress_chars("#>-"),
     );
-    bar
 }
 
 pub fn show_msg(message: &str, msglevel: MessageLevel) {

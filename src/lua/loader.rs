@@ -17,7 +17,10 @@
  */
 
 use crate::{
-    cli::errors::CliErrors,
+    cli::{
+        bar::BAR,
+        errors::CliErrors
+    },
     lua::{
         output::cve::CveReport,
         output::vuln::{AllReports, OutReport},
@@ -46,12 +49,11 @@ use std::{
 };
 
 /// Setup The Lua Runtime
-pub struct LuaRunTime<'prog, 'lua> {
+pub struct LuaRunTime<'lua> {
     pub lua: &'lua Lua,
-    pub prog: &'prog indicatif::ProgressBar,
 }
 
-impl LuaRunTime<'_, '_> {
+impl LuaRunTime<'_> {
     /// * `target_url` - The Target URL
     pub fn setup(&self, target_url: Option<&str>) {
         self.http_func(target_url);
@@ -220,7 +222,6 @@ impl LuaRunTime<'_, '_> {
     /// Setup Lotus utils functions
     pub fn get_utilsfunc<'prog, 'lua>(&self) {
         // ProgressBar
-        let bar = self.prog.clone();
         self.lua
             .globals()
             .set("ResponseMatcher", ResponseMatcher {})
@@ -292,13 +293,12 @@ impl LuaRunTime<'_, '_> {
                             RISK = the_report.risk.unwrap(),
                             MATCHING = format!("{:?}", the_report.matchers),
                         );
-                        bar.println(report_msg);
+                        BAR.lock().unwrap().println(report_msg);
                         Ok(())
                     })
                     .unwrap(),
             )
             .unwrap();
-        let bar = self.prog.clone();
         self.lua
             .globals()
             .set(
@@ -332,21 +332,20 @@ impl LuaRunTime<'_, '_> {
                                 Style::new().on_red().apply_to(the_report.evidence.unwrap())
                             ),
                         );
-                        bar.println(report_msg);
+                        BAR.lock().unwrap().println(report_msg);
                         Ok(())
                     })
                     .unwrap(),
             )
             .unwrap();
 
-        let bar = self.prog.clone();
         self.lua
             .globals()
             .set(
                 "println",
                 self.lua
                     .create_function(move |_, msg: String| {
-                        bar.println(&msg);
+                        BAR.lock().unwrap().println(&msg);
                         Ok(())
                     })
                     .unwrap(),

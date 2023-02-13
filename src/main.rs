@@ -19,12 +19,14 @@
 use lotus::{
     cli::{
         args::Opts,
+        bar::create_progress,
         startup::{new::new_args, urls::args_urls},
     },
     lua::threads::runner,
     ScanTypes,
 };
 use structopt::StructOpt;
+
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -33,6 +35,7 @@ async fn main() -> Result<(), std::io::Error> {
         Opts::URLS { .. } => {
             let opts = args_urls();
             // Open two threads for URL/HOST scanning
+            create_progress(( opts.target_data.urls.len() * opts.target_data.hosts.len() ) as u64);
             let scan_futures = vec![
                 opts.lotus_obj.start(
                     opts.target_data.urls,
