@@ -85,7 +85,7 @@ impl Lotus {
         scan_type: ScanTypes,
         exit_after: i32,
     ) {
-        BAR.lock().unwrap().suspend(||{});
+        {BAR.lock().unwrap().suspend(||{})};
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
                 let scripts = get_scripts(self.script_path.clone());
