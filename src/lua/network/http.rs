@@ -129,14 +129,14 @@ impl Sender {
                         );
                     });
                 let status = resp.status().as_u16() as i32;
-                let body = resp.text().await.unwrap();
+                let body = resp.bytes().await.unwrap();
+                let body = String::from_utf8_lossy(&body).to_string();
                 let resp_data_struct = HttpResponse {
                     url,
                     status,
                     body,
                     headers: resp_headers,
                 };
-
                 Ok(resp_data_struct)
             }
             Err(err) => {

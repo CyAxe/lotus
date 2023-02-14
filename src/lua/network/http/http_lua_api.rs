@@ -1,7 +1,6 @@
 use mlua::UserData;
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
-//use std::borrow::BorrowMut;
 
 #[derive(Clone)]
 pub struct Sender {
