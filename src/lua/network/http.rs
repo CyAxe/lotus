@@ -23,7 +23,6 @@ mod http_lua_api;
 pub use http_lua_api::Sender;
 use mlua::ExternalError;
 use lazy_static::lazy_static;
-use std::thread::sleep;
 use std::time::Duration;
 use std::sync::{Arc,Mutex};
 use tealr::{mlu::FromToLua, TypeName};
@@ -104,19 +103,22 @@ impl Sender {
             .await
         {
             Ok(resp) => {
-                let req_limit = REQUESTS_LIMIT.lock().unwrap();
-                let mut req_sent = REQUESTS_SENT.lock().unwrap();
-                *req_sent += 1;
-                if *req_sent >= *req_limit {
-                    let sleep_time = SLEEP_TIME.lock().unwrap();
-                    let bar = BAR.lock().unwrap();
-                    bar.println(format!("The rate limit for requests has been raised, please wait {} seconds ",*sleep_time));
-                    log::debug!("{}",format!("The rate limit for requests has been raised, please wait {} seconds ",*sleep_time));
-                    sleep(Duration::from_secs(*sleep_time));
-                    *req_sent = 0;
-                    bar.println("Continue ...");
-                    log::debug!("changing req_sent value to 0");
-                }
+                // Locking Scope
+                { 
+                    let req_limit = REQUESTS_LIMIT.lock().unwrap();
+                    let mut req_sent = REQUESTS_SENT.lock().unwrap();
+                    if *req_sent >= *req_limit {
+                        let sleep_time = SLEEP_TIME.lock().unwrap();
+                        let bar = BAR.lock().unwrap();
+                        bar.println(format!("The rate limit for requests has been raised, please wait {} seconds ",*sleep_time));
+                        log::debug!("{}",format!("The rate limit for requests has been raised, please wait {} seconds ",*sleep_time));
+                        tokio::time::sleep(Duration::from_secs(*sleep_time)).await;
+                        *req_sent = 0;
+                        bar.println("Continue ...");
+                        log::debug!("changing req_sent value to 0");
+                    }
+                    *req_sent += 1;
+                };
                 let mut resp_headers: HashMap<String, String> = HashMap::new();
                 resp.headers()
                     .iter()
