@@ -293,7 +293,7 @@ impl LuaRunTime<'_> {
                             RISK = the_report.risk.unwrap(),
                             MATCHING = format!("{:?}", the_report.matchers),
                         );
-                        BAR.lock().unwrap().println(report_msg);
+                        {BAR.lock().unwrap().println(report_msg)};
                         Ok(())
                     })
                     .unwrap(),
@@ -332,7 +332,7 @@ impl LuaRunTime<'_> {
                                 Style::new().on_red().apply_to(the_report.evidence.unwrap())
                             ),
                         );
-                        BAR.lock().unwrap().println(report_msg);
+                        {BAR.lock().unwrap().println(report_msg)};
                         Ok(())
                     })
                     .unwrap(),
@@ -345,7 +345,7 @@ impl LuaRunTime<'_> {
                 "println",
                 self.lua
                     .create_function(move |_, msg: String| {
-                        BAR.lock().unwrap().println(&msg);
+                        {BAR.lock().unwrap().println(&msg)};
                         Ok(())
                     })
                     .unwrap(),
