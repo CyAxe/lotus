@@ -127,6 +127,14 @@ pub enum Opts {
             help = "Set http proxy for all connections"
         )]
         proxy: Option<String>,
+        #[structopt(
+            long = "requests-limit",
+            help = "requests limit",
+            default_value = "2000"
+            )]
+        requests_limit: i32,
+        #[structopt(long = "delay", help = "sleeping dalay", default_value = "5")]
+        delay: u64,
 
         #[structopt(long = "log", help = "Saving Lotus Logs for debugging")]
         log: Option<PathBuf>,
