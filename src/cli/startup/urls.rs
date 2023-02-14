@@ -14,6 +14,8 @@ pub struct UrlArgs {
     pub exit_after: i32,
     pub req_opts: RequestOpts,
     pub lotus_obj: Lotus,
+    pub requests_limit: i32,
+    pub delay: u64
 }
 
 pub struct TargetData {
@@ -22,7 +24,7 @@ pub struct TargetData {
 }
 
 pub fn args_urls() -> UrlArgs {
-    let (urls, hosts, exit_after, req_opts, lotus_obj) = match Opts::from_args() {
+    let (urls, hosts, exit_after, req_opts, lotus_obj, requests_limit, delay) = match Opts::from_args() {
         Opts::URLS {
             redirects,
             workers,
@@ -35,6 +37,8 @@ pub fn args_urls() -> UrlArgs {
             urls,
             headers,
             exit_after,
+            requests_limit,
+            delay
         } => {
             // setup logger
             init_log(log).unwrap();
@@ -70,7 +74,7 @@ pub fn args_urls() -> UrlArgs {
                 .map(|url| url.to_string())
                 .collect::<Vec<String>>();
             let hosts = get_target_hosts(urls_vec.clone());
-            (urls_vec, hosts, exit_after, req_opts, lotus_obj)
+            (urls_vec, hosts, exit_after, req_opts, lotus_obj, requests_limit, delay)
         }
         _ => {
             std::process::exit(1);
@@ -82,5 +86,7 @@ pub fn args_urls() -> UrlArgs {
         exit_after,
         req_opts,
         lotus_obj,
+        requests_limit,
+        delay
     }
 }
