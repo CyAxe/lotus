@@ -1,8 +1,8 @@
-use std::path::PathBuf;
+use crate::{filename_to_string, show_msg, CliErrors, LuaRunTime, MessageLevel};
 use glob::glob;
 use log::error;
 use mlua::Lua;
-use crate::{filename_to_string, show_msg, MessageLevel, CliErrors, LuaRunTime};
+use std::path::PathBuf;
 
 /// Return Vector of scripts name and code with both methods
 pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
@@ -79,9 +79,7 @@ pub fn valid_scripts(
         }
         _ => {}
     }
-    let lua_eng = LuaRunTime {
-        lua: &Lua::new(),
-    };
+    let lua_eng = LuaRunTime { lua: &Lua::new() };
     if test_target_host.is_some() {
         lua_eng.setup(None);
         lua_eng

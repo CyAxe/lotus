@@ -21,13 +21,13 @@ use reqwest::{header::HeaderMap, redirect, Client, Method, Proxy};
 use std::collections::HashMap;
 mod http_lua_api;
 pub use http_lua_api::Sender;
-use mlua::ExternalError;
 use lazy_static::lazy_static;
+use mlua::ExternalError;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use std::sync::{Arc,Mutex};
 use tealr::{mlu::FromToLua, TypeName};
 
-lazy_static!{
+lazy_static! {
     pub static ref REQUESTS_LIMIT: Arc<Mutex<i32>> = Arc::new(Mutex::new(5));
     pub static ref REQUESTS_SENT: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
     pub static ref SLEEP_TIME: Arc<Mutex<u64>> = Arc::new(Mutex::new(5));
@@ -104,13 +104,16 @@ impl Sender {
         {
             Ok(resp) => {
                 // Locking Scope
-                { 
+                {
                     let req_limit = REQUESTS_LIMIT.lock().unwrap();
                     let mut req_sent = REQUESTS_SENT.lock().unwrap();
                     if *req_sent >= *req_limit {
                         let sleep_time = SLEEP_TIME.lock().unwrap();
                         let bar = BAR.lock().unwrap();
-                        bar.println(format!("The rate limit for requests has been raised, please wait {} seconds ",*sleep_time));
+                        bar.println(format!(
+                            "The rate limit for requests has been raised, please wait {} seconds ",
+                            *sleep_time
+                        ));
                         log::debug!("{}",format!("The rate limit for requests has been raised, please wait {} seconds ",*sleep_time));
                         tokio::time::sleep(Duration::from_secs(*sleep_time)).await;
                         *req_sent = 0;
@@ -139,9 +142,7 @@ impl Sender {
                 };
                 Ok(resp_data_struct)
             }
-            Err(err) => {
-                Err(err.to_lua_err())
-            },
+            Err(err) => Err(err.to_lua_err()),
         }
     }
 }

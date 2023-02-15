@@ -22,10 +22,7 @@ pub struct LuaLoader {
 /// * `request` - Request Options
 /// * `output_dir` - output file
 impl LuaLoader {
-    pub fn new(
-        request: RequestOpts,
-        output_dir: String,
-    ) -> LuaLoader {
+    pub fn new(request: RequestOpts, output_dir: String) -> LuaLoader {
         LuaLoader {
             output_dir,
             request,
@@ -33,12 +30,10 @@ impl LuaLoader {
     }
 
     /// Set Lua Functions for http and matching
-    /// 
+    ///
     fn set_lua(&self, target_url: Option<&str>, lua: &Lua, driver: Option<Arc<Mutex<WebDriver>>>) {
         // Adding Lotus Lua Function
-        let lua_eng = LuaRunTime {
-            lua,
-        };
+        let lua_eng = LuaRunTime { lua };
         lua_eng.setup(target_url);
         // HTTP Sender
         lua.globals()
@@ -117,24 +112,31 @@ impl LuaLoader {
         let main_func = lua.globals().get::<_, mlua::Function>("main");
         if main_func.is_err() {
             log::error!("[{}] there is no main function, Skipping ..", script_dir);
-            {BAR.lock().unwrap().println(format!(
-                "[{}] there is no main function, Skipping ..",
-                script_dir
-            ))};
+            {
+                BAR.lock().unwrap().println(format!(
+                    "[{}] there is no main function, Skipping ..",
+                    script_dir
+                ))
+            };
         } else {
             let run_scan = main_func
                 .unwrap()
                 .call_async::<_, mlua::Value>(mlua::Value::Nil)
                 .await;
-            {BAR.lock().unwrap().inc(1)};
+            {
+                BAR.lock().unwrap().inc(1)
+            };
             if run_scan.is_err() {
                 log::error!(
                     "[{}] Script Error : {:?}",
                     script_dir,
                     run_scan.clone().unwrap_err()
                 );
-                {BAR.lock().unwrap()
-                    .println(format!("Script ERROR: {:?}", run_scan.unwrap_err()))};
+                {
+                    BAR.lock()
+                        .unwrap()
+                        .println(format!("Script ERROR: {:?}", run_scan.unwrap_err()))
+                };
             } else {
                 let script_report = lua.globals().get::<_, AllReports>("Reports").unwrap();
                 if !script_report.reports.is_empty() {
