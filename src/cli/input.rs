@@ -7,9 +7,21 @@ pub mod load_scripts;
 pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     let mut hosts = Vec::new();
     urls.iter().for_each(|x| {
-        let host = Url::parse(x).unwrap().host().unwrap().to_string();
-        if !hosts.contains(&host) {
-            hosts.push(host);
+        let parsed_url = Url::parse(x);
+        if parsed_url.is_ok() {
+            let parsed_url = parsed_url.unwrap();
+            let host = {
+                let host = parsed_url.host().unwrap();
+                if parsed_url.port().is_some() {
+                    let port = parsed_url.port().unwrap();
+                    format!("{}:{}", host, port)
+                } else {
+                    host.to_string()
+                }
+            };
+            if !hosts.contains(&host) {
+                hosts.push(host);
+            }
         }
     });
     hosts.sort();
