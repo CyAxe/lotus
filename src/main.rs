@@ -23,13 +23,12 @@ use lotus::{
         startup::{new::new_args, urls::args_urls},
     },
     lua::{
+        network::http::{REQUESTS_LIMIT, SLEEP_TIME},
         threads::runner,
-        network::http::{SLEEP_TIME, REQUESTS_LIMIT}
     },
     ScanTypes,
 };
 use structopt::StructOpt;
-
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -38,7 +37,7 @@ async fn main() -> Result<(), std::io::Error> {
         Opts::URLS { .. } => {
             let opts = args_urls();
             // Open two threads for URL/HOST scanning
-            create_progress(( opts.target_data.urls.len() * opts.target_data.hosts.len() ) as u64);
+            create_progress((opts.target_data.urls.len() * opts.target_data.hosts.len()) as u64);
             *SLEEP_TIME.lock().unwrap() = opts.delay;
             *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
             let scan_futures = vec![

@@ -20,15 +20,15 @@ pub mod cli;
 pub mod lua;
 
 use cli::{
-    bar::{BAR,show_msg, MessageLevel},
+    bar::{show_msg, MessageLevel, BAR},
     errors::CliErrors,
-    input::load_scripts::{get_scripts, valid_scripts}
+    input::load_scripts::{get_scripts, valid_scripts},
 };
 use lua::{
-    loader::LuaRunTime, 
-    parsing::files::filename_to_string, 
+    loader::LuaRunTime,
+    parsing::files::filename_to_string,
     scan::LuaLoader,
-    threads::runner::{iter_futures, iter_futures_tuple}
+    threads::runner::{iter_futures, iter_futures_tuple},
 };
 use reqwest::header::HeaderMap;
 
@@ -58,7 +58,7 @@ pub enum ScanTypes {
     /// URLS Scanning under ID number 2
     URLS,
     /// PATHS Scanning under ID number 3
-    PATHS
+    PATHS,
 }
 
 pub struct Lotus {
@@ -87,22 +87,23 @@ impl Lotus {
         scan_type: ScanTypes,
         exit_after: i32,
     ) {
-        {BAR.lock().unwrap().suspend(||{})};
+        {
+            BAR.lock().unwrap().suspend(|| {})
+        };
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
                 let scripts = get_scripts(self.script_path.clone());
-                let loaded_scripts = valid_scripts( scripts, 1);
+                let loaded_scripts = valid_scripts(scripts, 1);
                 log::debug!("Running Host scan {:?}", loaded_scripts.len());
                 loaded_scripts
             } else if let ScanTypes::PATHS = scan_type {
                 let scripts = get_scripts(self.script_path.clone());
-                let loaded_scripts = valid_scripts( scripts, 3);
+                let loaded_scripts = valid_scripts(scripts, 3);
                 log::debug!("Running PATH scan {:?}", loaded_scripts.len());
                 loaded_scripts
-            }
-            else {
+            } else {
                 let scripts = get_scripts(self.script_path.clone());
-                let loaded_scripts = valid_scripts( scripts, 2);
+                let loaded_scripts = valid_scripts(scripts, 2);
                 log::debug!("Running URL scan {:?}", loaded_scripts.len());
                 loaded_scripts
             }
@@ -116,50 +117,57 @@ impl Lotus {
             self.output.as_ref().unwrap().to_str().unwrap().to_string(),
         ));
         let scan_type = Arc::new(scan_type);
-        iter_futures(target_data.clone(), |script_data|async move {
-            let loaded_scripts = loaded_scripts.clone();
-            let lotus_loader = Arc::clone(&lotus_obj);
-            let scan_type = Arc::clone(&scan_type);
-            iter_futures_tuple(loaded_scripts, |(script_code, script_name)| async move {
-                let script_data = script_data.clone();
-                let lotus_loader = Arc::clone(&lotus_loader);
+        iter_futures(
+            target_data.clone(),
+            |script_data| async move {
+                let loaded_scripts = loaded_scripts.clone();
+                let lotus_loader = Arc::clone(&lotus_obj);
                 let scan_type = Arc::clone(&scan_type);
-                let error_check = {
-                    if *self.stop_after.lock().unwrap() == exit_after {
-                        log::debug!("Ignoring scripts");
-                        false
-                    } else {
-                        log::debug!("Running {} script on {} ", script_name, script_data);
-                        true
-                    }
-                };
-                if error_check == false {
-                    // Nothing
-                } else {
-                    let run_scan = lotus_loader
-                        .run_scan(
-                            Some(script_data.as_str()),
-                            scan_type,
-                            None,
-                            &script_code,
-                            &script_name,
-                        )
-                        .await;
-                    if run_scan.is_err() {
-                        log::error!(
-                            "script error: {}",
-                            &run_scan.clone().unwrap_err().to_string()
-                        );
-                        show_msg(
-                            &run_scan.unwrap_err().to_string(),
-                            MessageLevel::Error,
-                        );
-                        let mut a = self.stop_after.lock().unwrap();
-                        log::debug!("Errors Counter: {}", a);
-                        *a += 1;
-                    }
-                }
-            }, self.script_workers).await;
-        },self.workers).await;
+                iter_futures_tuple(
+                    loaded_scripts,
+                    |(script_code, script_name)| async move {
+                        let script_data = script_data.clone();
+                        let lotus_loader = Arc::clone(&lotus_loader);
+                        let scan_type = Arc::clone(&scan_type);
+                        let error_check = {
+                            if *self.stop_after.lock().unwrap() == exit_after {
+                                log::debug!("Ignoring scripts");
+                                false
+                            } else {
+                                log::debug!("Running {} script on {} ", script_name, script_data);
+                                true
+                            }
+                        };
+                        if error_check == false {
+                            // Nothing
+                        } else {
+                            let run_scan = lotus_loader
+                                .run_scan(
+                                    Some(script_data.as_str()),
+                                    scan_type,
+                                    None,
+                                    &script_code,
+                                    &script_name,
+                                )
+                                .await;
+                            if run_scan.is_err() {
+                                log::error!(
+                                    "script error: {}",
+                                    &run_scan.clone().unwrap_err().to_string()
+                                );
+                                show_msg(&run_scan.unwrap_err().to_string(), MessageLevel::Error);
+                                let mut a = self.stop_after.lock().unwrap();
+                                log::debug!("Errors Counter: {}", a);
+                                *a += 1;
+                            }
+                        }
+                    },
+                    self.script_workers,
+                )
+                .await;
+            },
+            self.workers,
+        )
+        .await;
     }
 }

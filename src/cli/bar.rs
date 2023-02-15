@@ -17,8 +17,8 @@
  */
 
 use console::Style;
-use lazy_static::lazy_static;
 use indicatif::{ProgressBar, ProgressStyle};
+use lazy_static::lazy_static;
 use std::sync::{Arc, Mutex};
 
 pub enum MessageLevel {
