@@ -17,6 +17,18 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     hosts
 }
 
+pub fn get_target_paths(urls: Vec<String>) -> Vec<String> {
+    let mut paths: Vec<String> = Vec::new();
+    urls.iter().for_each(|x| {
+        let the_path = Url::parse(x).unwrap().path().to_string();
+        let new_url = Url::join(&Url::parse(x).unwrap(), &the_path).unwrap().to_string();
+        if !paths.contains(&new_url) {
+            paths.push(new_url);
+        }
+    });
+    paths
+}
+
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {
     if url_file.is_some() {
         let urls = filename_to_string(url_file.unwrap().to_str().unwrap());

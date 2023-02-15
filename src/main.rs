@@ -43,6 +43,12 @@ async fn main() -> Result<(), std::io::Error> {
             *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
             let scan_futures = vec![
                 opts.lotus_obj.start(
+                    opts.target_data.paths,
+                    opts.req_opts.clone(),
+                    ScanTypes::PATHS,
+                    opts.exit_after,
+                ),
+                opts.lotus_obj.start(
                     opts.target_data.urls,
                     opts.req_opts.clone(),
                     ScanTypes::URLS,
@@ -55,7 +61,7 @@ async fn main() -> Result<(), std::io::Error> {
                     opts.exit_after,
                 ),
             ];
-            runner::scan_futures(scan_futures, 2, None).await;
+            runner::scan_futures(scan_futures, 3, None).await;
         }
         Opts::NEW {
             scan_type,

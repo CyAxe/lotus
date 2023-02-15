@@ -1,5 +1,5 @@
 use crate::cli::args::Opts;
-use crate::cli::input::{get_target_hosts, get_target_urls};
+use crate::cli::input::{get_target_hosts, get_target_urls, get_target_paths};
 use crate::cli::logger::init_log;
 use crate::show_msg;
 use crate::CliErrors;
@@ -21,10 +21,11 @@ pub struct UrlArgs {
 pub struct TargetData {
     pub urls: Vec<String>,
     pub hosts: Vec<String>,
+    pub paths: Vec<String>,
 }
 
 pub fn args_urls() -> UrlArgs {
-    let (urls, hosts, exit_after, req_opts, lotus_obj, requests_limit, delay) = match Opts::from_args() {
+    let (urls, hosts, paths, exit_after, req_opts, lotus_obj, requests_limit, delay) = match Opts::from_args() {
         Opts::URLS {
             redirects,
             workers,
@@ -73,8 +74,9 @@ pub fn args_urls() -> UrlArgs {
                 .iter()
                 .map(|url| url.to_string())
                 .collect::<Vec<String>>();
+            let paths = get_target_paths(urls_vec.clone());
             let hosts = get_target_hosts(urls_vec.clone());
-            (urls_vec, hosts, exit_after, req_opts, lotus_obj, requests_limit, delay)
+            (urls_vec, hosts, paths,exit_after, req_opts, lotus_obj, requests_limit, delay)
         }
         _ => {
             std::process::exit(1);
@@ -82,7 +84,7 @@ pub fn args_urls() -> UrlArgs {
     };
 
     UrlArgs {
-        target_data: TargetData { urls, hosts },
+        target_data: TargetData { urls, hosts, paths },
         exit_after,
         req_opts,
         lotus_obj,

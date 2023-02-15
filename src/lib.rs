@@ -53,10 +53,12 @@ pub struct RequestOpts {
 /// Scanning type For `SCAN_TYPE` in lua scripts
 #[derive(Clone, Copy)]
 pub enum ScanTypes {
-    /// URLS Scanning under ID number 2
-    URLS,
     /// HOSTS Scanning under ID number 1
     HOSTS,
+    /// URLS Scanning under ID number 2
+    URLS,
+    /// PATHS Scanning under ID number 3
+    PATHS
 }
 
 pub struct Lotus {
@@ -92,7 +94,13 @@ impl Lotus {
                 let loaded_scripts = valid_scripts( scripts, 1);
                 log::debug!("Running Host scan {:?}", loaded_scripts.len());
                 loaded_scripts
-            } else {
+            } else if let ScanTypes::PATHS = scan_type {
+                let scripts = get_scripts(self.script_path.clone());
+                let loaded_scripts = valid_scripts( scripts, 3);
+                log::debug!("Running PATH scan {:?}", loaded_scripts.len());
+                loaded_scripts
+            }
+            else {
                 let scripts = get_scripts(self.script_path.clone());
                 let loaded_scripts = valid_scripts( scripts, 2);
                 log::debug!("Running URL scan {:?}", loaded_scripts.len());
