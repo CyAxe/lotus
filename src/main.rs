@@ -19,7 +19,7 @@
 use lotus::{
     cli::{
         args::Opts,
-        bar::{BAR,create_progress},
+        bar::{create_progress, show_msg, MessageLevel, BAR},
         startup::{new::new_args, urls::args_urls},
     },
     lua::{
@@ -36,10 +36,20 @@ async fn main() -> Result<(), std::io::Error> {
         Opts::SITEMAP { .. } => {}
         Opts::URLS { .. } => {
             let opts = args_urls();
+            show_msg(&format!("URLS: {}", opts.target_data.urls.len()), MessageLevel::Info);
+            show_msg(&format!("HOSTS: {}", opts.target_data.hosts.len()), MessageLevel::Info);
+            show_msg(&format!("PATHS: {}", opts.target_data.paths.len()), MessageLevel::Info);
             // Open two threads for URL/HOST scanning
-            create_progress((opts.target_data.urls.len() * opts.target_data.hosts.len() * opts.target_data.paths.len()) as u64);
+            create_progress(
+                (opts.target_data.urls.len()
+                    * opts.target_data.hosts.len()
+                    * opts.target_data.paths.len()) as u64,
+            );
             *SLEEP_TIME.lock().unwrap() = opts.delay;
             *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
+            {
+                BAR.lock().unwrap().suspend(|| {})
+            };
             let scan_futures = vec![
                 opts.lotus_obj.start(
                     opts.target_data.paths,
