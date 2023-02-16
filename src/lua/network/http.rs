@@ -125,7 +125,7 @@ impl Sender {
                     .for_each(|(header_name, header_value)| {
                         resp_headers.insert(
                             header_name.to_string(),
-                            header_value.to_str().unwrap().to_string(),
+                            String::from_utf8_lossy(header_value.as_bytes()).to_string(),
                         );
                     });
                 let status = resp.status().as_u16() as i32;
