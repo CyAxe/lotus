@@ -20,7 +20,7 @@ pub mod cli;
 pub mod lua;
 
 use cli::{
-    bar::{create_progress, show_msg, MessageLevel, BAR},
+    bar::{show_msg, MessageLevel, BAR},
     errors::CliErrors,
     input::load_scripts::{get_scripts, valid_scripts},
 };
@@ -87,9 +87,6 @@ impl Lotus {
         scan_type: ScanTypes,
         exit_after: i32,
     ) {
-        {
-            BAR.lock().unwrap().suspend(|| {})
-        };
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
                 let scripts = get_scripts(self.script_path.clone());
@@ -107,9 +104,6 @@ impl Lotus {
                 log::debug!("Running URL scan {:?}", loaded_scripts.len());
                 loaded_scripts
             }
-        };
-        {
-            create_progress(loaded_scripts.len() as u64)
         };
         if self.output.is_none() {
             show_msg("Output argument is missing", MessageLevel::Error);
