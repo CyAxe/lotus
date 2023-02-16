@@ -93,6 +93,23 @@ impl Sender {
         body: String,
         headers: HeaderMap,
     ) -> Result<HttpResponse, mlua::Error> {
+        {
+            let req_limit = REQUESTS_LIMIT.lock().unwrap();
+            let mut req_sent = REQUESTS_SENT.lock().unwrap();
+            if *req_sent >= *req_limit {
+                let sleep_time = SLEEP_TIME.lock().unwrap();
+                let bar = BAR.lock().unwrap();
+                bar.println(format!(
+                    "The rate limit for requests has been raised, please wait {} seconds ",
+                    *sleep_time
+                ));
+                log::debug!("{}",format!("The rate limit for requests has been raised, please wait {} seconds ",*sleep_time));
+                std::thread::sleep(Duration::from_secs(*sleep_time));
+                *req_sent = 1;
+                bar.println("Continue ...");
+                log::debug!("changing req_sent value to 1");
+            }
+        };
         match self
             .build_client()
             .unwrap()
@@ -105,21 +122,7 @@ impl Sender {
             Ok(resp) => {
                 // Locking Scope
                 {
-                    let req_limit = REQUESTS_LIMIT.lock().unwrap();
                     let mut req_sent = REQUESTS_SENT.lock().unwrap();
-                    if *req_sent >= *req_limit {
-                        let sleep_time = SLEEP_TIME.lock().unwrap();
-                        let bar = BAR.lock().unwrap();
-                        bar.println(format!(
-                            "The rate limit for requests has been raised, please wait {} seconds ",
-                            *sleep_time
-                        ));
-                        log::debug!("{}",format!("The rate limit for requests has been raised, please wait {} seconds ",*sleep_time));
-                        tokio::time::sleep(Duration::from_secs(*sleep_time)).await;
-                        *req_sent = 0;
-                        bar.println("Continue ...");
-                        log::debug!("changing req_sent value to 0");
-                    }
                     *req_sent += 1;
                 };
                 let mut resp_headers: HashMap<String, String> = HashMap::new();

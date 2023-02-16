@@ -20,7 +20,7 @@ pub mod cli;
 pub mod lua;
 
 use cli::{
-    bar::{show_msg, MessageLevel, BAR},
+    bar::{show_msg, MessageLevel, BAR, create_progress},
     errors::CliErrors,
     input::load_scripts::{get_scripts, valid_scripts},
 };
@@ -108,6 +108,7 @@ impl Lotus {
                 loaded_scripts
             }
         };
+        {create_progress(loaded_scripts.len() as u64)};
         if self.output.is_none() {
             show_msg("Output argument is missing", MessageLevel::Error);
             std::process::exit(1);
