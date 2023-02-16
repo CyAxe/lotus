@@ -41,9 +41,7 @@ async fn main() -> Result<(), std::io::Error> {
             show_msg(&format!("PATHS: {}", opts.target_data.paths.len()), MessageLevel::Info);
             // Open two threads for URL/HOST scanning
             create_progress(
-                (opts.target_data.urls.len()
-                    * opts.target_data.hosts.len()
-                    * opts.target_data.paths.len()) as u64,
+                opts.target_data.urls.len() as u64,
             );
             *SLEEP_TIME.lock().unwrap() = opts.delay;
             *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
