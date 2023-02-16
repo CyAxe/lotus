@@ -103,7 +103,13 @@ impl Sender {
                     "The rate limit for requests has been raised, please wait {} seconds ",
                     *sleep_time
                 ));
-                log::debug!("{}",format!("The rate limit for requests has been raised, please wait {} seconds ",*sleep_time));
+                log::debug!(
+                    "{}",
+                    format!(
+                        "The rate limit for requests has been raised, please wait {} seconds ",
+                        *sleep_time
+                    )
+                );
                 std::thread::sleep(Duration::from_secs(*sleep_time));
                 *req_sent = 1;
                 bar.println("Continue ...");
