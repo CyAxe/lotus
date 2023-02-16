@@ -7,14 +7,40 @@ pub mod load_scripts;
 pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     let mut hosts = Vec::new();
     urls.iter().for_each(|x| {
-        let host = Url::parse(x).unwrap().host().unwrap().to_string();
-        if !hosts.contains(&host) {
-            hosts.push(host);
+        let parsed_url = Url::parse(x);
+        if parsed_url.is_ok() {
+            let parsed_url = parsed_url.unwrap();
+            let host = {
+                let host = parsed_url.host().unwrap();
+                if parsed_url.port().is_some() {
+                    let port = parsed_url.port().unwrap();
+                    format!("{}:{}", host, port)
+                } else {
+                    host.to_string()
+                }
+            };
+            if !hosts.contains(&host) {
+                hosts.push(host);
+            }
         }
     });
     hosts.sort();
     hosts.dedup();
     hosts
+}
+
+pub fn get_target_paths(urls: Vec<String>) -> Vec<String> {
+    let mut paths: Vec<String> = Vec::new();
+    urls.iter().for_each(|x| {
+        let the_path = Url::parse(x).unwrap().path().to_string();
+        let new_url = Url::join(&Url::parse(x).unwrap(), &the_path)
+            .unwrap()
+            .to_string();
+        if !paths.contains(&new_url) {
+            paths.push(new_url);
+        }
+    });
+    paths
 }
 
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {

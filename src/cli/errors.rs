@@ -18,7 +18,6 @@ pub enum CliErrors {
     UnsupportedScript,
 }
 
-
 #[derive(Error, Debug)]
 pub enum Network {
     #[error("Connection Timeout")]

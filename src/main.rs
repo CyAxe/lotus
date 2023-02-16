@@ -19,17 +19,16 @@
 use lotus::{
     cli::{
         args::Opts,
-        bar::create_progress,
+        bar::{create_progress, show_msg, MessageLevel, BAR},
         startup::{new::new_args, urls::args_urls},
     },
     lua::{
+        network::http::{REQUESTS_LIMIT, SLEEP_TIME},
         threads::runner,
-        network::http::{SLEEP_TIME, REQUESTS_LIMIT}
     },
     ScanTypes,
 };
 use structopt::StructOpt;
-
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -37,11 +36,25 @@ async fn main() -> Result<(), std::io::Error> {
         Opts::SITEMAP { .. } => {}
         Opts::URLS { .. } => {
             let opts = args_urls();
+            show_msg(&format!("URLS: {}", opts.target_data.urls.len()), MessageLevel::Info);
+            show_msg(&format!("HOSTS: {}", opts.target_data.hosts.len()), MessageLevel::Info);
+            show_msg(&format!("PATHS: {}", opts.target_data.paths.len()), MessageLevel::Info);
             // Open two threads for URL/HOST scanning
-            create_progress(( opts.target_data.urls.len() * opts.target_data.hosts.len() ) as u64);
+            create_progress(
+                opts.target_data.urls.len() as u64,
+            );
             *SLEEP_TIME.lock().unwrap() = opts.delay;
             *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
+            {
+                BAR.lock().unwrap().suspend(|| {})
+            };
             let scan_futures = vec![
+                opts.lotus_obj.start(
+                    opts.target_data.paths,
+                    opts.req_opts.clone(),
+                    ScanTypes::PATHS,
+                    opts.exit_after,
+                ),
                 opts.lotus_obj.start(
                     opts.target_data.urls,
                     opts.req_opts.clone(),
@@ -55,7 +68,8 @@ async fn main() -> Result<(), std::io::Error> {
                     opts.exit_after,
                 ),
             ];
-            runner::scan_futures(scan_futures, 2, None).await;
+            runner::scan_futures(scan_futures, 3, None).await;
+            BAR.lock().unwrap().finish();
         }
         Opts::NEW {
             scan_type,
