@@ -53,10 +53,17 @@ impl Sender {
     }
 
     fn build_client(&self) -> Result<reqwest::Client, reqwest::Error> {
+        let redirects = self.redirects;
         match &self.proxy {
             Some(the_proxy) => Client::builder()
                 .timeout(Duration::from_secs(self.timeout))
-                .redirect(redirect::Policy::limited(self.redirects as usize))
+                .redirect(redirect::Policy::custom(move |attempt|{
+                    if attempt.previous().len() != redirects as usize {
+                        attempt.follow()
+                    } else {
+                        attempt.stop()
+                    }
+                }))
                 .default_headers(self.headers.clone())
                 .proxy(Proxy::all(the_proxy).unwrap())
                 .no_trust_dns()
@@ -64,7 +71,13 @@ impl Sender {
                 .build(),
             None => Client::builder()
                 .timeout(Duration::from_secs(self.timeout))
-                .redirect(redirect::Policy::limited(self.redirects as usize))
+                .redirect(redirect::Policy::custom(move |attempt|{
+                    if attempt.previous().len() == redirects as usize {
+                        attempt.stop()
+                    } else {
+                        attempt.follow()
+                    }
+                }))
                 .no_proxy()
                 .no_trust_dns()
                 .default_headers(self.headers.clone())
@@ -139,6 +152,7 @@ impl Sender {
                             String::from_utf8_lossy(header_value.as_bytes()).to_string(),
                         );
                     });
+                let url = resp.url().to_string();
                 let status = resp.status().as_u16() as i32;
                 let body = resp.bytes().await.unwrap();
                 let body = String::from_utf8_lossy(&body).to_string();
