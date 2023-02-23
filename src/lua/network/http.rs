@@ -159,6 +159,11 @@ impl Sender {
                     } 
                     else if err.is_redirect() {
                         "too_many_redirects"
+                    }
+                    else if err.is_body() {
+                        "request_body_error" 
+                    } else if err.is_decode() {
+                        "decode_error"
                     } else {
                         "external_error"
                     }
