@@ -33,7 +33,6 @@ use structopt::StructOpt;
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     match Opts::from_args() {
-        Opts::SITEMAP { .. } => {}
         Opts::URLS { .. } => {
             let opts = args_urls();
             show_msg(&format!("URLS: {}", opts.target_data.urls.len()), MessageLevel::Info);
