@@ -34,6 +34,9 @@ impl LuaLoader {
     fn set_lua(&self, target_url: Option<&str>, lua: &Lua, driver: Option<Arc<Mutex<WebDriver>>>) {
         // Adding Lotus Lua Function
         let lua_eng = LuaRunTime { lua };
+        lua.globals().set("ERR_STRING", lua.create_function(|_, error: mlua::Error| {
+            Ok(error.to_string())
+        }).unwrap()).unwrap();
         lua_eng.setup(target_url);
         // HTTP Sender
         lua.globals()

@@ -22,7 +22,6 @@ use std::collections::HashMap;
 mod http_lua_api;
 pub use http_lua_api::Sender;
 use lazy_static::lazy_static;
-use mlua::ExternalError;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tealr::{mlu::FromToLua, TypeName};
@@ -151,7 +150,22 @@ impl Sender {
                 };
                 Ok(resp_data_struct)
             }
-            Err(err) => Err(err.to_lua_err()),
+            Err(err) => {
+                let error_code = {
+                    if err.is_timeout() {
+                        "timeout_error"
+                    } else if err.is_connect(){
+                        "connection_error"
+                    } 
+                    else if err.is_redirect() {
+                        "too_many_redirects"
+                    } else {
+                        "external_error"
+                    }
+                };
+                let err = mlua::Error::RuntimeError(error_code.to_string());
+                Err(err)
+            },
         }
     }
 }
