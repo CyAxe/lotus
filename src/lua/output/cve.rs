@@ -71,6 +71,13 @@ impl UserData for CveReport {
                 Ok(())
             },
         );
+        methods.add_method_mut(
+            "clearMatcher",
+            |_, this, ()| {
+                this.matchers.clear();
+                Ok(())
+            }
+            )
     }
 }
 
