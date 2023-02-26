@@ -166,6 +166,12 @@ impl LuaRunTime<'_> {
 
         self.lua
             .globals()
+            .set("pathjoin", self.lua.create_function(|_, (current_path, new_path): (String, String)| {
+                let the_path = std::path::Path::new(&current_path).join(new_path);
+                Ok(the_path.to_str().unwrap().to_string())
+            }).unwrap()).unwrap();
+        self.lua
+            .globals()
             .set(
                 "readfile",
                 self.lua

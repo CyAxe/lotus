@@ -14,6 +14,7 @@ impl UserData for HttpMessage {
             },
         );
         methods.add_method("Url", |_, this, ()| Ok(this.url.as_str().to_string()));
+        methods.add_method("Path", |_, this, ()| Ok(this.url.path().to_string()));
         methods.add_method("TxtParams", |_, this, ()| {
             Ok(this.url.query().unwrap().to_string())
         });
