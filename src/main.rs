@@ -35,6 +35,7 @@ async fn main() -> Result<(), std::io::Error> {
     match Opts::from_args() {
         Opts::URLS { .. } => {
             let opts = args_urls();
+            let fuzz_workers = opts.fuzz_workers;
             show_msg(&format!("URLS: {}", opts.target_data.urls.len()), MessageLevel::Info);
             show_msg(&format!("HOSTS: {}", opts.target_data.hosts.len()), MessageLevel::Info);
             show_msg(&format!("PATHS: {}", opts.target_data.paths.len()), MessageLevel::Info);
@@ -53,18 +54,21 @@ async fn main() -> Result<(), std::io::Error> {
                     opts.req_opts.clone(),
                     ScanTypes::PATHS,
                     opts.exit_after,
+                    fuzz_workers
                 ),
                 opts.lotus_obj.start(
                     opts.target_data.urls,
                     opts.req_opts.clone(),
                     ScanTypes::URLS,
                     opts.exit_after,
+                    fuzz_workers
                 ),
                 opts.lotus_obj.start(
                     opts.target_data.hosts,
                     opts.req_opts,
                     ScanTypes::HOSTS,
                     opts.exit_after,
+                    fuzz_workers
                 ),
             ];
             runner::scan_futures(scan_futures, 3, None).await;

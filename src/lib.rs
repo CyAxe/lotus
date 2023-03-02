@@ -86,6 +86,7 @@ impl Lotus {
         request_option: RequestOpts,
         scan_type: ScanTypes,
         exit_after: i32,
+        fuzz_workers: usize
     ) {
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {
@@ -142,7 +143,7 @@ impl Lotus {
                                 .run_scan(
                                     Some(script_data.as_str()),
                                     scan_type,
-                                    None,
+                                    fuzz_workers,
                                     &script_code,
                                     &script_name,
                                 )

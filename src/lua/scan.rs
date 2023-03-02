@@ -7,9 +7,8 @@ use mlua::Lua;
 use std::{
     fs::OpenOptions,
     io::Write,
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
-use thirtyfour::prelude::*;
 
 #[derive(Clone)]
 pub struct LuaLoader {
@@ -31,7 +30,7 @@ impl LuaLoader {
 
     /// Set Lua Functions for http and matching
     ///
-    fn set_lua(&self, target_url: Option<&str>, lua: &Lua, driver: Option<Arc<Mutex<WebDriver>>>) {
+    fn set_lua(&self, target_url: Option<&str>, lua: &Lua) {
         // Adding Lotus Lua Function
         let lua_eng = LuaRunTime { lua };
         lua.globals().set("ERR_STRING", lua.create_function(|_, error: mlua::Error| {
@@ -50,23 +49,6 @@ impl LuaLoader {
                 ),
             )
             .unwrap();
-        if !driver.is_none() {
-            lua.globals()
-                .set(
-                    "openbrowser",
-                    lua.create_function(move |_, url: String| {
-                        futures::executor::block_on({
-                            let driver = Arc::clone(driver.as_ref().unwrap());
-                            async move {
-                                driver.lock().unwrap().goto(url).await.unwrap();
-                            }
-                        });
-                        Ok(())
-                    })
-                    .unwrap(),
-                )
-                .unwrap();
-        }
     }
     fn write_report(&self, results: &str) {
         OpenOptions::new()
@@ -86,21 +68,22 @@ impl LuaLoader {
         &self,
         target_url: Option<&str>,
         target_type: Arc<ScanTypes>,
-        driver: Option<Arc<Mutex<WebDriver>>>,
+        fuzz_workers: usize,
         script_code: &str,
         script_dir: &str,
     ) -> Result<(), mlua::Error> {
         let lua = Lua::new();
         // settings lua api
         if let ScanTypes::HOSTS = *target_type {
-            self.set_lua(None, &lua, driver);
+            self.set_lua(None, &lua);
             lua.globals()
                 .set("TARGET_HOST", target_url.unwrap())
                 .unwrap();
         } else {
-            self.set_lua(target_url, &lua, driver);
+            self.set_lua(target_url, &lua);
         }
         lua.globals().set("SCRIPT_PATH", script_dir).unwrap();
+        lua.globals().set("FUZZ_WORKERS", fuzz_workers).unwrap();
 
         // Handle this error please
         let run_code = lua.load(script_code).exec_async().await;
