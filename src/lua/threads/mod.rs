@@ -53,6 +53,7 @@ impl UserData for ParamScan {
                         let target_func = Arc::clone(&target_func);
                         let target_param = Arc::clone(&target_param);
                         let callback_function = Arc::clone(&callback_function);
+                        let accept_nil = Arc::clone(&this.accept_nil);
                         if *this.finds.lock().unwrap() == true {
                             stop_scan = true;
                         }
@@ -65,10 +66,20 @@ impl UserData for ParamScan {
                                     ))
                                     .await
                                     .unwrap();
-                                callback_function
-                                    .call_async::<_, bool>(caller)
-                                    .await
-                                    .unwrap();
+                                let is_nil = {caller == mlua::Nil};
+                                if is_nil == true {
+                                    if *accept_nil.lock().unwrap() == true {
+                                        callback_function
+                                            .call_async::<_, bool>(caller)
+                                            .await
+                                            .unwrap();
+                                    }
+                                } else {
+                                    callback_function
+                                        .call_async::<_, bool>(caller)
+                                        .await
+                                        .unwrap();
+                                }
                             }
                         }
                     })
