@@ -30,6 +30,7 @@ lazy_static! {
     pub static ref REQUESTS_LIMIT: Arc<Mutex<i32>> = Arc::new(Mutex::new(5));
     pub static ref REQUESTS_SENT: Arc<Mutex<i32>> = Arc::new(Mutex::new(0));
     pub static ref SLEEP_TIME: Arc<Mutex<u64>> = Arc::new(Mutex::new(5));
+    pub static ref VERBOSE_MODE: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
 }
 
 #[derive(Debug, FromToLua, TypeName)]
@@ -141,6 +142,12 @@ impl Sender {
                 // Locking Scope
                 {
                     let mut req_sent = REQUESTS_SENT.lock().unwrap();
+                    let verbose_mode = VERBOSE_MODE.lock().unwrap();
+                    if *verbose_mode == true {
+                        let log_msg = format!("SENDING HTTP REQUEST: {}", url);
+                        log::debug!("{}",log_msg);
+                        BAR.lock().unwrap().println(log_msg);
+                    }
                     *req_sent += 1;
                 };
                 let mut resp_headers: HashMap<String, String> = HashMap::new();

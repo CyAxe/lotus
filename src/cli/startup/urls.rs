@@ -16,7 +16,8 @@ pub struct UrlArgs {
     pub lotus_obj: Lotus,
     pub requests_limit: i32,
     pub delay: u64,
-    pub fuzz_workers: usize
+    pub fuzz_workers: usize,
+    pub verbose: bool
 }
 
 pub struct TargetData {
@@ -26,7 +27,7 @@ pub struct TargetData {
 }
 
 pub fn args_urls() -> UrlArgs {
-    let (urls, hosts, paths, exit_after, req_opts, lotus_obj, requests_limit, delay, fuzz_workers) =
+    let (urls, hosts, paths, exit_after, req_opts, lotus_obj, requests_limit, delay, fuzz_workers, verbose) =
         match Opts::from_args() {
             Opts::URLS {
                 redirects,
@@ -43,6 +44,7 @@ pub fn args_urls() -> UrlArgs {
                 requests_limit,
                 delay,
                 fuzz_workers,
+                verbose,
             } => {
                 // setup logger
                 init_log(log).unwrap();
@@ -89,6 +91,7 @@ pub fn args_urls() -> UrlArgs {
                     requests_limit,
                     delay,
                     fuzz_workers,
+                    verbose
                 )
             }
             _ => {
@@ -104,5 +107,6 @@ pub fn args_urls() -> UrlArgs {
         requests_limit,
         delay,
         fuzz_workers,
+        verbose,
     }
 }

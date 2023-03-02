@@ -23,7 +23,7 @@ use lotus::{
         startup::{new::new_args, urls::args_urls},
     },
     lua::{
-        network::http::{REQUESTS_LIMIT, SLEEP_TIME},
+        network::http::{REQUESTS_LIMIT, SLEEP_TIME, VERBOSE_MODE},
         threads::runner,
     },
     ScanTypes,
@@ -45,6 +45,7 @@ async fn main() -> Result<(), std::io::Error> {
             );
             *SLEEP_TIME.lock().unwrap() = opts.delay;
             *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
+            *VERBOSE_MODE.lock().unwrap() = opts.verbose;
             {
                 BAR.lock().unwrap().suspend(|| {})
             };

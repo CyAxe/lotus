@@ -90,6 +90,8 @@ pub enum Opts {
             help = "Number of workers"
         )]
         workers: usize,
+        #[structopt(short="v", long="verbose", help="verbose mode (show sending requests)")]
+        verbose: bool,
 
         #[structopt(
             short = "sw",
