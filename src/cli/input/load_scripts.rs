@@ -3,6 +3,13 @@ use glob::glob;
 use log::error;
 use mlua::Lua;
 use std::path::PathBuf;
+use crate::lua::runtime::{
+    http_ext::HTTPEXT,
+    encode_ext::EncodeEXT,
+    utils_ext::UtilsEXT,
+    payloads_ext::PayloadsEXT,
+};
+
 
 /// Return Vector of scripts name and code with both methods
 pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
@@ -80,15 +87,20 @@ pub fn valid_scripts(
         _ => {}
     }
     let lua_eng = LuaRunTime { lua: &Lua::new() };
+    lua_eng.add_encode_function();
+    lua_eng.add_printfunc();
+    lua_eng.add_matchingfunc();
+    lua_eng.add_threadsfunc();
+    lua_eng.add_payloadsfuncs();
     if test_target_host.is_some() {
-        lua_eng.setup(None);
+        lua_eng.add_httpfuncs(None);
         lua_eng
             .lua
             .globals()
             .set("TARGET_HOST", "example.com")
             .unwrap();
     } else {
-        lua_eng.setup(test_target_url);
+        lua_eng.add_httpfuncs(test_target_url);
     }
     let mut used_scripts: Vec<(String, String)> = Vec::new();
     scripts.iter().for_each(|(script_code, script_path)| {

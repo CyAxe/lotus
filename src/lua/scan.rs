@@ -9,6 +9,12 @@ use std::{
     io::Write,
     sync::Arc,
 };
+use crate::lua::runtime::{
+    http_ext::HTTPEXT,
+    encode_ext::EncodeEXT,
+    utils_ext::UtilsEXT,
+    payloads_ext::PayloadsEXT,
+};
 
 #[derive(Clone)]
 pub struct LuaLoader {
@@ -33,10 +39,15 @@ impl LuaLoader {
     fn set_lua(&self, target_url: Option<&str>, lua: &Lua) {
         // Adding Lotus Lua Function
         let lua_eng = LuaRunTime { lua };
+        lua_eng.add_httpfuncs(target_url);
+        lua_eng.add_encode_function();
+        lua_eng.add_printfunc();
+        lua_eng.add_matchingfunc();
+        lua_eng.add_threadsfunc();
+        lua_eng.add_payloadsfuncs();
         lua.globals().set("ERR_STRING", lua.create_function(|_, error: mlua::Error| {
             Ok(error.to_string())
         }).unwrap()).unwrap();
-        lua_eng.setup(target_url);
         // HTTP Sender
         lua.globals()
             .set(
