@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://user-images.githubusercontent.com/45688522/222855100-a4ac6087-464b-4df9-8fca-f0e5bf2d951a.png" width="470px" >
+<img src="https://user-images.githubusercontent.com/45688522/222855427-5a328880-1ded-4adf-ac8e-35d0ba1c8cdd.png" width="470px" >
 <!-- img src="https://user-images.githubusercontent.com/45688522/222831284-09899d3b-322b-4215-ba99-8294d4bf8a9b.png" width="170px" -->
 </p>
 Using Lotus' Lua API, you can automate your own web security module in the shortest amount of time by discovering, scanning, and reporting in just a few lines of code
