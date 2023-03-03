@@ -1,20 +1,13 @@
+use crate::lua::runtime::{
+    encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT,
+};
 use crate::{
     cli::bar::BAR,
     lua::{loader::LuaRunTime, network::http::Sender, output::vuln::AllReports},
     RequestOpts, ScanTypes,
 };
 use mlua::Lua;
-use std::{
-    fs::OpenOptions,
-    io::Write,
-    sync::Arc,
-};
-use crate::lua::runtime::{
-    http_ext::HTTPEXT,
-    encode_ext::EncodeEXT,
-    utils_ext::UtilsEXT,
-    payloads_ext::PayloadsEXT,
-};
+use std::{fs::OpenOptions, io::Write, sync::Arc};
 
 #[derive(Clone)]
 pub struct LuaLoader {
@@ -44,9 +37,13 @@ impl LuaLoader {
         lua_eng.add_matchingfunc();
         lua_eng.add_threadsfunc();
         lua_eng.add_payloadsfuncs();
-        lua.globals().set("ERR_STRING", lua.create_function(|_, error: mlua::Error| {
-            Ok(error.to_string())
-        }).unwrap()).unwrap();
+        lua.globals()
+            .set(
+                "ERR_STRING",
+                lua.create_function(|_, error: mlua::Error| Ok(error.to_string()))
+                    .unwrap(),
+            )
+            .unwrap();
         // HTTP Sender
         lua.globals()
             .set(

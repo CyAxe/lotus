@@ -1,15 +1,11 @@
+use crate::lua::runtime::{
+    encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT,
+};
 use crate::{filename_to_string, show_msg, CliErrors, LuaRunTime, MessageLevel};
 use glob::glob;
 use log::error;
 use mlua::Lua;
 use std::path::PathBuf;
-use crate::lua::runtime::{
-    http_ext::HTTPEXT,
-    encode_ext::EncodeEXT,
-    utils_ext::UtilsEXT,
-    payloads_ext::PayloadsEXT,
-};
-
 
 /// Return Vector of scripts name and code with both methods
 pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {

@@ -79,7 +79,11 @@ pub enum Opts {
             help = "Number of allowed http redirects"
         )]
         redirects: u32,
-        #[structopt(long="fuzz-workers",default_value = "15", help = "The number of workers who will be involved in the fuzzing process")]
+        #[structopt(
+            long = "fuzz-workers",
+            default_value = "15",
+            help = "The number of workers who will be involved in the fuzzing process"
+        )]
         fuzz_workers: usize,
 
         // threads
@@ -90,7 +94,11 @@ pub enum Opts {
             help = "Number of workers"
         )]
         workers: usize,
-        #[structopt(short="v", long="verbose", help="verbose mode (show sending requests)")]
+        #[structopt(
+            short = "v",
+            long = "verbose",
+            help = "verbose mode (show sending requests)"
+        )]
         verbose: bool,
 
         #[structopt(

@@ -1,23 +1,18 @@
 use crate::{
-    BAR,
-    LuaRunTime,
     lua::{
         loader::is_match,
+        output::{cve::CveReport, vuln::OutReport},
         parsing::{
+            html::{css_selector, html_parse, html_search},
             text::ResponseMatcher,
-            html::{html_search, html_parse, css_selector}
         },
         threads::{LuaThreader, ParamScan},
-        output::{
-        vuln::OutReport,
-        cve::CveReport
-        }
-    }
+    },
+    LuaRunTime, BAR,
 };
-use std::sync::{Arc,Mutex};
-use mlua::ExternalError;
 use console::Style;
-
+use mlua::ExternalError;
+use std::sync::{Arc, Mutex};
 
 pub trait UtilsEXT {
     fn add_threadsfunc(&self);
@@ -117,7 +112,6 @@ impl UtilsEXT for LuaRunTime<'_> {
                     .unwrap(),
             )
             .unwrap();
-
     }
     fn add_matchingfunc(&self) {
         self.lua

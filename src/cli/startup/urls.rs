@@ -17,7 +17,7 @@ pub struct UrlArgs {
     pub requests_limit: i32,
     pub delay: u64,
     pub fuzz_workers: usize,
-    pub verbose: bool
+    pub verbose: bool,
 }
 
 pub struct TargetData {
@@ -27,77 +27,87 @@ pub struct TargetData {
 }
 
 pub fn args_urls() -> UrlArgs {
-    let (urls, hosts, paths, exit_after, req_opts, lotus_obj, requests_limit, delay, fuzz_workers, verbose) =
-        match Opts::from_args() {
-            Opts::URLS {
-                redirects,
-                workers,
-                scripts_workers,
+    let (
+        urls,
+        hosts,
+        paths,
+        exit_after,
+        req_opts,
+        lotus_obj,
+        requests_limit,
+        delay,
+        fuzz_workers,
+        verbose,
+    ) = match Opts::from_args() {
+        Opts::URLS {
+            redirects,
+            workers,
+            scripts_workers,
+            timeout,
+            script_path,
+            output,
+            proxy,
+            log,
+            urls,
+            headers,
+            exit_after,
+            requests_limit,
+            delay,
+            fuzz_workers,
+            verbose,
+        } => {
+            // setup logger
+            init_log(log).unwrap();
+            let req_opts = RequestOpts {
+                headers,
+                proxy,
                 timeout,
+                redirects,
+            };
+            let lotus_obj = Lotus {
                 script_path,
                 output,
-                proxy,
-                log,
-                urls,
-                headers,
+                workers,
+                script_workers: scripts_workers,
+                stop_after: Arc::new(Mutex::new(1)),
+            };
+            let urls = get_target_urls(urls);
+            if urls.is_err() {
+                match urls {
+                    Err(CliErrors::EmptyStdin) => {
+                        show_msg("No input in Stdin", MessageLevel::Error);
+                    }
+                    Err(CliErrors::ReadingError) => {
+                        show_msg("Cannot Read the urls file", MessageLevel::Error);
+                    }
+                    _ => {}
+                };
+                std::process::exit(1);
+            }
+            let urls_vec = urls
+                .unwrap()
+                .iter()
+                .map(|url| url.to_string())
+                .collect::<Vec<String>>();
+            let paths = get_target_paths(urls_vec.clone());
+            let hosts = get_target_hosts(urls_vec.clone());
+            (
+                urls_vec,
+                hosts,
+                paths,
                 exit_after,
+                req_opts,
+                lotus_obj,
                 requests_limit,
                 delay,
                 fuzz_workers,
                 verbose,
-            } => {
-                // setup logger
-                init_log(log).unwrap();
-                let req_opts = RequestOpts {
-                    headers,
-                    proxy,
-                    timeout,
-                    redirects,
-                };
-                let lotus_obj = Lotus {
-                    script_path,
-                    output,
-                    workers,
-                    script_workers: scripts_workers,
-                    stop_after: Arc::new(Mutex::new(1)),
-                };
-                let urls = get_target_urls(urls);
-                if urls.is_err() {
-                    match urls {
-                        Err(CliErrors::EmptyStdin) => {
-                            show_msg("No input in Stdin", MessageLevel::Error);
-                        }
-                        Err(CliErrors::ReadingError) => {
-                            show_msg("Cannot Read the urls file", MessageLevel::Error);
-                        }
-                        _ => {}
-                    };
-                    std::process::exit(1);
-                }
-                let urls_vec = urls
-                    .unwrap()
-                    .iter()
-                    .map(|url| url.to_string())
-                    .collect::<Vec<String>>();
-                let paths = get_target_paths(urls_vec.clone());
-                let hosts = get_target_hosts(urls_vec.clone());
-                (
-                    urls_vec,
-                    hosts,
-                    paths,
-                    exit_after,
-                    req_opts,
-                    lotus_obj,
-                    requests_limit,
-                    delay,
-                    fuzz_workers,
-                    verbose
-                )
-            }
-            _ => {
-                std::process::exit(1);
-            }
-        };
+            )
+        }
+        _ => {
+            std::process::exit(1);
+        }
+    };
 
     UrlArgs {
         target_data: TargetData { urls, hosts, paths },

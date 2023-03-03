@@ -58,7 +58,7 @@ impl Sender {
         match &self.proxy {
             Some(the_proxy) => Client::builder()
                 .timeout(Duration::from_secs(self.timeout))
-                .redirect(redirect::Policy::custom(move |attempt|{
+                .redirect(redirect::Policy::custom(move |attempt| {
                     if attempt.previous().len() != redirects as usize {
                         attempt.follow()
                     } else {
@@ -72,7 +72,7 @@ impl Sender {
                 .build(),
             None => Client::builder()
                 .timeout(Duration::from_secs(self.timeout))
-                .redirect(redirect::Policy::custom(move |attempt|{
+                .redirect(redirect::Policy::custom(move |attempt| {
                     if attempt.previous().len() == redirects as usize {
                         attempt.stop()
                     } else {
@@ -145,7 +145,7 @@ impl Sender {
                     let verbose_mode = VERBOSE_MODE.lock().unwrap();
                     if *verbose_mode == true {
                         let log_msg = format!("SENDING HTTP REQUEST: {}", url);
-                        log::debug!("{}",log_msg);
+                        log::debug!("{}", log_msg);
                         BAR.lock().unwrap().println(log_msg);
                     }
                     *req_sent += 1;
@@ -175,14 +175,12 @@ impl Sender {
                 let error_code = {
                     if err.is_timeout() {
                         "timeout_error"
-                    } else if err.is_connect(){
+                    } else if err.is_connect() {
                         "connection_error"
-                    } 
-                    else if err.is_redirect() {
+                    } else if err.is_redirect() {
                         "too_many_redirects"
-                    }
-                    else if err.is_body() {
-                        "request_body_error" 
+                    } else if err.is_body() {
+                        "request_body_error"
                     } else if err.is_decode() {
                         "decode_error"
                     } else {
@@ -191,7 +189,7 @@ impl Sender {
                 };
                 let err = mlua::Error::RuntimeError(error_code.to_string());
                 Err(err)
-            },
+            }
         }
     }
 }

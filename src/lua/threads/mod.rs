@@ -66,7 +66,7 @@ impl UserData for ParamScan {
                                     ))
                                     .await
                                     .unwrap();
-                                let is_nil = {caller == mlua::Nil};
+                                let is_nil = { caller == mlua::Nil };
                                 if is_nil == true {
                                     if *accept_nil.lock().unwrap() == true {
                                         callback_function

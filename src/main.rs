@@ -36,13 +36,20 @@ async fn main() -> Result<(), std::io::Error> {
         Opts::URLS { .. } => {
             let opts = args_urls();
             let fuzz_workers = opts.fuzz_workers;
-            show_msg(&format!("URLS: {}", opts.target_data.urls.len()), MessageLevel::Info);
-            show_msg(&format!("HOSTS: {}", opts.target_data.hosts.len()), MessageLevel::Info);
-            show_msg(&format!("PATHS: {}", opts.target_data.paths.len()), MessageLevel::Info);
-            // Open two threads for URL/HOST scanning
-            create_progress(
-                opts.target_data.urls.len() as u64,
+            show_msg(
+                &format!("URLS: {}", opts.target_data.urls.len()),
+                MessageLevel::Info,
             );
+            show_msg(
+                &format!("HOSTS: {}", opts.target_data.hosts.len()),
+                MessageLevel::Info,
+            );
+            show_msg(
+                &format!("PATHS: {}", opts.target_data.paths.len()),
+                MessageLevel::Info,
+            );
+            // Open two threads for URL/HOST scanning
+            create_progress(opts.target_data.urls.len() as u64);
             *SLEEP_TIME.lock().unwrap() = opts.delay;
             *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
             *VERBOSE_MODE.lock().unwrap() = opts.verbose;
@@ -55,21 +62,21 @@ async fn main() -> Result<(), std::io::Error> {
                     opts.req_opts.clone(),
                     ScanTypes::PATHS,
                     opts.exit_after,
-                    fuzz_workers
+                    fuzz_workers,
                 ),
                 opts.lotus_obj.start(
                     opts.target_data.urls,
                     opts.req_opts.clone(),
                     ScanTypes::URLS,
                     opts.exit_after,
-                    fuzz_workers
+                    fuzz_workers,
                 ),
                 opts.lotus_obj.start(
                     opts.target_data.hosts,
                     opts.req_opts,
                     ScanTypes::HOSTS,
                     opts.exit_after,
-                    fuzz_workers
+                    fuzz_workers,
                 ),
             ];
             runner::scan_futures(scan_futures, 3, None).await;

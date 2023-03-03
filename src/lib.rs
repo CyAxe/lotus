@@ -86,7 +86,7 @@ impl Lotus {
         request_option: RequestOpts,
         scan_type: ScanTypes,
         exit_after: i32,
-        fuzz_workers: usize
+        fuzz_workers: usize,
     ) {
         let loaded_scripts = {
             if let ScanTypes::HOSTS = scan_type {

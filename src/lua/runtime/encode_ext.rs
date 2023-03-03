@@ -4,7 +4,6 @@ pub trait EncodeEXT {
     fn add_encode_function(&self);
 }
 
-
 impl EncodeEXT for LuaRunTime<'_> {
     fn add_encode_function(&self) {
         self.lua
@@ -28,4 +27,3 @@ impl EncodeEXT for LuaRunTime<'_> {
             .unwrap();
     }
 }
-
