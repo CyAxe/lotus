@@ -1,27 +1,29 @@
 <p align="center">
-<img src="https://user-images.githubusercontent.com/45688522/187603703-5781b86b-9f5a-4658-9370-7083a3b5b6d5.png" width="470px">
+<img src="https://user-images.githubusercontent.com/45688522/222831630-05902f10-ca2c-4fe8-baad-e9f0e88e7c7f.png" width="470px" >
+<!-- img src="https://user-images.githubusercontent.com/45688522/222831284-09899d3b-322b-4215-ba99-8294d4bf8a9b.png" width="170px" -->
 </p>
+Using Lotus' Lua API, you can automate your own web security module in the shortest amount of time by discovering, scanning, and reporting in just a few lines of code
 
+Currently, we are working hard to write libraries and functions in most cases to ensure that you do not miss any functions with Lotus. Our mission is to make security scripting easier and faster by providing our Lua API with many functions you will need in most security scripting cases. 
 
-:warning: We're Looking for maintainers
-https://github.com/rusty-sec/lotus/issues/39
+As of right now, we are still in beta version (0.4), which means that many ideas have not been implemented into that project
 
-# lotus
+ Consequently, any contribution you are able to make to this project will enable us to complete it as quickly as possible and move into stable versions sooner rather than later. If you have any further questions, please view the github repository issues page or join our Discord server (https://discord.gg/nBYDPTzjSq).
 
-
-:zap: Fast Web Security Scanner written in Rust based on Lua Scripts :waning_gibbous_moon: :crab: 
-
-
-Here at Lotus, we strive to make the process of automating your own web security module as simple and fast as possible
-Currently, there is a lot of work being done on this project, as there are a number of features that have not yet been implemented (OAST, reading headers, reading raw requests rather than URLs, crawler, custom report script, etc.), thus any contribution you may be able to make to this project will assist in ensuring its completion as soon as possible. Please feel free to view the github repository issues page and join our Discord server (https://discord.gg/nBYDPTzjSq) if you have any further questions.
-
-### Usage
+### :rocket: Installation 
 It can be built from source, but ensure that you install the package `openssl-dev` before running this command
 
 ```bash
+$ apt install libssl-dev pkg-config gcc git -y
 $ cargo install --git=https://github.com/rusty-sec/lotus/
 ```
+We encourage you to open an issue on our github repository if you are having difficulties compiling it and would like some assistance
+You can also download the binary file based on your operating system and run it directly
+
+
+
 You will then need to download the lua scripts from our [github repository](https://github.com/rusty-sec/lotus-scripts) and run the following command
+but rembmer do use the scripts from the offical repo if you want to use any scirpt from other repos use it on your risk 
 
 ```
 $ echo http://testphp.vulnweb.com/listproducts.php?cat=1 | lotus urls lotus-scripts/active -o test_out.json
@@ -29,23 +31,23 @@ $ echo http://testphp.vulnweb.com/listproducts.php?cat=1 | lotus urls lotus-scri
 
 ![image](https://user-images.githubusercontent.com/45688522/202260525-46caeaeb-8687-4723-a406-aea30e0ea9c6.png)
 
+```bash
+khaled@Home ~/work/code/lotus-scripts]$ echo "http://localhost:5000/?name=2" | lotus urls ~/work/code/lotus-scripts/active/ -o out -v
+[INFO] URLS: 1
+[INFO] HOSTS: 1
+[INFO] PATHS: 1
 
-### Lua API
-We are working on creating a new document for this list as soon as possible, as it has not been updated for a long time 
+[+] Template Injection on: http://localhost:5000/?name=2lot%7B%7B2*2%7D%7Dus
+[#] SCAN TYPE: VULN
+[#] Description: https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/07-Input_Validation_Testing
+/18-Testing_for_Server_Side_Template_Injection
+[#] Vulnerable Parameter: name
+[#] Risk: high
+[#] Used Payload: lot{{2*2}}us
+[#] Matching Pattern: lot4us
+#--------------------------------------------------#
+```
 
-| Function   |      About      |  output type | Example |
-|----------|:-------------:|------:| -----:|
-| is_match |  check if regex is matching with the text or not | bool | `is_match("\d\d\d","123") -- true` |
-| println |    print message above the progress bar   | Nil | `println("XSS FOUND :D")` |
-| log_info | logging with info level | Nil | `log_info("Hello")`|
-| log_debug | logging with debug level | Nil | `log_debug("Hello")`|
-| log_warn | logging with warn level | Nil | `log_warn("Hello")`|
-| log_error | logging with error level | Nil | `log_error("Hello")`|
-| generate_css_selector | generate Css Selector pattern for Xss payloads | String | `generate_css_selector("<img/src=x onerror=alert(1)")`
-| html_parse | get the type of your payload in the response page | List of Location Enum | `html_parse("<h1 hackerman><h1>","hackerman") -- AttrName`  | 
-| html_search | Search with CSS Selector in HTML | String | `html_search("<h1 hackerman>demo</h1>","h1")`
-| change_urlquery | add your payload to all url parameters | Table (List) | `change_urlquery("http://google.com/?hello=1","hacker")` |
-| set_urlvalue | Change custom parameter value in the url|  String | `set_urlvalue("http://google.com/?test=1","test","hacker")`|
-| urljoin | Join Path to the url | String | `urljoin("http://google.com/","/search")` | 
-| send_req | send Get http request to the url |  Table with ( url , status , body , errors ) | `send_req("https://google.com")` |
 
+### :book: Documentation
+you can find lotus docs in docs/*.md dir but if you want a simple one (web version) you can visit https://lotus.knas.me
