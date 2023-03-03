@@ -23,7 +23,6 @@ pub struct LuaLoader {
 }
 
 /// Start Lotus by adding the ProgressBar and http request options
-/// * `bar` - ProgressBar
 /// * `request` - Request Options
 /// * `output_dir` - output file
 impl LuaLoader {
