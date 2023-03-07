@@ -35,7 +35,7 @@ fn load_scripts(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors
         match entry {
             Ok(path) => scripts.push((
                 filename_to_string(path.to_str().unwrap()).unwrap(),
-                path.file_name().unwrap().to_str().unwrap().to_string(),
+                path.to_str().unwrap().to_string()
             )),
             Err(e) => error!("{:?}", e),
         }
