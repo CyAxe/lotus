@@ -161,15 +161,21 @@ impl Sender {
                     });
                 let url = resp.url().to_string();
                 let status = resp.status().as_u16() as i32;
-                let body = resp.bytes().await.unwrap();
-                let body = String::from_utf8_lossy(&body).to_string();
-                let resp_data_struct = HttpResponse {
-                    url,
-                    status,
-                    body,
-                    headers: resp_headers,
-                };
-                Ok(resp_data_struct)
+                let body = resp.bytes().await;
+                if body.is_err(){
+                    let err = mlua::Error::RuntimeError("Timeout Body".to_string());
+                    log::error!("Timeout Body");
+                    return Err(err)
+                } else {
+                    let body = String::from_utf8_lossy(&body.unwrap()).to_string();
+                    let resp_data_struct = HttpResponse {
+                        url,
+                        status,
+                        body,
+                        headers: resp_headers,
+                    };
+                    Ok(resp_data_struct)
+                }
             }
             Err(err) => {
                 let error_code = {
