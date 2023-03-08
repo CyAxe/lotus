@@ -50,9 +50,11 @@ async fn main() -> Result<(), std::io::Error> {
             );
             // Open two threads for URL/HOST scanning
             create_progress(opts.target_data.urls.len() as u64);
-            *SLEEP_TIME.lock().unwrap() = opts.delay;
-            *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
-            *VERBOSE_MODE.lock().unwrap() = opts.verbose;
+            {
+                *SLEEP_TIME.lock().unwrap() = opts.delay;
+                *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
+                *VERBOSE_MODE.lock().unwrap() = opts.verbose;
+            }
             {
                 BAR.lock().unwrap().suspend(|| {})
             };
