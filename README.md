@@ -2,23 +2,24 @@
 <img src="https://user-images.githubusercontent.com/45688522/222855427-5a328880-1ded-4adf-ac8e-35d0ba1c8cdd.png" width="470px" >
 <!-- img src="https://user-images.githubusercontent.com/45688522/222831284-09899d3b-322b-4215-ba99-8294d4bf8a9b.png" width="170px" -->
 </p>
-Using Lotus' Lua API, you can automate your own web security module in the shortest amount of time by discovering, scanning, and reporting in just a few lines of code
+Lotus is an automation system for Dynamic Application Security Testing (DAST) that simplifies web security scripting by providing a Lua API with numerous functions that can be used to automate web security processes in just a few lines of code
 
-Currently, we are working hard to write libraries and functions in most cases to ensure that you do not miss any functions with Lotus. Our mission is to make security scripting easier and faster by providing our Lua API with many functions you will need in most security scripting cases. 
 
-As of right now, we are still in beta version (0.4), which means that many ideas have not been implemented into that project
+Our aim is to make security scripting more efficient by providing libraries and functions to ensure that no critical security features are missed in most security scripting cases.
 
- Consequently, any contribution you are able to make to this project will enable us to complete it as quickly as possible and move into stable versions sooner rather than later. If you have any further questions, please view the github repository issues page or join our Discord server (https://discord.gg/nBYDPTzjSq).
+At present, Lotus is in beta version (0.4), meaning that several ideas are yet to be implemented. However, 
+we welcome any contributions that can enable us to complete the project as quickly as possible and move into stable versions
+If you have any questions, please refer to the Github repository issues page or join our Discord server (https://discord.gg/nBYDPTzjSq)
 
-### :rocket: Installation 
-It can be built from source, but ensure that you install the package `openssl-dev` before running this command
-
+## :rocket: Installation
+You can install Lotus from the source code by running the following commands:
 ```bash
 $ apt install libssl-dev pkg-config gcc git -y
 $ cargo install --git=https://github.com/rusty-sec/lotus/
 ```
-We encourage you to open an issue on our github repository if you are having difficulties compiling it and would like some assistance
-You can also download the binary file based on your operating system and run it directly
+Before running the command, ensure that you have installed the openssl-dev package. If you encounter any challenges while compiling, please open an issue on our Github repository for assistance. Alternatively, you can download the binary file suitable for your operating system and run it directly.
+
+Next, you will need to download the Lua scripts from our Github repository and run the following command:
 
 
 
