@@ -25,7 +25,7 @@ use cli::{
     input::load_scripts::{get_scripts, valid_scripts},
 };
 use lua::{
-    loader::{LuaRunTime, LuaOptions},
+    loader::{LuaOptions, LuaRunTime},
     parsing::files::filename_to_string,
     run::LuaLoader,
     threads::runner::{iter_futures, iter_futures_tuple},
@@ -132,7 +132,7 @@ impl Lotus {
                             target_type: *scan_type,
                             fuzz_workers,
                             script_code: &script_code,
-                            script_dir: &script_name
+                            script_dir: &script_name,
                         };
                         let error_check = {
                             if *self.stop_after.lock().unwrap() == exit_after {
@@ -146,11 +146,7 @@ impl Lotus {
                         if error_check == false {
                             // Nothing
                         } else {
-                            let run_scan = lotus_loader
-                                .run_scan(
-                                    lua_opts
-                                )
-                                .await;
+                            let run_scan = lotus_loader.run_scan(lua_opts).await;
                             if run_scan.is_err() {
                                 log::error!(
                                     "script error: {}",

@@ -3,8 +3,12 @@ use crate::lua::runtime::{
 };
 use crate::{
     cli::bar::BAR,
-    lua::{loader::{LuaRunTime, LuaOptions}, network::http::Sender, output::vuln::AllReports},
-    RequestOpts, ScanTypes
+    lua::{
+        loader::{LuaOptions, LuaRunTime},
+        network::http::Sender,
+        output::vuln::AllReports,
+    },
+    RequestOpts, ScanTypes,
 };
 use mlua::Lua;
 use std::{fs::OpenOptions, io::Write};
@@ -71,10 +75,7 @@ impl LuaLoader {
     /// Run The Targeted Script on the target url
     /// * `target_url` - Target url
     /// * `target_type` - the input type if its HOST or URL
-    pub async fn run_scan<'a>(
-        &self,
-        lua_opts:  LuaOptions<'_>
-    ) -> Result<(), mlua::Error> {
+    pub async fn run_scan<'a>(&self, lua_opts: LuaOptions<'_>) -> Result<(), mlua::Error> {
         let lua = Lua::new();
         // settings lua api
         if let ScanTypes::HOSTS = lua_opts.target_type {
@@ -85,8 +86,12 @@ impl LuaLoader {
         } else {
             self.set_lua(lua_opts.target_url, &lua);
         }
-        lua.globals().set("SCRIPT_PATH", lua_opts.script_dir).unwrap();
-        lua.globals().set("FUZZ_WORKERS", lua_opts.fuzz_workers).unwrap();
+        lua.globals()
+            .set("SCRIPT_PATH", lua_opts.script_dir)
+            .unwrap();
+        lua.globals()
+            .set("FUZZ_WORKERS", lua_opts.fuzz_workers)
+            .unwrap();
 
         // Handle this error please
         let run_code = lua.load(lua_opts.script_code).exec_async().await;
@@ -100,7 +105,10 @@ impl LuaLoader {
         }
         let main_func = lua.globals().get::<_, mlua::Function>("main");
         if main_func.is_err() {
-            log::error!("[{}] there is no main function, Skipping ..", lua_opts.script_dir);
+            log::error!(
+                "[{}] there is no main function, Skipping ..",
+                lua_opts.script_dir
+            );
             {
                 BAR.lock().unwrap().println(format!(
                     "[{}] there is no main function, Skipping ..",

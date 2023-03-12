@@ -57,7 +57,7 @@ pub fn args_scan() -> ScanArgs {
             delay,
             fuzz_workers,
             verbose,
-            is_request
+            is_request,
         } => {
             // setup logger
             init_log(log).unwrap();

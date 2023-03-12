@@ -31,7 +31,7 @@ pub struct LuaOptions<'a> {
     pub target_type: ScanTypes,
     pub fuzz_workers: usize,
     pub script_code: &'a str,
-    pub script_dir: &'a str
+    pub script_dir: &'a str,
 }
 
 /// check if the regex pattern is matching with this string or not without get the matched parts
