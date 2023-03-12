@@ -20,7 +20,7 @@ use lotus::{
     cli::{
         args::Opts,
         bar::{create_progress, show_msg, MessageLevel, BAR},
-        startup::{new::new_args, urls::args_urls},
+        startup::{new::new_args, scan::args_scan},
     },
     lua::{
         network::http::{REQUESTS_LIMIT, SLEEP_TIME, VERBOSE_MODE},
@@ -33,8 +33,8 @@ use structopt::StructOpt;
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     match Opts::from_args() {
-        Opts::URLS { .. } => {
-            let opts = args_urls();
+        Opts::SCAN { .. } => {
+            let opts = args_scan();
             let fuzz_workers = opts.fuzz_workers;
             show_msg(
                 &format!("URLS: {}", opts.target_data.urls.len()),

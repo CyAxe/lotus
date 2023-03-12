@@ -3,11 +3,11 @@ use crate::lua::runtime::{
 };
 use crate::{
     cli::bar::BAR,
-    lua::{loader::LuaRunTime, network::http::Sender, output::vuln::AllReports},
-    RequestOpts, ScanTypes,
+    lua::{loader::{LuaRunTime, LuaOptions}, network::http::Sender, output::vuln::AllReports},
+    RequestOpts, ScanTypes
 };
 use mlua::Lua;
-use std::{fs::OpenOptions, io::Write, sync::Arc};
+use std::{fs::OpenOptions, io::Write};
 
 #[derive(Clone)]
 pub struct LuaLoader {
@@ -71,29 +71,25 @@ impl LuaLoader {
     /// Run The Targeted Script on the target url
     /// * `target_url` - Target url
     /// * `target_type` - the input type if its HOST or URL
-    pub async fn run_scan(
+    pub async fn run_scan<'a>(
         &self,
-        target_url: Option<&str>,
-        target_type: Arc<ScanTypes>,
-        fuzz_workers: usize,
-        script_code: &str,
-        script_dir: &str,
+        lua_opts:  LuaOptions<'_>
     ) -> Result<(), mlua::Error> {
         let lua = Lua::new();
         // settings lua api
-        if let ScanTypes::HOSTS = *target_type {
+        if let ScanTypes::HOSTS = lua_opts.target_type {
             self.set_lua(None, &lua);
             lua.globals()
-                .set("TARGET_HOST", target_url.unwrap())
+                .set("TARGET_HOST", lua_opts.target_url.unwrap())
                 .unwrap();
         } else {
-            self.set_lua(target_url, &lua);
+            self.set_lua(lua_opts.target_url, &lua);
         }
-        lua.globals().set("SCRIPT_PATH", script_dir).unwrap();
-        lua.globals().set("FUZZ_WORKERS", fuzz_workers).unwrap();
+        lua.globals().set("SCRIPT_PATH", lua_opts.script_dir).unwrap();
+        lua.globals().set("FUZZ_WORKERS", lua_opts.fuzz_workers).unwrap();
 
         // Handle this error please
-        let run_code = lua.load(script_code).exec_async().await;
+        let run_code = lua.load(lua_opts.script_code).exec_async().await;
         if run_code.is_err() {
             {
                 let bar = BAR.lock().unwrap();
@@ -104,11 +100,11 @@ impl LuaLoader {
         }
         let main_func = lua.globals().get::<_, mlua::Function>("main");
         if main_func.is_err() {
-            log::error!("[{}] there is no main function, Skipping ..", script_dir);
+            log::error!("[{}] there is no main function, Skipping ..", lua_opts.script_dir);
             {
                 BAR.lock().unwrap().println(format!(
                     "[{}] there is no main function, Skipping ..",
-                    script_dir
+                    lua_opts.script_dir
                 ))
             };
         } else {
@@ -122,7 +118,7 @@ impl LuaLoader {
             if run_scan.is_err() {
                 log::error!(
                     "[{}] Script Error : {:?}",
-                    script_dir,
+                    lua_opts.script_dir,
                     run_scan.clone().unwrap_err()
                 );
                 {
@@ -136,12 +132,12 @@ impl LuaLoader {
                     let results = serde_json::to_string(&script_report.reports).unwrap();
                     log::debug!(
                         "[{}] Report Length {}",
-                        script_dir,
+                        lua_opts.script_dir,
                         script_report.reports.len()
                     );
                     self.write_report(&results);
                 } else {
-                    log::debug!("[{}] Script report is empty", script_dir);
+                    log::debug!("[{}] Script report is empty", lua_opts.script_dir);
                 }
             }
         }

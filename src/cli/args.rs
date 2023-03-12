@@ -70,7 +70,7 @@ pub enum Opts {
         file_name: PathBuf,
     },
     #[structopt(about = "Use CVE, VULN scripts to scan the given URLs")]
-    URLS {
+    SCAN {
         // redirects limit
         #[structopt(
             short,
@@ -154,6 +154,8 @@ pub enum Opts {
             parse(from_os_str)
         )]
         urls: Option<PathBuf>,
+        #[structopt(long = "requests", help = "Give input as full request in JSON")]
+        is_request: bool,
 
         #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}", help = "Default Headers (eg: '{\"X-API\":\"123\"}')")]
         headers: HeaderMap,

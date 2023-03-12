@@ -25,9 +25,9 @@ use cli::{
     input::load_scripts::{get_scripts, valid_scripts},
 };
 use lua::{
-    loader::LuaRunTime,
+    loader::{LuaRunTime, LuaOptions},
     parsing::files::filename_to_string,
-    scan::LuaLoader,
+    run::LuaLoader,
     threads::runner::{iter_futures, iter_futures_tuple},
 };
 use reqwest::header::HeaderMap;
@@ -127,6 +127,13 @@ impl Lotus {
                         let script_data = script_data.clone();
                         let lotus_loader = Arc::clone(&lotus_loader);
                         let scan_type = Arc::clone(&scan_type);
+                        let lua_opts = LuaOptions {
+                            target_url: Some(&script_data),
+                            target_type: *scan_type,
+                            fuzz_workers,
+                            script_code: &script_code,
+                            script_dir: &script_name
+                        };
                         let error_check = {
                             if *self.stop_after.lock().unwrap() == exit_after {
                                 log::debug!("Ignoring scripts");
@@ -141,11 +148,7 @@ impl Lotus {
                         } else {
                             let run_scan = lotus_loader
                                 .run_scan(
-                                    Some(script_data.as_str()),
-                                    scan_type,
-                                    fuzz_workers,
-                                    &script_code,
-                                    &script_name,
+                                    lua_opts
                                 )
                                 .await;
                             if run_scan.is_err() {

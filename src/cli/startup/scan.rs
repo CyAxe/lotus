@@ -9,9 +9,10 @@ use crate::RequestOpts;
 use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 
-pub struct UrlArgs {
+pub struct ScanArgs {
     pub target_data: TargetData,
     pub exit_after: i32,
+    pub is_request: bool,
     pub req_opts: RequestOpts,
     pub lotus_obj: Lotus,
     pub requests_limit: i32,
@@ -26,12 +27,13 @@ pub struct TargetData {
     pub paths: Vec<String>,
 }
 
-pub fn args_urls() -> UrlArgs {
+pub fn args_scan() -> ScanArgs {
     let (
         urls,
         hosts,
         paths,
         exit_after,
+        is_request,
         req_opts,
         lotus_obj,
         requests_limit,
@@ -39,7 +41,7 @@ pub fn args_urls() -> UrlArgs {
         fuzz_workers,
         verbose,
     ) = match Opts::from_args() {
-        Opts::URLS {
+        Opts::SCAN {
             redirects,
             workers,
             scripts_workers,
@@ -55,6 +57,7 @@ pub fn args_urls() -> UrlArgs {
             delay,
             fuzz_workers,
             verbose,
+            is_request
         } => {
             // setup logger
             init_log(log).unwrap();
@@ -96,6 +99,7 @@ pub fn args_urls() -> UrlArgs {
                 hosts,
                 paths,
                 exit_after,
+                is_request,
                 req_opts,
                 lotus_obj,
                 requests_limit,
@@ -109,9 +113,10 @@ pub fn args_urls() -> UrlArgs {
         }
     };
 
-    UrlArgs {
+    ScanArgs {
         target_data: TargetData { urls, hosts, paths },
         exit_after,
+        is_request,
         req_opts,
         lotus_obj,
         requests_limit,

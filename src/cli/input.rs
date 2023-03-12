@@ -3,6 +3,7 @@ use crate::CliErrors;
 use std::{io, io::BufRead, path::PathBuf};
 use url::Url;
 pub mod load_scripts;
+pub mod parse_requests;
 
 pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     let mut hosts = Vec::new();

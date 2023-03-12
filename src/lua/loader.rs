@@ -17,12 +17,21 @@
  */
 
 use crate::cli::errors::CliErrors;
+use crate::ScanTypes;
 use log::error;
 use mlua::Lua;
 
 /// Setup The Lua Runtime
 pub struct LuaRunTime<'lua> {
     pub lua: &'lua Lua,
+}
+
+pub struct LuaOptions<'a> {
+    pub target_url: Option<&'a str>,
+    pub target_type: ScanTypes,
+    pub fuzz_workers: usize,
+    pub script_code: &'a str,
+    pub script_dir: &'a str
 }
 
 /// check if the regex pattern is matching with this string or not without get the matched parts
