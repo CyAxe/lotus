@@ -1,6 +1,3 @@
-use crate::lua::runtime::{
-    encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT,
-};
 use crate::{
     cli::bar::BAR,
     lua::{
@@ -10,8 +7,10 @@ use crate::{
     },
     RequestOpts, ScanTypes,
 };
+use crate::lua::runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT};
 use mlua::Lua;
-use std::{fs::OpenOptions, io::Write};
+use std::fs::OpenOptions;
+use std::io::Write;
 
 #[derive(Clone)]
 pub struct LuaLoader {
@@ -24,7 +23,7 @@ pub struct LuaLoader {
 /// * `output_dir` - output file
 impl LuaLoader {
     pub fn new(request: RequestOpts, output_dir: String) -> LuaLoader {
-        LuaLoader {
+        Self {
             output_dir,
             request,
         }
