@@ -33,64 +33,54 @@ use structopt::StructOpt;
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     match Opts::from_args() {
-        Opts::SCAN { .. } => {
-            let opts = args_scan();
-            let fuzz_workers = opts.fuzz_workers;
-            show_msg(
-                &format!("URLS: {}", opts.target_data.urls.len()),
-                MessageLevel::Info,
-            );
-            show_msg(
-                &format!("HOSTS: {}", opts.target_data.hosts.len()),
-                MessageLevel::Info,
-            );
-            show_msg(
-                &format!("PATHS: {}", opts.target_data.paths.len()),
-                MessageLevel::Info,
-            );
-            // Open two threads for URL/HOST scanning
-            create_progress(opts.target_data.urls.len() as u64);
-            {
-                *SLEEP_TIME.lock().unwrap() = opts.delay;
-                *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
-                *VERBOSE_MODE.lock().unwrap() = opts.verbose;
-            }
-            {
-                BAR.lock().unwrap().suspend(|| {})
-            };
-            let scan_futures = vec![
-                opts.lotus_obj.start(
-                    opts.target_data.paths,
-                    opts.req_opts.clone(),
-                    ScanTypes::PATHS,
-                    opts.exit_after,
-                    fuzz_workers,
-                ),
-                opts.lotus_obj.start(
-                    opts.target_data.urls,
-                    opts.req_opts.clone(),
-                    ScanTypes::URLS,
-                    opts.exit_after,
-                    fuzz_workers,
-                ),
-                opts.lotus_obj.start(
-                    opts.target_data.hosts,
-                    opts.req_opts,
-                    ScanTypes::HOSTS,
-                    opts.exit_after,
-                    fuzz_workers,
-                ),
-            ];
-            runner::scan_futures(scan_futures, 3, None).await;
-            BAR.lock().unwrap().finish();
-        }
-        Opts::NEW {
-            scan_type,
-            file_name,
-        } => {
+        Opts::SCAN { .. } => run_scan().await,
+        Opts::NEW { scan_type, file_name } => {
             new_args(scan_type, file_name);
             std::process::exit(0);
         }
+    }
+}
+
+async fn run_scan() -> Result<(), std::io::Error> {
+    let opts = args_scan();
+    let fuzz_workers = opts.fuzz_workers;
+    show_msg(&format!("URLS: {}", opts.target_data.urls.len()), MessageLevel::Info);
+    show_msg(&format!("HOSTS: {}", opts.target_data.hosts.len()), MessageLevel::Info);
+    show_msg(&format!("PATHS: {}", opts.target_data.paths.len()), MessageLevel::Info);
+    // Open two threads for URL/HOST scanning
+    create_progress(opts.target_data.urls.len() as u64);
+    {
+        *SLEEP_TIME.lock().unwrap() = opts.delay;
+        *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
+        *VERBOSE_MODE.lock().unwrap() = opts.verbose;
+    }
+    {
+        BAR.lock().unwrap().suspend(|| {})
     };
+    let scan_futures = vec![
+        opts.lotus_obj.start(
+            opts.target_data.paths,
+            opts.req_opts.clone(),
+            ScanTypes::PATHS,
+            opts.exit_after,
+            fuzz_workers,
+        ),
+        opts.lotus_obj.start(
+            opts.target_data.urls,
+            opts.req_opts.clone(),
+            ScanTypes::URLS,
+            opts.exit_after,
+            fuzz_workers,
+        ),
+        opts.lotus_obj.start(
+            opts.target_data.hosts,
+            opts.req_opts,
+            ScanTypes::HOSTS,
+            opts.exit_after,
+            fuzz_workers,
+        ),
+    ];
+    runner::scan_futures(scan_futures, 3, None).await;
+    BAR.lock().unwrap().finish();
     Ok(())
 }
