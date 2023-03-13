@@ -102,96 +102,75 @@ impl Sender {
         body: String,
         headers: HeaderMap,
     ) -> Result<HttpResponse, mlua::Error> {
-        {
-            let req_limit = REQUESTS_LIMIT.lock().unwrap();
-            let mut req_sent = REQUESTS_SENT.lock().unwrap();
-            if *req_sent >= *req_limit {
-                let sleep_time = SLEEP_TIME.lock().unwrap();
-                let bar = BAR.lock().unwrap();
-                bar.println(format!(
-                    "The rate limit for requests has been raised, please wait {} seconds ",
-                    *sleep_time
-                ));
-                log::debug!(
-                    "{}",
-                    format!(
-                        "The rate limit for requests has been raised, please wait {} seconds ",
-                        *sleep_time
-                    )
-                );
-                std::thread::sleep(Duration::from_secs(*sleep_time));
-                *req_sent = 1;
-                bar.println("Continue ...");
-                log::debug!("changing req_sent value to 1");
-            }
-        };
-        match self
-            .build_client()
-            .unwrap()
+        let req_limit = *REQUESTS_LIMIT.lock().unwrap();
+        let mut req_sent = REQUESTS_SENT.lock().unwrap();
+        if *req_sent >= req_limit {
+            let sleep_time = *SLEEP_TIME.lock().unwrap();
+            let bar = BAR.lock().unwrap();
+            let msg = format!("The rate limit for requests has been reached. Sleeping for {} seconds...", sleep_time);
+            bar.println(&msg);
+            log::debug!("{}", msg);
+            std::thread::sleep(Duration::from_secs(sleep_time));
+            *req_sent = 1;
+            bar.println("Continuing...");
+            log::debug!("Resetting req_sent value to 1");
+        } else {
+            *req_sent += 1;
+        }
+
+        let client = self.build_client().unwrap();
+        let request = client
             .request(Method::from_bytes(method.as_bytes()).unwrap(), url.clone())
             .headers(headers)
-            .body(body)
-            .send()
-            .await
-        {
+            .body(body);
+
+        let response = match request.send().await {
             Ok(resp) => {
-                // Locking Scope
-                {
-                    let mut req_sent = REQUESTS_SENT.lock().unwrap();
-                    let verbose_mode = VERBOSE_MODE.lock().unwrap();
-                    if *verbose_mode == true {
-                        let log_msg = format!("SENDING HTTP REQUEST: {}", url);
-                        log::debug!("{}", log_msg);
-                        BAR.lock().unwrap().println(log_msg);
-                    }
-                    *req_sent += 1;
-                };
-                let mut resp_headers: HashMap<String, String> = HashMap::new();
-                resp.headers()
-                    .iter()
-                    .for_each(|(header_name, header_value)| {
-                        resp_headers.insert(
-                            header_name.to_string(),
-                            String::from_utf8_lossy(header_value.as_bytes()).to_string(),
-                        );
-                    });
+                let verbose_mode = *VERBOSE_MODE.lock().unwrap();
+                if verbose_mode {
+                    let msg = format!("Sent HTTP request: {}", &url);
+                    BAR.lock().unwrap().println(&msg);
+                    log::debug!("{}", msg);
+                }
+
+                let mut resp_headers = HashMap::new();
+                resp.headers().iter().for_each(|(name, value)| {
+                    let value = String::from_utf8_lossy(value.as_bytes()).to_string();
+                    resp_headers.insert(name.to_string(), value);
+                });
+
                 let url = resp.url().to_string();
                 let status = resp.status().as_u16() as i32;
-                let body = resp.bytes().await;
-                if body.is_err() {
-                    let err = mlua::Error::RuntimeError("Timeout Body".to_string());
-                    log::error!("Timeout Body");
-                    return Err(err);
-                } else {
-                    let body = String::from_utf8_lossy(&body.unwrap()).to_string();
-                    let resp_data_struct = HttpResponse {
+                let body = resp.bytes().await.map(|b| String::from_utf8_lossy(&b).to_string());
+                match body {
+                    Ok(body) => Ok(HttpResponse {
                         url,
                         status,
                         body,
                         headers: resp_headers,
-                    };
-                    Ok(resp_data_struct)
+                    }),
+                    Err(_) => {
+                        let err = mlua::Error::RuntimeError("Timeout Body".to_string());
+                        log::error!("Timeout Body");
+                        Err(err)
+                    }
                 }
             }
             Err(err) => {
-                let error_code = {
-                    if err.is_timeout() {
-                        "timeout_error"
-                    } else if err.is_connect() {
-                        "connection_error"
-                    } else if err.is_redirect() {
-                        "too_many_redirects"
-                    } else if err.is_body() {
-                        "request_body_error"
-                    } else if err.is_decode() {
-                        "decode_error"
-                    } else {
-                        "external_error"
-                    }
+                let error_code = match () {
+                    _ if err.is_timeout() => "timeout_error",
+                    _ if err.is_connect() => "connection_error",
+                    _ if err.is_redirect() => "too_many_redirects",
+                    _ if err.is_body() => "request_body_error",
+                    _ if err.is_decode() => "decode_error",
+                    _ => "external_error",
                 };
+
                 let err = mlua::Error::RuntimeError(error_code.to_string());
                 Err(err)
             }
-        }
+        };
+
+        response
     }
 }
