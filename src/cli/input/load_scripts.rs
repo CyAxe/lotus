@@ -79,7 +79,8 @@ pub fn valid_scripts(
         }
         2 => {
             test_target_url = Some("https://example.com");
-        }
+        },
+        3 => {}
         _ => {}
     }
     let lua_eng = LuaRunTime { lua: &Lua::new() };

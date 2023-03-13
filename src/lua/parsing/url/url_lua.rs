@@ -10,7 +10,7 @@ impl UserData for HttpMessage {
         methods.add_method(
             "setAllParams",
             |_, this, (payload, remove_content): (String, bool)| {
-                Ok(this.change_urlquery(payload, remove_content))
+                Ok(this.change_urlquery(&payload, remove_content))
             },
         );
         methods.add_method("Url", |_, this, ()| Ok(this.url.as_str().to_string()));
@@ -30,7 +30,7 @@ impl UserData for HttpMessage {
             Ok(all_params)
         });
         methods.add_method("urlJoin", |_, this, new_path: String| {
-            Ok(this.urljoin(new_path))
+            Ok(this.urljoin(new_path.as_str()))
         });
     }
 }
