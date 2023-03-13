@@ -1,20 +1,16 @@
-/*
- * this file is part of lotus project, an web security scanner written in rust based on lua scripts
- * for details, please see https://github.com/rusty-sec/lotus/
- *
- * copyright (c) 2022 - khaled nassar
- *
- * please note that this file was originally released under the
- * gnu general public license as published by the free software foundation;
- * either version 2 of the license, or (at your option) any later version.
- *
- *
- * unless required by applicable law or agreed to in writing, software
- * distributed under the license is distributed on an "as is" basis,
- * without warranties or conditions of any kind, either express or implied.
- * see the license for the specific language governing permissions and
- * limitations under the license.
- */
+// This file is part of Lotus Project, a web security scanner written in Rust based on Lua scripts.
+// For details, please see https://github.com/rusty-sec/lotus/
+//
+// Copyright (c) 2022 - Khaled Nassar
+//
+// Please note that this file was originally released under the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the License, or (at your option)
+// any later version.
+//
+// Unless required by applicable law or agreed to in writing, software distributed under the
+// License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+// either express or implied. See the License for the specific language governing permissions
+// and limitations under the License.
 
 use crate::BAR;
 use reqwest::{header::HeaderMap, redirect, Client, Method, Proxy};
@@ -106,96 +102,75 @@ impl Sender {
         body: String,
         headers: HeaderMap,
     ) -> Result<HttpResponse, mlua::Error> {
-        {
-            let req_limit = REQUESTS_LIMIT.lock().unwrap();
-            let mut req_sent = REQUESTS_SENT.lock().unwrap();
-            if *req_sent >= *req_limit {
-                let sleep_time = SLEEP_TIME.lock().unwrap();
-                let bar = BAR.lock().unwrap();
-                bar.println(format!(
-                    "The rate limit for requests has been raised, please wait {} seconds ",
-                    *sleep_time
-                ));
-                log::debug!(
-                    "{}",
-                    format!(
-                        "The rate limit for requests has been raised, please wait {} seconds ",
-                        *sleep_time
-                    )
-                );
-                std::thread::sleep(Duration::from_secs(*sleep_time));
-                *req_sent = 1;
-                bar.println("Continue ...");
-                log::debug!("changing req_sent value to 1");
-            }
-        };
-        match self
-            .build_client()
-            .unwrap()
+        let req_limit = *REQUESTS_LIMIT.lock().unwrap();
+        let mut req_sent = REQUESTS_SENT.lock().unwrap();
+        if *req_sent >= req_limit {
+            let sleep_time = *SLEEP_TIME.lock().unwrap();
+            let bar = BAR.lock().unwrap();
+            let msg = format!("The rate limit for requests has been reached. Sleeping for {} seconds...", sleep_time);
+            bar.println(&msg);
+            log::debug!("{}", msg);
+            std::thread::sleep(Duration::from_secs(sleep_time));
+            *req_sent = 1;
+            bar.println("Continuing...");
+            log::debug!("Resetting req_sent value to 1");
+        } else {
+            *req_sent += 1;
+        }
+
+        let client = self.build_client().unwrap();
+        let request = client
             .request(Method::from_bytes(method.as_bytes()).unwrap(), url.clone())
             .headers(headers)
-            .body(body)
-            .send()
-            .await
-        {
+            .body(body);
+
+        let response = match request.send().await {
             Ok(resp) => {
-                // Locking Scope
-                {
-                    let mut req_sent = REQUESTS_SENT.lock().unwrap();
-                    let verbose_mode = VERBOSE_MODE.lock().unwrap();
-                    if *verbose_mode == true {
-                        let log_msg = format!("SENDING HTTP REQUEST: {}", url);
-                        log::debug!("{}", log_msg);
-                        BAR.lock().unwrap().println(log_msg);
-                    }
-                    *req_sent += 1;
-                };
-                let mut resp_headers: HashMap<String, String> = HashMap::new();
-                resp.headers()
-                    .iter()
-                    .for_each(|(header_name, header_value)| {
-                        resp_headers.insert(
-                            header_name.to_string(),
-                            String::from_utf8_lossy(header_value.as_bytes()).to_string(),
-                        );
-                    });
+                let verbose_mode = *VERBOSE_MODE.lock().unwrap();
+                if verbose_mode {
+                    let msg = format!("Sent HTTP request: {}", &url);
+                    BAR.lock().unwrap().println(&msg);
+                    log::debug!("{}", msg);
+                }
+
+                let mut resp_headers = HashMap::new();
+                resp.headers().iter().for_each(|(name, value)| {
+                    let value = String::from_utf8_lossy(value.as_bytes()).to_string();
+                    resp_headers.insert(name.to_string(), value);
+                });
+
                 let url = resp.url().to_string();
                 let status = resp.status().as_u16() as i32;
-                let body = resp.bytes().await;
-                if body.is_err(){
-                    let err = mlua::Error::RuntimeError("Timeout Body".to_string());
-                    log::error!("Timeout Body");
-                    return Err(err)
-                } else {
-                    let body = String::from_utf8_lossy(&body.unwrap()).to_string();
-                    let resp_data_struct = HttpResponse {
+                let body = resp.bytes().await.map(|b| String::from_utf8_lossy(&b).to_string());
+                match body {
+                    Ok(body) => Ok(HttpResponse {
                         url,
                         status,
                         body,
                         headers: resp_headers,
-                    };
-                    Ok(resp_data_struct)
+                    }),
+                    Err(_) => {
+                        let err = mlua::Error::RuntimeError("Timeout Body".to_string());
+                        log::error!("Timeout Body");
+                        Err(err)
+                    }
                 }
             }
             Err(err) => {
-                let error_code = {
-                    if err.is_timeout() {
-                        "timeout_error"
-                    } else if err.is_connect() {
-                        "connection_error"
-                    } else if err.is_redirect() {
-                        "too_many_redirects"
-                    } else if err.is_body() {
-                        "request_body_error"
-                    } else if err.is_decode() {
-                        "decode_error"
-                    } else {
-                        "external_error"
-                    }
+                let error_code = match () {
+                    _ if err.is_timeout() => "timeout_error",
+                    _ if err.is_connect() => "connection_error",
+                    _ if err.is_redirect() => "too_many_redirects",
+                    _ if err.is_body() => "request_body_error",
+                    _ if err.is_decode() => "decode_error",
+                    _ => "external_error",
                 };
+
                 let err = mlua::Error::RuntimeError(error_code.to_string());
                 Err(err)
             }
-        }
+        };
+
+        response
     }
 }

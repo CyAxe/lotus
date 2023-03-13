@@ -3,6 +3,7 @@ use crate::CliErrors;
 use std::{io, io::BufRead, path::PathBuf};
 use url::Url;
 pub mod load_scripts;
+pub mod parse_requests;
 
 pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     let mut hosts = Vec::new();
@@ -29,22 +30,33 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     hosts
 }
 
-pub fn get_target_paths(urls: Vec<String>) -> Vec<String> {
+pub fn get_target_paths(urls: Vec<String>) -> Result<Vec<String>, String> {
     let mut paths: Vec<String> = Vec::new();
-    urls.iter().for_each(|x| {
-        let the_path = Url::parse(x).unwrap().path().to_string();
-        let new_url = Url::join(&Url::parse(x).unwrap(), &the_path);
-        if new_url.is_ok(){
-            let new_url = new_url.unwrap().to_string();
-            if !paths.contains(&new_url) {
-                paths.push(new_url);
+    for url_str in urls {
+        let url = match Url::parse(&url_str) {
+            Ok(url) => url,
+            Err(err) => {
+                log::error!("Failed to parse URL {}: {}", url_str, err);
+                continue;
             }
-        } else {
-            log::error!("Cannot URL Join {} with {}",x,&the_path);
-            log::error!("UNWRAP ERROR {}",new_url.unwrap_err());
+        };
+        let path = match url.path().to_string().as_str() {
+            "" => "/".to_string(),
+            path => path.to_string(),
+        };
+        let new_url = match url.join(&path) {
+            Ok(new_url) => new_url,
+            Err(err) => {
+                log::error!("Failed to join URL {} with path {}: {}", url, path, err);
+                continue;
+            }
+        };
+        let new_url_str = new_url.to_string();
+        if !paths.contains(&new_url_str) {
+            paths.push(new_url_str);
         }
-    });
-    paths
+    }
+    Ok(paths)
 }
 
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {

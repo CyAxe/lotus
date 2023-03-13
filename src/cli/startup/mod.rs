@@ -1,2 +1,2 @@
 pub mod new;
-pub mod urls;
+pub mod scan;
