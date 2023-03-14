@@ -100,6 +100,7 @@ impl LuaLoader {
         };
 
         // execute script code
+        log::debug!("Executing Code: {}", lua_opts.script_dir);
         let run_code = lua.load(lua_opts.script_code).exec_async().await;
         if let Err(e) = run_code {
             let bar = BAR.lock().unwrap();
@@ -118,6 +119,7 @@ impl LuaLoader {
             return Ok(());
         }
 
+        log::debug!("Calling the main function: {}", lua_opts.script_dir);
         let run_scan = main_func.unwrap().call_async::<_, mlua::Value>(mlua::Value::Nil).await;
         BAR.lock().unwrap().inc(1);
 
