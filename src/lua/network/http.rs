@@ -102,20 +102,22 @@ impl Sender {
         body: String,
         headers: HeaderMap,
     ) -> Result<HttpResponse, mlua::Error> {
-        let req_limit = *REQUESTS_LIMIT.lock().unwrap();
-        let mut req_sent = REQUESTS_SENT.lock().unwrap();
-        if *req_sent >= req_limit {
-            let sleep_time = *SLEEP_TIME.lock().unwrap();
-            let bar = BAR.lock().unwrap();
-            let msg = format!("The rate limit for requests has been reached. Sleeping for {} seconds...", sleep_time);
-            bar.println(&msg);
-            log::debug!("{}", msg);
-            std::thread::sleep(Duration::from_secs(sleep_time));
-            *req_sent = 1;
-            bar.println("Continuing...");
-            log::debug!("Resetting req_sent value to 1");
-        } else {
-            *req_sent += 1;
+        {
+            let req_limit = *REQUESTS_LIMIT.lock().unwrap();
+            let mut req_sent = REQUESTS_SENT.lock().unwrap();
+            if *req_sent >= req_limit {
+                let sleep_time = *SLEEP_TIME.lock().unwrap();
+                let bar = BAR.lock().unwrap();
+                let msg = format!("The rate limit for requests has been reached. Sleeping for {} seconds...", sleep_time);
+                bar.println(&msg);
+                log::debug!("{}", msg);
+                std::thread::sleep(Duration::from_secs(sleep_time));
+                *req_sent = 1;
+                bar.println("Continuing...");
+                log::debug!("Resetting req_sent value to 1");
+            } else {
+                *req_sent += 1;
+            }
         }
 
         let client = self.build_client().unwrap();
