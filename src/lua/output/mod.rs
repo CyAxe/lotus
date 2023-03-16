@@ -1,3 +1,3 @@
 pub mod cve;
-pub mod vuln;
 pub mod general;
+pub mod vuln;

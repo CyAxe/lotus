@@ -1,10 +1,10 @@
 use crate::cli::args::Opts;
 use crate::cli::input::{get_target_hosts, get_target_paths, get_target_urls};
 use crate::cli::logger::init_log;
-use crate::{show_msg, MessageLevel};
 use crate::CliErrors;
 use crate::Lotus;
 use crate::RequestOpts;
+use crate::{show_msg, MessageLevel};
 use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 
@@ -94,7 +94,10 @@ pub fn args_scan() -> ScanArgs {
             let paths = match get_target_paths(urls_vec.clone()) {
                 Ok(paths) => paths,
                 Err(err) => {
-                    show_msg(&format!("Failed to get target paths: {}", err), MessageLevel::Error);
+                    show_msg(
+                        &format!("Failed to get target paths: {}", err),
+                        MessageLevel::Error,
+                    );
                     vec![]
                 }
             };

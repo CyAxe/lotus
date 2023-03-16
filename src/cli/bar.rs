@@ -49,7 +49,7 @@ pub fn create_progress(bar: u64) {
 pub fn show_msg(message: &str, msglevel: MessageLevel) {
     let print_level = match msglevel {
         MessageLevel::Info => {
-            log::info!("{}",message);
+            log::info!("{}", message);
             format!("[{}]", Style::new().blue().apply_to("INFO"))
         }
         MessageLevel::Warn => {

@@ -46,14 +46,25 @@ impl Sender {
             timeout,
             redirects,
             proxy,
+            merge_headers: true,
         }
     }
 
-    fn build_client(&self) -> Result<reqwest::Client, reqwest::Error> {
-        let redirects = self.redirects;
-        match &self.proxy {
+    fn build_client(
+        &self,
+        timeout: u64,
+        headers: HeaderMap,
+        redirects: u32,
+        proxy: Option<String>,
+    ) -> Result<reqwest::Client, reqwest::Error> {
+        let proxy = if proxy.is_none(){
+            &self.proxy
+        } else {
+            &proxy
+        };
+        match proxy {
             Some(the_proxy) => Client::builder()
-                .timeout(Duration::from_secs(self.timeout))
+                .timeout(Duration::from_secs(timeout))
                 .redirect(redirect::Policy::custom(move |attempt| {
                     if attempt.previous().len() != redirects as usize {
                         attempt.follow()
@@ -61,13 +72,13 @@ impl Sender {
                         attempt.stop()
                     }
                 }))
-                .default_headers(self.headers.clone())
+                .default_headers(headers.clone())
                 .proxy(Proxy::all(the_proxy).unwrap())
                 .no_trust_dns()
                 .danger_accept_invalid_certs(true)
                 .build(),
             None => Client::builder()
-                .timeout(Duration::from_secs(self.timeout))
+                .timeout(Duration::from_secs(timeout))
                 .redirect(redirect::Policy::custom(move |attempt| {
                     if attempt.previous().len() == redirects as usize {
                         attempt.stop()
@@ -77,7 +88,7 @@ impl Sender {
                 }))
                 .no_proxy()
                 .no_trust_dns()
-                .default_headers(self.headers.clone())
+                .default_headers(headers.clone())
                 .danger_accept_invalid_certs(true)
                 .build(),
         }
@@ -99,8 +110,8 @@ impl Sender {
         &self,
         method: &str,
         url: String,
-        body: String,
-        headers: HeaderMap,
+        body: Option<String>,
+        request_option: Sender,
     ) -> Result<HttpResponse, mlua::Error> {
         {
             let req_limit = *REQUESTS_LIMIT.lock().unwrap();
@@ -108,7 +119,10 @@ impl Sender {
             if *req_sent >= req_limit {
                 let sleep_time = *SLEEP_TIME.lock().unwrap();
                 let bar = BAR.lock().unwrap();
-                let msg = format!("The rate limit for requests has been reached. Sleeping for {} seconds...", sleep_time);
+                let msg = format!(
+                    "The rate limit for requests has been reached. Sleeping for {} seconds...",
+                    sleep_time
+                );
                 bar.println(&msg);
                 log::debug!("{}", msg);
                 std::thread::sleep(Duration::from_secs(sleep_time));
@@ -120,12 +134,25 @@ impl Sender {
             }
         }
 
-        let client = self.build_client().unwrap();
+        let client = self
+            .build_client(
+                request_option.timeout,
+                request_option.headers.clone(),
+                request_option.redirects,
+                request_option.proxy,
+            )
+            .unwrap();
         let request = client
             .request(Method::from_bytes(method.as_bytes()).unwrap(), url.clone())
-            .headers(headers)
-            .body(body);
+            .headers(request_option.headers);
 
+        let request = {
+            if body.is_some() {
+                request.body(body.unwrap())
+            } else {
+                request
+            }
+        };
         let response = match request.send().await {
             Ok(resp) => {
                 let verbose_mode = *VERBOSE_MODE.lock().unwrap();
@@ -143,7 +170,10 @@ impl Sender {
 
                 let url = resp.url().to_string();
                 let status = resp.status().as_u16() as i32;
-                let body = resp.bytes().await.map(|b| String::from_utf8_lossy(&b).to_string());
+                let body = resp
+                    .bytes()
+                    .await
+                    .map(|b| String::from_utf8_lossy(&b).to_string());
                 match body {
                     Ok(body) => Ok(HttpResponse {
                         url,
