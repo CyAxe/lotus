@@ -1,8 +1,8 @@
 use mlua::UserData;
-use tealr::{mlu::FromToLua, TypeName};
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
 use std::collections::HashMap;
+use tealr::{mlu::FromToLua, TypeName};
 
 #[derive(Clone)]
 pub struct Sender {
@@ -18,7 +18,7 @@ pub struct MultiPart {
     pub content: String,
     pub filename: Option<String>,
     pub content_type: Option<String>,
-    pub headers: Option<HashMap<String, String>>
+    pub headers: Option<HashMap<String, String>>,
 }
 
 /// Adding OOP for http sender class
@@ -57,18 +57,28 @@ impl UserData for Sender {
             }
             let url = url.unwrap();
 
-            let multipart = request_option.get::<_, Option<HashMap<String, MultiPart>>>("multipart").unwrap_or_default();
-            let method = request_option.get::<_, Option<String>>("method")
-                .ok().flatten()
+            let multipart = request_option
+                .get::<_, Option<HashMap<String, MultiPart>>>("multipart")
+                .unwrap_or_default();
+            let method = request_option
+                .get::<_, Option<String>>("method")
+                .ok()
+                .flatten()
                 .unwrap_or_else(|| "GET".to_string());
-            let timeout = request_option.get::<_, Option<u64>>("timeout")
-                .ok().flatten()
+            let timeout = request_option
+                .get::<_, Option<u64>>("timeout")
+                .ok()
+                .flatten()
                 .unwrap_or_else(|| this.timeout);
-            let proxy = request_option.get::<_, Option<String>>("proxy")
-                .ok().flatten()
+            let proxy = request_option
+                .get::<_, Option<String>>("proxy")
+                .ok()
+                .flatten()
                 .or_else(|| this.proxy.clone());
-            let redirects = request_option.get::<_, Option<u32>>("redirect")
-                .ok().flatten()
+            let redirects = request_option
+                .get::<_, Option<u32>>("redirect")
+                .ok()
+                .flatten()
                 .unwrap_or_else(|| this.redirects);
             let headers = match request_option.get::<_, Option<HashMap<String, String>>>("headers")
             {
@@ -98,7 +108,9 @@ impl UserData for Sender {
                 redirects,
                 merge_headers: true,
             };
-            let resp = this.send(&method, url, body, multipart,current_request).await;
+            let resp = this
+                .send(&method, url, body, multipart, current_request)
+                .await;
             if resp.is_ok() {
                 Ok(resp.unwrap())
             } else {
