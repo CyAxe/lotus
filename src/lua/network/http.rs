@@ -53,7 +53,7 @@ impl Sender {
     fn create_form(&self, multipart: HashMap<String, MultiPart>) -> Form {
         let mut form = Form::new();
         for (key, part) in multipart {
-            let mut builder = Part::text(part.name);
+            let mut builder = Part::text(part.content);
             if let Some(filename) = part.filename {
                 builder = builder.file_name(filename);
             }
