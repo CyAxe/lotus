@@ -133,6 +133,7 @@ impl Lotus {
                 .await;
             },
             self.workers,
-        ).await;
+        )
+        .await;
     }
 }

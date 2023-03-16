@@ -7,7 +7,7 @@ pub struct GeneralReport {
     pub description: Option<String>,
     pub target: Option<String>,
     pub risk: Option<String>,
-    pub matchers: Vec<serde_json::Value>
+    pub matchers: Vec<serde_json::Value>,
 }
 
 impl UserData for GeneralReport {
@@ -29,7 +29,7 @@ impl UserData for GeneralReport {
             this.description = Some(description);
             Ok(())
         });
-        methods.add_method_mut("setMatchers", |_, this, matching_data: mlua::Value|{
+        methods.add_method_mut("setMatchers", |_, this, matching_data: mlua::Value| {
             let matching_data_json = serde_json::to_value(&matching_data).unwrap();
             this.matchers.push(matching_data_json);
             Ok(())
@@ -44,7 +44,7 @@ impl GeneralReport {
             target: None,
             description: None,
             risk: None,
-            matchers: vec![]
+            matchers: vec![],
         }
     }
 }

@@ -1,3 +1,6 @@
+use crate::lua::runtime::{
+    encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT,
+};
 use crate::{
     cli::bar::BAR,
     lua::{
@@ -7,7 +10,6 @@ use crate::{
     },
     RequestOpts, ScanTypes,
 };
-use crate::lua::runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT};
 use mlua::Lua;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -77,7 +79,6 @@ impl LuaLoader {
     pub async fn run_scan<'a>(&self, lua_opts: LuaOptions<'_>) -> Result<(), mlua::Error> {
         let lua = Lua::new();
 
-        // set lua globals
         lua.globals()
             .set("SCRIPT_PATH", lua_opts.script_dir)
             .unwrap();
@@ -100,6 +101,7 @@ impl LuaLoader {
         };
 
         // execute script code
+        log::debug!("Executing Code: {}", lua_opts.script_dir);
         let run_code = lua.load(lua_opts.script_code).exec_async().await;
         if let Err(e) = run_code {
             let bar = BAR.lock().unwrap();
@@ -118,7 +120,11 @@ impl LuaLoader {
             return Ok(());
         }
 
-        let run_scan = main_func.unwrap().call_async::<_, mlua::Value>(mlua::Value::Nil).await;
+        log::debug!("Calling the main function: {}", lua_opts.script_dir);
+        let run_scan = main_func
+            .unwrap()
+            .call_async::<_, mlua::Value>(mlua::Value::Nil)
+            .await;
         BAR.lock().unwrap().inc(1);
 
         if let Err(e) = run_scan {
@@ -133,15 +139,13 @@ impl LuaLoader {
                 let report_count = script_report.reports.len();
                 let log_message = format!(
                     "The script in directory [{}] generated {} report(s):\n\n{}\n\n",
-                    lua_opts.script_dir,
-                    report_count,
-                    results
+                    lua_opts.script_dir, report_count, results
                 );
                 log::debug!("{}", log_message);
                 self.write_report(&results);
             }
         }
 
-    Ok(())
+        Ok(())
     }
 }

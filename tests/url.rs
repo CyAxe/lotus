@@ -9,7 +9,12 @@ fn test_change_urlquery() {
     let payload = "new_value";
     let expected_result = [("key1", "new_value"), ("key2", "new_value")]
         .iter()
-        .map(|(k, v)| (k.to_string(), format!("https://example.com/path?{}={}", k, v)))
+        .map(|(k, v)| {
+            (
+                k.to_string(),
+                format!("https://example.com/path?{}={}", k, v),
+            )
+        })
         .collect::<HashMap<String, String>>();
 
     let result = http_msg.change_urlquery(payload, true);

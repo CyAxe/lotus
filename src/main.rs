@@ -30,7 +30,10 @@ use structopt::StructOpt;
 async fn main() -> Result<(), std::io::Error> {
     match Opts::from_args() {
         Opts::SCAN { .. } => run_scan().await,
-        Opts::NEW { scan_type, file_name } => {
+        Opts::NEW {
+            scan_type,
+            file_name,
+        } => {
             new_args(scan_type, file_name);
             std::process::exit(0);
         }
@@ -40,9 +43,18 @@ async fn main() -> Result<(), std::io::Error> {
 async fn run_scan() -> Result<(), std::io::Error> {
     let opts = args_scan();
     let fuzz_workers = opts.fuzz_workers;
-    show_msg(&format!("URLS: {}", opts.target_data.urls.len()), MessageLevel::Info);
-    show_msg(&format!("HOSTS: {}", opts.target_data.hosts.len()), MessageLevel::Info);
-    show_msg(&format!("PATHS: {}", opts.target_data.paths.len()), MessageLevel::Info);
+    show_msg(
+        &format!("URLS: {}", opts.target_data.urls.len()),
+        MessageLevel::Info,
+    );
+    show_msg(
+        &format!("HOSTS: {}", opts.target_data.hosts.len()),
+        MessageLevel::Info,
+    );
+    show_msg(
+        &format!("PATHS: {}", opts.target_data.paths.len()),
+        MessageLevel::Info,
+    );
     // Open two threads for URL/HOST scanning
     create_progress(opts.target_data.urls.len() as u64);
     {

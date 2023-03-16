@@ -79,7 +79,7 @@ pub fn valid_scripts(
         }
         2 => {
             test_target_url = Some("https://example.com");
-        },
+        }
         3 => {}
         _ => {}
     }

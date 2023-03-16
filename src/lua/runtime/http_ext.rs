@@ -2,8 +2,8 @@ use crate::{
     lua::{
         output::{
             cve::CveReport,
+            general::GeneralReport,
             vuln::{AllReports, OutReport},
-            general::GeneralReport
         },
         parsing::url::HttpMessage,
     },

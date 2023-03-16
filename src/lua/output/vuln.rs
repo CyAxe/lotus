@@ -12,10 +12,7 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use crate::lua::output::{
-    cve::CveReport,
-    general::GeneralReport
-};
+use crate::lua::output::{cve::CveReport, general::GeneralReport};
 use mlua::UserData;
 use serde::{Deserialize, Serialize};
 
@@ -24,7 +21,7 @@ use serde::{Deserialize, Serialize};
 pub enum LotusReport {
     CVE(CveReport),
     VULN(OutReport),
-    GENERAL(GeneralReport)
+    GENERAL(GeneralReport),
 }
 
 #[derive(Clone, Deserialize, Serialize)]

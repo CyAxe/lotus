@@ -22,11 +22,7 @@ pub struct HttpMessage {
 }
 
 impl HttpMessage {
-    pub fn change_urlquery(
-        &self,
-        payload: &str,
-        remove_content: bool,
-    ) -> HashMap<String, String> {
+    pub fn change_urlquery(&self, payload: &str, remove_content: bool) -> HashMap<String, String> {
         let mut scan_params = HashMap::with_capacity(16);
         let mut result = HashMap::with_capacity(16);
 
