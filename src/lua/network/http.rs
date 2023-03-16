@@ -162,11 +162,11 @@ impl Sender {
                     log::debug!("{}", msg);
                 }
 
-                let mut resp_headers = HashMap::new();
-                resp.headers().iter().for_each(|(name, value)| {
-                    let value = String::from_utf8_lossy(value.as_bytes()).to_string();
-                    resp_headers.insert(name.to_string(), value);
-                });
+                let resp_headers = resp
+                    .headers()
+                    .iter()
+                    .map(|(name, value)| (name.to_string(), String::from_utf8_lossy(value.as_bytes()).to_string()))
+                    .collect::<HashMap<String, String>>();
 
                 let url = resp.url().to_string();
                 let status = resp.status().as_u16() as i32;
