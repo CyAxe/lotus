@@ -13,10 +13,14 @@
 // and limitations under the License.
 
 use crate::BAR;
-use reqwest::{header::{HeaderMap, HeaderName, HeaderValue},multipart::{Form, Part}, redirect, Client, Method, Proxy};
+use reqwest::{
+    header::{HeaderMap, HeaderName, HeaderValue},
+    multipart::{Form, Part},
+    redirect, Client, Method, Proxy,
+};
 use std::collections::HashMap;
 mod http_lua_api;
-pub use http_lua_api::{Sender, MultiPart};
+pub use http_lua_api::{MultiPart, Sender};
 use lazy_static::lazy_static;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -81,11 +85,7 @@ impl Sender {
         redirects: u32,
         proxy: Option<String>,
     ) -> Result<reqwest::Client, reqwest::Error> {
-        let proxy = if proxy.is_none(){
-            &self.proxy
-        } else {
-            &proxy
-        };
+        let proxy = if proxy.is_none() { &self.proxy } else { &proxy };
         match proxy {
             Some(the_proxy) => Client::builder()
                 .timeout(Duration::from_secs(timeout))
@@ -147,7 +147,10 @@ impl Sender {
                     "The rate limit for requests has been reached. Sleeping for {} seconds...",
                     sleep_time
                 ));
-                log::debug!("The rate limit for requests has been reached. Sleeping for {} seconds...", sleep_time);
+                log::debug!(
+                    "The rate limit for requests has been reached. Sleeping for {} seconds...",
+                    sleep_time
+                );
                 std::thread::sleep(Duration::from_secs(sleep_time));
                 *req_sent = 1;
                 BAR.lock().unwrap().println("Continuing...");
@@ -195,7 +198,12 @@ impl Sender {
                 let resp_headers = resp
                     .headers()
                     .iter()
-                    .map(|(name, value)| (name.to_string(), String::from_utf8_lossy(value.as_bytes()).to_string()))
+                    .map(|(name, value)| {
+                        (
+                            name.to_string(),
+                            String::from_utf8_lossy(value.as_bytes()).to_string(),
+                        )
+                    })
                     .collect::<HashMap<String, String>>();
 
                 let url = resp.url().to_string();
