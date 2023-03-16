@@ -1,4 +1,5 @@
 use mlua::UserData;
+use tealr::{mlu::FromToLua, TypeName};
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
 use std::collections::HashMap;
@@ -10,6 +11,14 @@ pub struct Sender {
     pub timeout: u64,
     pub redirects: u32,
     pub merge_headers: bool,
+}
+
+#[derive(TypeName, FromToLua)]
+pub struct MultiPart {
+    pub name: String,
+    pub filename: Option<String>,
+    pub content_type: Option<String>,
+    pub headers: Option<HashMap<String, String>>
 }
 
 /// Adding OOP for http sender class
@@ -47,6 +56,8 @@ impl UserData for Sender {
                 ));
             }
             let url = url.unwrap();
+
+            let multipart = request_option.get::<_, Option<HashMap<String, MultiPart>>>("multipart").unwrap_or_default();
             let method = request_option.get::<_, Option<String>>("method")
                 .ok().flatten()
                 .unwrap_or_else(|| "GET".to_string());
@@ -87,7 +98,7 @@ impl UserData for Sender {
                 redirects,
                 merge_headers: true,
             };
-            let resp = this.send(&method, url, body, current_request).await;
+            let resp = this.send(&method, url, body, multipart,current_request).await;
             if resp.is_ok() {
                 Ok(resp.unwrap())
             } else {

@@ -13,10 +13,10 @@
 // and limitations under the License.
 
 use crate::BAR;
-use reqwest::{header::HeaderMap, redirect, Client, Method, Proxy};
+use reqwest::{header::{HeaderMap, HeaderName, HeaderValue},multipart::{Form, Part}, redirect, Client, Method, Proxy};
 use std::collections::HashMap;
 mod http_lua_api;
-pub use http_lua_api::Sender;
+pub use http_lua_api::{Sender, MultiPart};
 use lazy_static::lazy_static;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -50,6 +50,30 @@ impl Sender {
         }
     }
 
+    fn create_form(&self, multipart: HashMap<String, MultiPart>) -> Form {
+        let mut form = Form::new();
+        for (key, part) in multipart {
+            let mut builder = Part::text(part.name);
+            if let Some(filename) = part.filename {
+                builder = builder.file_name(filename);
+            }
+            if let Some(content_type) = part.content_type {
+                builder = builder.mime_str(&content_type).unwrap();
+            }
+            if let Some(headers) = part.headers {
+                let mut current_headers = HeaderMap::new();
+                headers.iter().for_each(|(name, value)| {
+                    current_headers.insert(
+                        HeaderName::from_bytes(name.as_bytes()).unwrap(),
+                        HeaderValue::from_bytes(value.as_bytes()).unwrap(),
+                    );
+                });
+                builder = builder.headers(current_headers);
+            }
+            form = form.part(key, builder);
+        }
+        form
+    }
     fn build_client(
         &self,
         timeout: u64,
@@ -111,6 +135,7 @@ impl Sender {
         method: &str,
         url: String,
         body: Option<String>,
+        multipart: Option<HashMap<String, MultiPart>>,
         request_option: Sender,
     ) -> Result<HttpResponse, mlua::Error> {
         {
@@ -118,16 +143,14 @@ impl Sender {
             let mut req_sent = REQUESTS_SENT.lock().unwrap();
             if *req_sent >= req_limit {
                 let sleep_time = *SLEEP_TIME.lock().unwrap();
-                let bar = BAR.lock().unwrap();
-                let msg = format!(
+                BAR.lock().unwrap().println(&format!(
                     "The rate limit for requests has been reached. Sleeping for {} seconds...",
                     sleep_time
-                );
-                bar.println(&msg);
-                log::debug!("{}", msg);
+                ));
+                log::debug!("The rate limit for requests has been reached. Sleeping for {} seconds...", sleep_time);
                 std::thread::sleep(Duration::from_secs(sleep_time));
                 *req_sent = 1;
-                bar.println("Continuing...");
+                BAR.lock().unwrap().println("Continuing...");
                 log::debug!("Resetting req_sent value to 1");
             } else {
                 *req_sent += 1;
@@ -151,6 +174,13 @@ impl Sender {
                 request.body(body.unwrap())
             } else {
                 request
+            }
+        };
+        let request = {
+            if multipart.is_none() {
+                request
+            } else {
+                request.multipart(self.create_form(multipart.unwrap()))
             }
         };
         let response = match request.send().await {
