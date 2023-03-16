@@ -15,7 +15,7 @@ pub struct Sender {
 
 #[derive(TypeName, FromToLua)]
 pub struct MultiPart {
-    pub name: String,
+    pub content: String,
     pub filename: Option<String>,
     pub content_type: Option<String>,
     pub headers: Option<HashMap<String, String>>
