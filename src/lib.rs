@@ -24,7 +24,7 @@ use lua::{
     loader::{LuaOptions, LuaRunTime},
     parsing::files::filename_to_string,
     run::LuaLoader,
-    threads::runner::{iter_futures, iter_futures_tuple},
+    threads::runner::iter_futures,
 };
 use reqwest::header::HeaderMap;
 
@@ -103,7 +103,7 @@ impl Lotus {
             |script_data| async move {
                 let lotus_loader = Arc::clone(&lotus_obj);
                 let scan_type = Arc::clone(&scan_type);
-                iter_futures_tuple(
+                iter_futures(
                     loaded_scripts,
                     |(script_code, script_name)| async move {
                         let lua_opts = LuaOptions {
