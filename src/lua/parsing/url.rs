@@ -56,28 +56,24 @@ impl HttpMessage {
         result
     }
 
-    pub fn set_urlvalue(&self, param: &str, payload: &str) -> String {
-        let mut final_params = HashMap::with_capacity(16);
-
-        for (key, value) in self.url.query_pairs() {
-            if key == param {
-                let mut new_value = String::with_capacity(value.len() + payload.len());
-                new_value.push_str(value.as_ref().to_string().as_str());
-                new_value.push_str(payload);
-                final_params.insert(key.to_string(), new_value);
-            } else {
-                final_params.insert(key.to_string(), value.to_string());
-            }
-        }
-
-        let mut new_url = self.url.clone();
-        new_url.set_query(None);
-
-        for (key, value) in final_params.iter() {
-            new_url.query_pairs_mut().append_pair(key, value);
-        }
-
-        new_url.as_str().to_string()
+    pub fn set_urlvalue(&self, param: &str, payload: &str, remove_content: bool) -> String {
+        let mut url = self.url.clone();
+        let new_query = url.query_pairs()
+            .fold(String::new(), |mut acc, (key, value)| {
+                if key == param {
+                    if remove_content {
+                        acc += &format!("{}={}", key, payload);
+                    } else {
+                        acc += &format!("{}={}", key, value + payload);
+                    }
+                } else {
+                    acc += &format!("{}={}", key, value.to_string());
+                }
+                acc += "&";
+                acc
+            });
+        url.set_query(Some(&new_query[..new_query.len() - 1]));
+        url.as_str().to_string()
     }
 
     pub fn urljoin(&self, path: &str) -> String {

@@ -4,8 +4,8 @@ use std::collections::HashMap;
 
 impl UserData for HttpMessage {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("setParam", |_, this, (param, payload): (String, String)| {
-            Ok(this.set_urlvalue(&param, &payload))
+        methods.add_method("setParam", |_, this, (param, payload,remove_content): (String, String, bool)| {
+            Ok(this.set_urlvalue(&param, &payload, remove_content))
         });
         methods.add_method(
             "setAllParams",
