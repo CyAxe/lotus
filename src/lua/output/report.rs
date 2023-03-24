@@ -14,16 +14,72 @@
 
 use mlua::{UserData, LuaSerdeExt};
 use serde::{Deserialize, Serialize};
+use serde_json::{Value, Map};
+use console::style;
+
+use crate::cli::bar::BAR;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AllReports {
-    pub reports: Vec<serde_json::Value>,
+    pub reports: Vec<Value>,
+}
+
+fn format_report(report: &Value) -> String {
+    match report {
+        Value::Object(map) => {
+            let mut report_str = String::from("{");
+            for (key, value) in map.iter() {
+                if let Some(val_obj) = value.as_object() {
+                    report_str.push_str(&format_table(key, val_obj));
+                } else {
+                    report_str.push_str(&format!(
+                        "\n  {} {}: {}\n",
+                        style("[#]").blue(),
+                        style(key).bold(),
+                        style(value.to_string()).bold()
+                    ));
+                }
+            }
+            report_str.push_str("}\n\n");
+            report_str
+        }
+        _ => "".to_string(),
+    }
+}
+
+fn format_table(key: &str, val_obj: &Map<String, Value>) -> String {
+    let mut table_str = format!("\n  [📂 {}:\n", style(key).bold().green());
+    for (inner_key, inner_value) in val_obj.iter() {
+        if let Some(inner_obj) = inner_value.as_object() {
+            table_str.push_str(&format_table(inner_key, inner_obj));
+        } else {
+            let val_str = if inner_value.is_boolean() {
+                if inner_value.as_bool().unwrap() {
+                    "✅ true".to_owned()
+                } else {
+                    "❌ false".to_owned()
+                }
+            } else {
+                inner_value.to_string()
+            };
+            table_str.push_str(&format!(
+                "    | → {}: {}\n",
+                style(inner_key).bold(),
+                val_str
+            ));
+        }
+    }
+    table_str.push_str("  ]<|\n");
+    table_str
 }
 
 impl UserData for AllReports {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut("add", |c_lua, this, the_report: mlua::Value| {
             let the_report = c_lua.from_value(the_report).unwrap();
+            {
+                BAR.lock().unwrap().println(format_report(&the_report));
+            };
             this.reports.push(the_report);
             Ok(())
         });
