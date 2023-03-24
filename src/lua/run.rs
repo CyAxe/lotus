@@ -6,7 +6,7 @@ use crate::{
     lua::{
         loader::{LuaOptions, LuaRunTime},
         network::http::Sender,
-        output::vuln::AllReports,
+        output::report::AllReports,
     },
     RequestOpts, ScanTypes,
 };

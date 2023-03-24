@@ -1,7 +1,6 @@
 use crate::{
     lua::{
         loader::is_match,
-        output::{cve::CveReport, vuln::OutReport},
         parsing::{
             html::{css_selector, html_parse, html_search},
             text::ResponseMatcher,
@@ -10,7 +9,6 @@ use crate::{
     },
     LuaRunTime, BAR,
 };
-use console::Style;
 use mlua::ExternalError;
 use std::sync::{Arc, Mutex};
 
@@ -22,82 +20,6 @@ pub trait UtilsEXT {
 
 impl UtilsEXT for LuaRunTime<'_> {
     fn add_printfunc(&self) {
-        self.lua
-            .globals()
-            .set(
-                "print_cve_report",
-                self.lua
-                    .create_function(move |_, the_report: CveReport| {
-                        let good_msg = format!("[{}]", Style::new().green().apply_to("+"));
-                        let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
-                        let report_msg = format!(
-                            "
-{GOOD} {NAME} on: {URL}
-{INFO} SCAN TYPE: CVE
-{INFO} Description: {Description}
-{INFO} Risk: {RISK}
-{INFO} Matching Pattern: {MATCHING}
-#--------------------------------------------------#
-
-                                     ",
-                            GOOD = good_msg,
-                            INFO = info_msg,
-                            NAME = the_report.name.unwrap(),
-                            URL = the_report.url.unwrap(),
-                            Description = the_report.description.unwrap(),
-                            RISK = the_report.risk.unwrap(),
-                            MATCHING = format!("{:?}", the_report.matchers),
-                        );
-                        {
-                            BAR.lock().unwrap().println(report_msg)
-                        };
-                        Ok(())
-                    })
-                    .unwrap(),
-            )
-            .unwrap();
-        self.lua
-            .globals()
-            .set(
-                "print_vuln_report",
-                self.lua
-                    .create_function(move |_, the_report: OutReport| {
-                        let good_msg = format!("[{}]", Style::new().green().apply_to("+"));
-                        let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
-                        let report_msg = format!(
-                            "
-{GOOD} {NAME} on: {URL}
-{INFO} SCAN TYPE: VULN
-{INFO} Description: {Description}
-{INFO} Vulnerable Parameter: {PARAM}
-{INFO} Risk: {RISK}
-{INFO} Used Payload: {ATTACK}
-{INFO} Matching Pattern: {MATCHING}
-#--------------------------------------------------#
-
-                                     ",
-                            GOOD = good_msg,
-                            INFO = info_msg,
-                            NAME = the_report.name.unwrap(),
-                            URL = the_report.url.unwrap(),
-                            Description = the_report.description.unwrap(),
-                            PARAM = the_report.param.unwrap(),
-                            RISK = the_report.risk.unwrap(),
-                            ATTACK = the_report.attack.unwrap(),
-                            MATCHING = format!(
-                                "{}",
-                                Style::new().on_red().apply_to(the_report.evidence.unwrap())
-                            ),
-                        );
-                        {
-                            BAR.lock().unwrap().println(report_msg)
-                        };
-                        Ok(())
-                    })
-                    .unwrap(),
-            )
-            .unwrap();
-
         self.lua
             .globals()
             .set(

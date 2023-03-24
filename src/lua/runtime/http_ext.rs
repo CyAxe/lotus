@@ -1,10 +1,6 @@
 use crate::{
     lua::{
-        output::{
-            cve::CveReport,
-            general::GeneralReport,
-            vuln::{AllReports, OutReport},
-        },
+        output::report::AllReports,
         parsing::url::HttpMessage,
     },
     CliErrors, LuaRunTime,
@@ -150,18 +146,6 @@ impl HTTPEXT for LuaRunTime<'_> {
                     reports: Vec::new(),
                 },
             )
-            .unwrap();
-        self.lua
-            .globals()
-            .set("VulnReport", OutReport::init())
-            .unwrap();
-        self.lua
-            .globals()
-            .set("GeneralReport", GeneralReport::init())
-            .unwrap();
-        self.lua
-            .globals()
-            .set("CveReport", CveReport::init())
             .unwrap();
     }
 }
