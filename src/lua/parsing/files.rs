@@ -12,18 +12,13 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use log::{debug, error};
 use std::fs::File;
-use std::io::Read;
+use std::io::{BufReader,Read};
 
 pub fn filename_to_string(s: &str) -> Result<String, std::io::Error> {
-    let file = File::open(s);
-    debug!("READING {:?}", s);
-    if file.is_err() {
-        error!("READING ERROR: {:?}", s);
-        return Err(file.unwrap_err());
-    }
+    let file = File::open(s)?;
+    let mut buf_reader = BufReader::new(file);
     let mut s = String::new();
-    file.unwrap().read_to_string(&mut s)?;
+    buf_reader.read_to_string(&mut s)?;
     Ok(s)
 }
