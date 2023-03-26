@@ -90,10 +90,6 @@ impl Lotus {
             ScanTypes::PATHS => valid_scripts(get_scripts(self.script_path.clone()), 3),
             _ => valid_scripts(get_scripts(self.script_path.clone()), 2),
         };
-        if self.output.is_none() {
-            show_msg("Output argument is missing", MessageLevel::Error);
-            std::process::exit(1);
-        }
         let lotus_obj = Arc::new(LuaLoader::new(
             request_option.clone(),
             self.output.clone(),
