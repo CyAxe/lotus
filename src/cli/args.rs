@@ -3,6 +3,7 @@ use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use serde_json::Value;
 use structopt::StructOpt;
 
 fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
@@ -30,6 +31,11 @@ fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
             );
         });
     Ok(user_headers)
+}
+
+fn get_env_vars(env_vars_json: &str) -> Result<Value, serde_json::Error> {
+    let parsed_vars = serde_json::from_str(env_vars_json)?;
+    Ok(parsed_vars)
 }
 
 fn get_script_type(script_type: &str) -> Result<ScriptType, CliErrors> {
@@ -165,5 +171,7 @@ pub enum Opts {
             help = "Exit after X number of script errors"
         )]
         exit_after: i32,
+        #[structopt(long = "env-vars",parse(try_from_str = get_env_vars),default_value="{}",help = "Set Global Vars for scripts")]
+        env_vars: Value
     },
 }

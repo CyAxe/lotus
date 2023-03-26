@@ -57,6 +57,7 @@ pub fn args_scan() -> ScanArgs {
             fuzz_workers,
             verbose,
             is_request,
+            env_vars
         } => {
             // setup logger
             init_log(log).unwrap();
@@ -72,6 +73,7 @@ pub fn args_scan() -> ScanArgs {
                 workers,
                 script_workers: scripts_workers,
                 stop_after: Arc::new(Mutex::new(1)),
+                env_vars
             };
             let urls = get_target_urls(urls);
             if urls.is_err() {

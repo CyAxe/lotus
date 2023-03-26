@@ -28,6 +28,7 @@ pub struct LuaOptions<'a> {
     pub fuzz_workers: usize,
     pub script_code: &'a str,
     pub script_dir: &'a str,
+    pub env_vars: serde_json::Value
 }
 
 /// check if the regex pattern is matching with this string or not without get the matched parts

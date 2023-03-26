@@ -1,14 +1,12 @@
 use crate::{
     lua::{
         output::report::AllReports,
-        parsing::url::HttpMessage,
+        parsing::{url::HttpMessage, files::filename_to_string},
     },
     CliErrors, LuaRunTime,
 };
 use log::{debug, error, info, warn};
 use mlua::ExternalError;
-use std::fs::File;
-use std::io::prelude::*;
 use std::path::Path;
 use std::time::Duration;
 use std::collections::HashMap;
@@ -111,9 +109,7 @@ impl HTTPEXT for LuaRunTime<'_> {
                 self.lua
                     .create_function(|_ctx, file_path: String| {
                         if Path::new(&file_path).exists() {
-                            let mut file = File::open(&file_path)?;
-                            let mut file_content = String::new();
-                            file.read_to_string(&mut file_content)?;
+                            let file_content = filename_to_string(&file_path)?;
                             Ok(file_content)
                         } else {
                             Err(CliErrors::ReadingError.to_lua_err())
