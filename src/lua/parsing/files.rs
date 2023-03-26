@@ -13,7 +13,7 @@
 // and limitations under the License.
 
 use std::fs::File;
-use std::io::{BufReader,Read};
+use std::io::{BufReader, Read};
 
 pub fn filename_to_string(s: &str) -> Result<String, std::io::Error> {
     let file = File::open(s)?;

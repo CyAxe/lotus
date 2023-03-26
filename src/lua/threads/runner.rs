@@ -3,7 +3,7 @@ use futures::Future;
 use futures::{channel::mpsc, sink::SinkExt};
 use tokio::sync::RwLock;
 
-pub async fn iter_futures<F, T: Clone ,Fut>(target_iter: Vec<T>, target_function: F, workers: usize)
+pub async fn iter_futures<F, T: Clone, Fut>(target_iter: Vec<T>, target_function: F, workers: usize)
 where
     F: FnOnce(T) -> Fut + Clone,
     Fut: Future<Output = ()>,

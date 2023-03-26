@@ -12,10 +12,10 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use mlua::{UserData, LuaSerdeExt};
-use serde::{Deserialize, Serialize};
-use serde_json::{Value, Map};
 use console::style;
+use mlua::{LuaSerdeExt, UserData};
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 
 use crate::cli::bar::BAR;
 

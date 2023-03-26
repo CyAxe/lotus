@@ -1,15 +1,15 @@
 use crate::{
     lua::{
         output::report::AllReports,
-        parsing::{url::HttpMessage, files::filename_to_string},
+        parsing::{files::filename_to_string, url::HttpMessage},
     },
     CliErrors, LuaRunTime,
 };
 use log::{debug, error, info, warn};
 use mlua::ExternalError;
+use std::collections::HashMap;
 use std::path::Path;
 use std::time::Duration;
-use std::collections::HashMap;
 use tokio::time::sleep;
 use url::Url;
 
@@ -67,16 +67,22 @@ impl HTTPEXT for LuaRunTime<'_> {
                 Ok(())
             })
             .unwrap();
-        let headers_converter = self.lua.create_function(|_, headers_txt: String| {
-            let mut result = HashMap::new();
-            for line in headers_txt.lines() {
-                if let Some((name, value)) = line.split_once(":") {
-                    result.insert(name.trim().to_string(), value.trim().to_string());
+        let headers_converter = self
+            .lua
+            .create_function(|_, headers_txt: String| {
+                let mut result = HashMap::new();
+                for line in headers_txt.lines() {
+                    if let Some((name, value)) = line.split_once(":") {
+                        result.insert(name.trim().to_string(), value.trim().to_string());
+                    }
                 }
-            }
-            Ok(result)
-        }).unwrap();
-        self.lua.globals().set("make_headers", headers_converter).unwrap();
+                Ok(result)
+            })
+            .unwrap();
+        self.lua
+            .globals()
+            .set("make_headers", headers_converter)
+            .unwrap();
         self.lua
             .globals()
             .set(

@@ -1,9 +1,9 @@
 use crate::cli::errors::CliErrors;
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use serde_json::Value;
 use structopt::StructOpt;
 
 fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
@@ -172,6 +172,6 @@ pub enum Opts {
         )]
         exit_after: i32,
         #[structopt(long = "env-vars",parse(try_from_str = get_env_vars),default_value="{}",help = "Set Global Vars for scripts")]
-        env_vars: Value
+        env_vars: Value,
     },
 }

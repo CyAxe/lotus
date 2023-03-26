@@ -81,8 +81,7 @@ impl LuaLoader {
         let lua = Lua::new();
         let env_vars: mlua::Value = lua.to_value(&lua_opts.env_vars).unwrap();
 
-        lua.globals()
-            .set("ENV", env_vars).unwrap();
+        lua.globals().set("ENV", env_vars).unwrap();
         lua.globals()
             .set("SCRIPT_PATH", lua_opts.script_dir)
             .unwrap();

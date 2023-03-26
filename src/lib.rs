@@ -68,7 +68,7 @@ pub struct Lotus {
     pub script_workers: usize,
     /// Stop After X of errors
     pub stop_after: Arc<Mutex<i32>>,
-    pub env_vars: serde_json::Value
+    pub env_vars: serde_json::Value,
 }
 
 impl Lotus {
@@ -90,10 +90,7 @@ impl Lotus {
             ScanTypes::PATHS => valid_scripts(get_scripts(self.script_path.clone()), 3),
             _ => valid_scripts(get_scripts(self.script_path.clone()), 2),
         };
-        let lotus_obj = Arc::new(LuaLoader::new(
-            request_option.clone(),
-            self.output.clone(),
-        ));
+        let lotus_obj = Arc::new(LuaLoader::new(request_option.clone(), self.output.clone()));
         let scan_type = Arc::new(scan_type);
         iter_futures(
             target_data,
@@ -109,7 +106,7 @@ impl Lotus {
                             fuzz_workers,
                             script_code: &script_code,
                             script_dir: &script_name,
-                            env_vars: self.env_vars.clone()
+                            env_vars: self.env_vars.clone(),
                         };
                         if *self.stop_after.lock().unwrap() == exit_after {
                             log::debug!("Ignoring scripts");

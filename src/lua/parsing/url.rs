@@ -58,7 +58,8 @@ impl HttpMessage {
 
     pub fn set_urlvalue(&self, param: &str, payload: &str, remove_content: bool) -> String {
         let mut url = self.url.clone();
-        let new_query = url.query_pairs()
+        let new_query = url
+            .query_pairs()
             .fold(String::new(), |mut acc, (key, value)| {
                 if key == param {
                     if remove_content {
