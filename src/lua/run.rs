@@ -10,7 +10,7 @@ use crate::{
     },
     RequestOpts, ScanTypes,
 };
-use mlua::Lua;
+use mlua::{Lua, LuaSerdeExt};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
@@ -79,7 +79,10 @@ impl LuaLoader {
     /// * `target_type` - the input type if its HOST or URL
     pub async fn run_scan<'a>(&self, lua_opts: LuaOptions<'_>) -> Result<(), mlua::Error> {
         let lua = Lua::new();
+        let env_vars: mlua::Value = lua.to_value(&lua_opts.env_vars).unwrap();
 
+        lua.globals()
+            .set("ENV", env_vars).unwrap();
         lua.globals()
             .set("SCRIPT_PATH", lua_opts.script_dir)
             .unwrap();
