@@ -95,7 +95,7 @@ impl Lotus {
         }
         let lotus_obj = Arc::new(LuaLoader::new(
             request_option.clone(),
-            self.output.as_ref().unwrap().to_str().unwrap().to_string(),
+            self.output.clone(),
         ));
         let scan_type = Arc::new(scan_type);
         iter_futures(

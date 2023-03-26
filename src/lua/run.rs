@@ -13,10 +13,11 @@ use crate::{
 use mlua::Lua;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::path::PathBuf;
 
 #[derive(Clone)]
 pub struct LuaLoader {
-    output_dir: String,
+    output_dir: Option<PathBuf>,
     request: RequestOpts,
 }
 
@@ -24,7 +25,7 @@ pub struct LuaLoader {
 /// * `request` - Request Options
 /// * `output_dir` - output file
 impl LuaLoader {
-    pub fn new(request: RequestOpts, output_dir: String) -> LuaLoader {
+    pub fn new(request: RequestOpts, output_dir: Option<PathBuf>) -> LuaLoader {
         Self {
             output_dir,
             request,
@@ -67,7 +68,7 @@ impl LuaLoader {
             .write(true)
             .append(true)
             .create(true)
-            .open(&self.output_dir)
+            .open(&self.output_dir.as_ref().unwrap())
             .expect("Could not open file")
             .write_all(format!("{}\n", results).as_str().as_bytes())
             .expect("Could not write to file");
@@ -142,7 +143,9 @@ impl LuaLoader {
                     lua_opts.script_dir, report_count, results
                 );
                 log::debug!("{}", log_message);
-                self.write_report(&results);
+                if self.output_dir.is_some() {
+                    self.write_report(&results);
+                }
             }
         }
 
