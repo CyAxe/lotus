@@ -38,12 +38,10 @@ pub fn create_progress(bar: u64) {
     bar_obj.set_length(bar + bar_length);
     bar_obj.set_style(
         ProgressStyle::default_bar()
-            .template(
-                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}",
-            )
-            .expect("ProgressBar Error")
-            .tick_chars("⣾⣽⣻⢿⡿⣟⣯⣷".to_string().as_str())
-            .progress_chars("#>-"),
+            .progress_chars("#>-")
+            .tick_strings(&["🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"])
+            //.tick_chars("⣾⣽⣻⢿⡿⣟⣯⣷".to_string().as_str())
+            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}").unwrap()
     );
 }
 
