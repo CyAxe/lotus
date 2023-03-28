@@ -33,9 +33,10 @@ lazy_static! {
 
 /// Lotus ProgressBar based on the length of `bar` parameter
 pub fn create_progress(bar: u64) {
-    let bar_length = BAR.lock().unwrap().length().unwrap();
-    BAR.lock().unwrap().set_length(bar + bar_length);
-    BAR.lock().unwrap().set_style(
+    let bar_obj = BAR.lock().unwrap();
+    let bar_length = bar_obj.length().unwrap();
+    bar_obj.set_length(bar + bar_length);
+    bar_obj.set_style(
         ProgressStyle::default_bar()
             .template(
                 "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}",
