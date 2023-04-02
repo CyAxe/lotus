@@ -14,31 +14,41 @@
 
 use mlua::UserData;
 use tealr::TypeName;
+use regex::Regex;
 
 #[derive(TypeName, Debug)]
 pub struct ResponseMatcher {}
 
 impl ResponseMatcher {
-    pub fn match_and_body(&self, body: String, text: Vec<String>) -> bool {
+    pub fn match_and_body(&self, body: &str, text: Vec<String>, is_regex: Option<bool>) -> bool {
         let mut counter = 0;
-        text.iter().for_each(|x| {
-            if body.contains(x) {
+        for x in text.iter() {
+            if is_regex.unwrap_or(false) {
+                if let Ok(re_pattern) = Regex::new(x) {
+                    if re_pattern.is_match(body) {
+                        counter += 1;
+                    }
+                }
+            } else if body.contains(x) {
                 counter += 1;
             }
-        });
-        if counter == text.len() {
-            true
-        } else {
-            false
         }
+        counter == text.len()
     }
-    pub fn match_once_body(&self, body: String, text: Vec<String>) -> String {
-        let mut matched_data = "".into();
-        text.iter().for_each(|x| {
-            if body.contains(x) {
-                matched_data = x.to_string();
+
+    pub fn match_once_body(&self, body: String, text: Vec<String>, is_regex: Option<bool>) -> Vec<String> {
+        let mut matched_data = Vec::new();
+        for pattern in text {
+            if is_regex.unwrap_or(false) {
+                if let Ok(re) = Regex::new(&pattern) {
+                    if re.is_match(&body) {
+                        matched_data.push(pattern);
+                    }
+                }
+            } else if body.contains(&pattern) {
+                matched_data.push(pattern);
             }
-        });
+        }
         matched_data
     }
 }
@@ -47,14 +57,14 @@ impl UserData for ResponseMatcher {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method(
             "match_body",
-            |_, this, (response, text_list): (String, Vec<String>)| {
-                Ok(this.match_and_body(response, text_list))
+            |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
+                Ok(this.match_and_body(&response, text_list,is_regex))
             },
         );
         methods.add_method(
             "match_body_once",
-            |_, this, (response, text_list): (String, Vec<String>)| {
-                let is_match = this.match_once_body(response, text_list);
+            |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
+                let is_match = this.match_once_body(response, text_list,is_regex);
                 Ok(is_match)
             },
         )
