@@ -1,9 +1,10 @@
 use crate::{
     lua::{
+        model::LuaRunTime,
         output::report::AllReports,
         parsing::{files::filename_to_string, url::HttpMessage},
     },
-    CliErrors, LuaRunTime,
+    CliErrors,
 };
 use log::{debug, error, info, warn};
 use mlua::ExternalError;

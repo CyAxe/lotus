@@ -4,7 +4,7 @@ use crate::lua::runtime::{
 use crate::{
     cli::bar::BAR,
     lua::{
-        loader::{LuaOptions, LuaRunTime},
+        model::{LuaOptions, LuaRunTime},
         network::http::Sender,
         output::report::AllReports,
     },

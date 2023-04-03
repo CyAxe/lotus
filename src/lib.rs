@@ -21,7 +21,7 @@ use cli::{
     input::load_scripts::{get_scripts, valid_scripts},
 };
 use lua::{
-    loader::{LuaOptions, LuaRunTime},
+    model::LuaOptions,
     parsing::files::filename_to_string,
     run::LuaLoader,
     threads::runner::iter_futures,

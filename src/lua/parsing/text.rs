@@ -12,7 +12,8 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use mlua::{UserData, ExternalResult};
+use mlua::UserData;
+use mlua::ExternalError;
 use regex::RegexBuilder;
 use tealr::TypeName;
 use crate::cli::errors::CliErrors;
@@ -38,12 +39,7 @@ impl ResponseMatcher {
             .build()
         {
             Ok(re) => {
-                if let Err(e) = re.is_match(&resp) {
-                    log::error!("Cannot match with resp value: {}", resp);
-                    Err(CliErrors::RegexError)
-                } else {
-                    Ok(true)
-                }
+                Ok(re.is_match(&resp))
             }
             Err(_) => {
                 log::error!("Regex Pattern ERROR  {:?}", pattern);
@@ -52,6 +48,25 @@ impl ResponseMatcher {
         }
     }
 
+    pub fn replace_txt(&self, regex_pattern: &str, replacement: &str, response: &str) -> Result<String, CliErrors> {
+        match RegexBuilder::new(&regex_pattern)
+            .multi_line(self.multi_line)
+            .case_insensitive(self.case_insensitive)
+            .unicode(self.unicode)
+            .octal(self.octal)
+            .dot_matches_new_line(self.dot_matches_new_line)
+            .build()
+        {
+            Ok(re) => {
+                let replace_output = re.replacen(response, 2,replacement).to_string();
+                Ok(replace_output)
+            }
+            Err(_) => {
+                log::error!("Regex Pattern ERROR  {:?}", regex_pattern);
+                Err(CliErrors::RegexPatternError)
+            }
+        }
+    }
     pub fn match_and_body(
         &self,
         body: &str,
@@ -131,20 +146,18 @@ impl UserData for ResponseMatcher {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method("is_match", |_, this, (regex_pattern,response): (String, String)|{
             let is_match = this.is_match(regex_pattern, response);
-            if Ok(..) == is_match {
-                Ok(is_match.unwrap())
-            } else {
-                Err(is_match.to_lua_err())
+            match is_match {
+                Ok(matched) => Ok(matched),
+                Err(err) => Err(err.to_lua_err()),
             }
         });
         methods.add_method(
             "match_body",
             |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
                 let body_match = this.match_and_body(&response, text_list, is_regex);
-                if Ok(..) == body_match {
-                    Ok(body_match.unwrap())
-                } else {
-                    Err(body_match.to_lua_err())
+                match body_match {
+                    Ok(matched) => Ok(matched),
+                    Err(err) => Err(err.to_lua_err()),
                 }
             },
         );
@@ -152,13 +165,20 @@ impl UserData for ResponseMatcher {
             "match_body_once",
             |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
                 let is_match = this.match_once_body(response, text_list, is_regex);
-                if Ok(..) == is_match {
-                    Ok(is_match.unwrap())
-                } else {
-                    Err(is_match.to_lua_err())
+                match is_match {
+                    Ok(matched) => Ok(matched),
+                    Err(err) => Err(err.to_lua_err()),
                 }
             },
         );
+        methods.add_method(
+            "replace", |_,this, (response, regex_pattern, replacement): (String,String, String)|{
+                let replace_output = this.replace_txt(&regex_pattern, &replacement, &response);
+                match replace_output {
+                    Ok(replaced) => Ok(replaced),
+                    Err(err) => Err(err.to_lua_err()),
+                }
+            });
         methods.add_method_mut("options", |_, this, opts: mlua::Table| {
             let response_matcher = ResponseMatcher {
                 multi_line: opts.get::<_, bool>("multi_line").unwrap_or(this.multi_line),
