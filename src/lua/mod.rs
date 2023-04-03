@@ -1,4 +1,4 @@
-pub mod loader;
+pub mod model;
 pub mod network;
 pub mod output;
 pub mod parsing;

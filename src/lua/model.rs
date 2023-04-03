@@ -12,9 +12,7 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use crate::cli::errors::CliErrors;
 use crate::ScanTypes;
-use log::error;
 use mlua::Lua;
 
 /// Setup The Lua Runtime
@@ -29,21 +27,4 @@ pub struct LuaOptions<'a> {
     pub script_code: &'a str,
     pub script_dir: &'a str,
     pub env_vars: serde_json::Value,
-}
-
-/// check if the regex pattern is matching with this string or not without get the matched parts
-pub fn is_match(pattern: String, resp: String) -> Result<bool, CliErrors> {
-    let re = fancy_regex::Regex::new(&pattern);
-    if let Ok(..) = re {
-        let matched = re.unwrap().is_match(&resp);
-        if matched.is_err() {
-            error!("Cannot match with resp value: {}", resp);
-            Err(CliErrors::RegexError)
-        } else {
-            Ok(matched.unwrap())
-        }
-    } else {
-        error!("Regex Pattern ERROR  {:?}", pattern);
-        Err(CliErrors::RegexPatternError)
-    }
 }

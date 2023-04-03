@@ -1,15 +1,14 @@
 use crate::{
     lua::{
-        loader::is_match,
+        model::LuaRunTime,
         parsing::{
             html::{css_selector, html_parse, html_search},
             text::ResponseMatcher,
         },
         threads::{LuaThreader, ParamScan},
     },
-    LuaRunTime, BAR,
+    BAR,
 };
-use mlua::ExternalError;
 use std::sync::{Arc, Mutex};
 
 pub trait UtilsEXT {
@@ -36,22 +35,6 @@ impl UtilsEXT for LuaRunTime<'_> {
             .unwrap();
     }
     fn add_matchingfunc(&self) {
-        self.lua
-            .globals()
-            .set(
-                "is_match",
-                self.lua
-                    .create_function(|_, (pattern, text): (String, String)| {
-                        let try_match = is_match(pattern, text);
-                        if try_match.is_err() {
-                            Err(try_match.unwrap_err().to_lua_err())
-                        } else {
-                            Ok(try_match.unwrap())
-                        }
-                    })
-                    .unwrap(),
-            )
-            .unwrap();
         self.lua
             .globals()
             .set(
