@@ -12,11 +12,11 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use mlua::UserData;
+use crate::cli::errors::CliErrors;
 use mlua::ExternalError;
+use mlua::UserData;
 use regex::RegexBuilder;
 use tealr::TypeName;
-use crate::cli::errors::CliErrors;
 
 #[derive(TypeName, Clone, Debug)]
 pub struct ResponseMatcher {
@@ -38,9 +38,7 @@ impl ResponseMatcher {
             .dot_matches_new_line(self.dot_matches_new_line)
             .build()
         {
-            Ok(re) => {
-                Ok(re.is_match(&resp))
-            }
+            Ok(re) => Ok(re.is_match(&resp)),
             Err(_) => {
                 log::error!("Regex Pattern ERROR  {:?}", pattern);
                 Err(CliErrors::RegexPatternError)
@@ -48,7 +46,11 @@ impl ResponseMatcher {
         }
     }
 
-    pub fn extract_data(&self, regex_pattern: &str, response: &str) -> Result<Vec<String>, CliErrors> {
+    pub fn extract_data(
+        &self,
+        regex_pattern: &str,
+        response: &str,
+    ) -> Result<Vec<String>, CliErrors> {
         match RegexBuilder::new(&regex_pattern)
             .multi_line(self.multi_line)
             .case_insensitive(self.case_insensitive)
@@ -58,7 +60,10 @@ impl ResponseMatcher {
             .build()
         {
             Ok(re) => {
-                let match_iter = re.find_iter(response).map(|m| m.as_str().to_owned()).collect();
+                let match_iter = re
+                    .find_iter(response)
+                    .map(|m| m.as_str().to_owned())
+                    .collect();
                 Ok(match_iter)
             }
             Err(_) => {
@@ -66,9 +71,13 @@ impl ResponseMatcher {
                 Err(CliErrors::RegexPatternError)
             }
         }
-
     }
-    pub fn replace_txt(&self, regex_pattern: &str, replacement: &str, response: &str) -> Result<String, CliErrors> {
+    pub fn replace_txt(
+        &self,
+        regex_pattern: &str,
+        replacement: &str,
+        response: &str,
+    ) -> Result<String, CliErrors> {
         match RegexBuilder::new(&regex_pattern)
             .multi_line(self.multi_line)
             .case_insensitive(self.case_insensitive)
@@ -78,7 +87,7 @@ impl ResponseMatcher {
             .build()
         {
             Ok(re) => {
-                let replace_output = re.replacen(response, 2,replacement).to_string();
+                let replace_output = re.replacen(response, 2, replacement).to_string();
                 Ok(replace_output)
             }
             Err(_) => {
@@ -164,13 +173,16 @@ impl ResponseMatcher {
 
 impl UserData for ResponseMatcher {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("is_match", |_, this, (regex_pattern,response): (String, String)|{
-            let is_match = this.is_match(regex_pattern, response);
-            match is_match {
-                Ok(matched) => Ok(matched),
-                Err(err) => Err(err.to_lua_err()),
-            }
-        });
+        methods.add_method(
+            "is_match",
+            |_, this, (regex_pattern, response): (String, String)| {
+                let is_match = this.is_match(regex_pattern, response);
+                match is_match {
+                    Ok(matched) => Ok(matched),
+                    Err(err) => Err(err.to_lua_err()),
+                }
+            },
+        );
         methods.add_method(
             "match_body",
             |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
@@ -192,22 +204,25 @@ impl UserData for ResponseMatcher {
             },
         );
         methods.add_method(
-            "replace", |_,this, (response, regex_pattern, replacement): (String,String, String)|{
+            "replace",
+            |_, this, (response, regex_pattern, replacement): (String, String, String)| {
                 let replace_output = this.replace_txt(&regex_pattern, &replacement, &response);
                 match replace_output {
                     Ok(replaced) => Ok(replaced),
                     Err(err) => Err(err.to_lua_err()),
                 }
-            });
-        methods.add_method("extract", |_, this, (regex_pattern, response): (String, String)|{
-            let extract_data = this.extract_data(&regex_pattern, &response);
-            match extract_data {
-                Ok(data) => {
-                    Ok(data)
-                },
-                Err(err) => Err(err.to_lua_err())
-            }
-        });
+            },
+        );
+        methods.add_method(
+            "extract",
+            |_, this, (regex_pattern, response): (String, String)| {
+                let extract_data = this.extract_data(&regex_pattern, &response);
+                match extract_data {
+                    Ok(data) => Ok(data),
+                    Err(err) => Err(err.to_lua_err()),
+                }
+            },
+        );
         methods.add_method_mut("options", |_, this, opts: mlua::Table| {
             let response_matcher = ResponseMatcher {
                 multi_line: opts.get::<_, bool>("multi_line").unwrap_or(this.multi_line),

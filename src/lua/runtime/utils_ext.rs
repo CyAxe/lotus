@@ -1,5 +1,4 @@
 use crate::{
-    BAR,
     lua::{
         model::LuaRunTime,
         parsing::{
@@ -8,6 +7,7 @@ use crate::{
         },
         threads::{LuaThreader, ParamScan},
     },
+    BAR,
 };
 use std::sync::{Arc, Mutex};
 

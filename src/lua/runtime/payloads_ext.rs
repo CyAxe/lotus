@@ -1,6 +1,6 @@
+use crate::lua::model::LuaRunTime;
 use crate::lua::parsing::html::Location;
 use crate::lua::payloads;
-use crate::lua::model::LuaRunTime;
 
 pub trait PayloadsEXT {
     fn add_payloadsfuncs(&self);
