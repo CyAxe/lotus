@@ -12,9 +12,10 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use mlua::UserData;
+use mlua::{UserData, ExternalResult};
 use regex::RegexBuilder;
 use tealr::TypeName;
+use crate::cli::errors::CliErrors;
 
 #[derive(TypeName, Clone, Debug)]
 pub struct ResponseMatcher {
@@ -27,11 +28,40 @@ pub struct ResponseMatcher {
 }
 
 impl ResponseMatcher {
-    pub fn match_and_body(&self, body: &str, text: Vec<String>, is_regex: Option<bool>) -> bool {
+    pub fn is_match(&self, pattern: String, resp: String) -> Result<bool, CliErrors> {
+        match RegexBuilder::new(&pattern)
+            .multi_line(self.multi_line)
+            .case_insensitive(self.case_insensitive)
+            .unicode(self.unicode)
+            .octal(self.octal)
+            .dot_matches_new_line(self.dot_matches_new_line)
+            .build()
+        {
+            Ok(re) => {
+                if let Err(e) = re.is_match(&resp) {
+                    log::error!("Cannot match with resp value: {}", resp);
+                    Err(CliErrors::RegexError)
+                } else {
+                    Ok(true)
+                }
+            }
+            Err(_) => {
+                log::error!("Regex Pattern ERROR  {:?}", pattern);
+                Err(CliErrors::RegexPatternError)
+            }
+        }
+    }
+
+    pub fn match_and_body(
+        &self,
+        body: &str,
+        text: Vec<String>,
+        is_regex: Option<bool>,
+    ) -> Result<bool, CliErrors> {
         let mut counter = 0;
-        for x in text.iter() {
-            if is_regex.unwrap_or(false) {
-                if let Ok(re_pattern) = RegexBuilder::new(x)
+        for search_pattern in text.iter() {
+            match is_regex.unwrap_or(false) {
+                true => match RegexBuilder::new(&search_pattern)
                     .multi_line(self.multi_line)
                     .case_insensitive(self.case_insensitive)
                     .unicode(self.unicode)
@@ -39,15 +69,24 @@ impl ResponseMatcher {
                     .dot_matches_new_line(self.dot_matches_new_line)
                     .build()
                 {
-                    if re_pattern.is_match(body) {
+                    Ok(re_pattern) => {
+                        if re_pattern.is_match(body) {
+                            counter += 1;
+                        }
+                    }
+                    Err(_) => {
+                        log::error!("Invalid regex pattern: {:?}", search_pattern);
+                        return Err(CliErrors::RegexPatternError);
+                    }
+                },
+                false => {
+                    if body.contains(search_pattern) {
                         counter += 1;
                     }
                 }
-            } else if body.contains(x) {
-                counter += 1;
             }
         }
-        counter == text.len()
+        Ok(counter == text.len())
     }
 
     pub fn match_once_body(
@@ -55,11 +94,11 @@ impl ResponseMatcher {
         body: String,
         text: Vec<String>,
         is_regex: Option<bool>,
-    ) -> Vec<String> {
+    ) -> Result<Vec<String>, CliErrors> {
         let mut matched_data = Vec::new();
         for pattern in text {
-            if is_regex.unwrap_or(false) {
-                if let Ok(re) = RegexBuilder::new(&pattern)
+            match is_regex.unwrap_or(false) {
+                true => match RegexBuilder::new(&pattern)
                     .multi_line(self.multi_line)
                     .case_insensitive(self.case_insensitive)
                     .unicode(self.unicode)
@@ -67,31 +106,57 @@ impl ResponseMatcher {
                     .dot_matches_new_line(self.dot_matches_new_line)
                     .build()
                 {
-                    if re.is_match(&body) {
+                    Ok(re) => {
+                        if re.is_match(&body) {
+                            matched_data.push(pattern);
+                        }
+                    }
+                    Err(_) => {
+                        log::error!("Invalid regex pattern: {:?}", pattern);
+                        return Err(CliErrors::RegexPatternError);
+                    }
+                },
+                false => {
+                    if body.contains(&pattern) {
                         matched_data.push(pattern);
                     }
                 }
-            } else if body.contains(&pattern) {
-                matched_data.push(pattern);
             }
         }
-        matched_data
+        Ok(matched_data)
     }
 }
 
 impl UserData for ResponseMatcher {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
+        methods.add_method("is_match", |_, this, (regex_pattern,response): (String, String)|{
+            let is_match = this.is_match(regex_pattern, response);
+            if Ok(..) == is_match {
+                Ok(is_match.unwrap())
+            } else {
+                Err(is_match.to_lua_err())
+            }
+        });
         methods.add_method(
             "match_body",
             |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
-                Ok(this.match_and_body(&response, text_list, is_regex))
+                let body_match = this.match_and_body(&response, text_list, is_regex);
+                if Ok(..) == body_match {
+                    Ok(body_match.unwrap())
+                } else {
+                    Err(body_match.to_lua_err())
+                }
             },
         );
         methods.add_method(
             "match_body_once",
             |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
                 let is_match = this.match_once_body(response, text_list, is_regex);
-                Ok(is_match)
+                if Ok(..) == is_match {
+                    Ok(is_match.unwrap())
+                } else {
+                    Err(is_match.to_lua_err())
+                }
             },
         );
         methods.add_method_mut("options", |_, this, opts: mlua::Table| {
