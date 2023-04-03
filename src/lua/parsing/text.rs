@@ -13,18 +13,32 @@
 // and limitations under the License.
 
 use mlua::UserData;
+use regex::RegexBuilder;
 use tealr::TypeName;
-use regex::Regex;
 
-#[derive(TypeName, Debug)]
-pub struct ResponseMatcher {}
+#[derive(TypeName, Clone, Debug)]
+pub struct ResponseMatcher {
+    pub multi_line: bool,
+    pub case_insensitive: bool,
+    pub ignore_whitespace: bool,
+    pub unicode: bool,
+    pub octal: bool,
+    pub dot_matches_new_line: bool,
+}
 
 impl ResponseMatcher {
     pub fn match_and_body(&self, body: &str, text: Vec<String>, is_regex: Option<bool>) -> bool {
         let mut counter = 0;
         for x in text.iter() {
             if is_regex.unwrap_or(false) {
-                if let Ok(re_pattern) = Regex::new(x) {
+                if let Ok(re_pattern) = RegexBuilder::new(x)
+                    .multi_line(self.multi_line)
+                    .case_insensitive(self.case_insensitive)
+                    .unicode(self.unicode)
+                    .octal(self.octal)
+                    .dot_matches_new_line(self.dot_matches_new_line)
+                    .build()
+                {
                     if re_pattern.is_match(body) {
                         counter += 1;
                     }
@@ -36,11 +50,23 @@ impl ResponseMatcher {
         counter == text.len()
     }
 
-    pub fn match_once_body(&self, body: String, text: Vec<String>, is_regex: Option<bool>) -> Vec<String> {
+    pub fn match_once_body(
+        &self,
+        body: String,
+        text: Vec<String>,
+        is_regex: Option<bool>,
+    ) -> Vec<String> {
         let mut matched_data = Vec::new();
         for pattern in text {
             if is_regex.unwrap_or(false) {
-                if let Ok(re) = Regex::new(&pattern) {
+                if let Ok(re) = RegexBuilder::new(&pattern)
+                    .multi_line(self.multi_line)
+                    .case_insensitive(self.case_insensitive)
+                    .unicode(self.unicode)
+                    .octal(self.octal)
+                    .dot_matches_new_line(self.dot_matches_new_line)
+                    .build()
+                {
                     if re.is_match(&body) {
                         matched_data.push(pattern);
                     }
@@ -58,15 +84,35 @@ impl UserData for ResponseMatcher {
         methods.add_method(
             "match_body",
             |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
-                Ok(this.match_and_body(&response, text_list,is_regex))
+                Ok(this.match_and_body(&response, text_list, is_regex))
             },
         );
         methods.add_method(
             "match_body_once",
             |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
-                let is_match = this.match_once_body(response, text_list,is_regex);
+                let is_match = this.match_once_body(response, text_list, is_regex);
                 Ok(is_match)
             },
-        )
+        );
+        methods.add_method_mut("options", |_, this, opts: mlua::Table| {
+            let response_matcher = ResponseMatcher {
+                multi_line: opts.get::<_, bool>("multi_line").unwrap_or(this.multi_line),
+                case_insensitive: opts
+                    .get::<_, bool>("case_insensitive")
+                    .unwrap_or(this.case_insensitive),
+                ignore_whitespace: opts
+                    .get::<_, bool>("ignore_whitespace")
+                    .unwrap_or(this.ignore_whitespace),
+                unicode: opts.get::<_, bool>("unicode").unwrap_or(this.unicode),
+                octal: opts.get::<_, bool>("octal").unwrap_or(this.octal),
+                dot_matches_new_line: opts
+                    .get::<_, bool>("dot_matches_new_line")
+                    .unwrap_or(this.dot_matches_new_line),
+            };
+
+            *this = response_matcher;
+
+            Ok(())
+        });
     }
 }
