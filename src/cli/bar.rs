@@ -41,7 +41,10 @@ pub fn create_progress(bar: u64) {
             .progress_chars("#>-")
             .tick_strings(&["🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"])
             //.tick_chars("⣾⣽⣻⢿⡿⣟⣯⣷".to_string().as_str())
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}").unwrap()
+            .template(
+                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}",
+            )
+            .unwrap(),
     );
 }
 
