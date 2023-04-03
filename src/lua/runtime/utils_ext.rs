@@ -88,7 +88,14 @@ impl UtilsEXT for LuaRunTime<'_> {
 
         self.lua
             .globals()
-            .set("ResponseMatcher", ResponseMatcher {})
+            .set("ResponseMatcher", ResponseMatcher {
+                ignore_whitespace: false,
+                case_insensitive: false,
+                multi_line: false,
+                octal: true,
+                unicode: true,
+                dot_matches_new_line: false
+            })
             .unwrap();
 
         self.lua
