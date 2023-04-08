@@ -59,6 +59,22 @@ pub fn get_target_paths(urls: Vec<String>) -> Result<Vec<String>, String> {
     Ok(paths)
 }
 
+pub fn get_stdin_input() -> Result<Vec<String>, CliErrors> {
+    if atty::is(atty::Stream::Stdin) {
+        Err(CliErrors::EmptyStdin)
+    } else {
+        let stdin = io::stdin();
+        let mut input_lines: Vec<String> = Vec::new();
+        stdin.lock().lines().for_each(|x| {
+            let the_line = x.unwrap();
+            input_lines.push(the_line);
+        });
+        input_lines.sort();
+        input_lines.dedup();
+        Ok(input_lines)
+    }
+
+}
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {
     if url_file.is_some() {
         let urls = filename_to_string(url_file.unwrap().to_str().unwrap());
@@ -72,25 +88,9 @@ pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErro
             Err(CliErrors::ReadingError)
         }
     } else {
-        if atty::is(atty::Stream::Stdin) {
-            Err(CliErrors::EmptyStdin)
-        } else {
-            let stdin = io::stdin();
-            let mut urls: Vec<String> = Vec::new();
-            stdin.lock().lines().for_each(|x| {
-                let the_url = x.unwrap();
-                match url::Url::parse(&the_url) {
-                    Ok(..) => {
-                        urls.push(the_url);
-                    }
-                    Err(..) => {
-                        log::error!("Cannot Parse {} url, ignoring ..", the_url);
-                    }
-                };
-            });
-            urls.sort();
-            urls.dedup();
-            Ok(urls)
+        let mut urls = get_stdin_input()?;
+        urls.sort();
+        urls.dedup();
+        Ok(urls)
         }
-    }
 }
