@@ -16,7 +16,7 @@ use lotus::{
     cli::{
         args::Opts,
         bar::{create_progress, show_msg, MessageLevel, BAR},
-        startup::{new::new_args, scan::args_scan},
+        startup::{new::new_args, scan::scan::args_scan},
     },
     lua::{
         network::http::{REQUESTS_LIMIT, SLEEP_TIME, VERBOSE_MODE},
@@ -55,6 +55,8 @@ async fn run_scan() -> Result<(), std::io::Error> {
         &format!("PATHS: {}", opts.target_data.paths.len()),
         MessageLevel::Info,
     );
+    show_msg(&format!("CUSTOM: {}", opts.target_data.custom.len()), 
+        MessageLevel::Info);
     // Open two threads for URL/HOST scanning
     create_progress(opts.target_data.urls.len() as u64);
     {
@@ -68,6 +70,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
     let scan_futures = vec![
         opts.lotus_obj.start(
             opts.target_data.paths,
+            None,
             opts.req_opts.clone(),
             ScanTypes::PATHS,
             opts.exit_after,
@@ -75,20 +78,30 @@ async fn run_scan() -> Result<(), std::io::Error> {
         ),
         opts.lotus_obj.start(
             opts.target_data.urls,
+            None,
             opts.req_opts.clone(),
             ScanTypes::URLS,
             opts.exit_after,
             fuzz_workers,
         ),
         opts.lotus_obj.start(
+            vec![],
+            Some(opts.target_data.custom),
+            opts.req_opts.clone(),
+            ScanTypes::CUSTOM,
+            opts.exit_after,
+            fuzz_workers,
+        ),
+        opts.lotus_obj.start(
             opts.target_data.hosts,
+            None,
             opts.req_opts,
             ScanTypes::HOSTS,
             opts.exit_after,
             fuzz_workers,
         ),
     ];
-    runner::scan_futures(scan_futures, 3, None).await;
+    runner::scan_futures(scan_futures, 4, None).await;
     BAR.lock().unwrap().finish();
     Ok(())
 }

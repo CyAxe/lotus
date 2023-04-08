@@ -26,6 +26,8 @@ pub enum ScanTypes {
     URLS,
     /// PATHS Scanning under ID number 3
     PATHS,
+    /// CUSTOM Scannig under ID number 4
+    CUSTOM
 }
 
 pub struct Lotus {

@@ -20,8 +20,8 @@ pub struct LuaRunTime<'lua> {
     pub lua: &'lua Lua,
 }
 
-pub struct LuaOptions<'a> {
-    pub target_url: Option<&'a str>,
+pub struct LuaOptions<'a,T: Clone + std::fmt::Display> {
+    pub target_url: Option<&'a T>,
     pub target_type: ScanTypes,
     pub fuzz_workers: usize,
     pub script_code: &'a str,
