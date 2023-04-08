@@ -21,7 +21,7 @@ pub struct LuaRunTime<'lua> {
 }
 
 pub struct LuaOptions<'a> {
-    pub target_url: Option<&'a str>,
+    pub target_url: Option<&'a serde_json::Value>,
     pub target_type: ScanTypes,
     pub fuzz_workers: usize,
     pub script_code: &'a str,
