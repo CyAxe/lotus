@@ -20,8 +20,8 @@ pub struct LuaRunTime<'lua> {
     pub lua: &'lua Lua,
 }
 
-pub struct LuaOptions<'a,T: Clone + std::fmt::Display + serde::Serialize + serde::Deserialize<'static> > {
-    pub target_url: Option<&'a T>,
+pub struct LuaOptions<'a> {
+    pub target_url: Option<&'a serde_json::Value>,
     pub target_type: ScanTypes,
     pub fuzz_workers: usize,
     pub script_code: &'a str,

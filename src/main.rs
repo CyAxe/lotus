@@ -69,34 +69,30 @@ async fn run_scan() -> Result<(), std::io::Error> {
     };
     let scan_futures = vec![
         opts.lotus_obj.start(
-            opts.target_data.paths,
-            None,
+            convert_serde_value(opts.target_data.paths),
             opts.req_opts.clone(),
             ScanTypes::PATHS,
             opts.exit_after,
             fuzz_workers,
         ),
         opts.lotus_obj.start(
-            opts.target_data.urls,
-            None,
+            convert_serde_value(opts.target_data.urls),
             opts.req_opts.clone(),
             ScanTypes::URLS,
             opts.exit_after,
             fuzz_workers,
         ),
         opts.lotus_obj.start(
-            vec![],
-            Some(opts.target_data.custom),
+            convert_serde_value(opts.target_data.hosts),
             opts.req_opts.clone(),
-            ScanTypes::CUSTOM,
+            ScanTypes::HOSTS,
             opts.exit_after,
             fuzz_workers,
         ),
         opts.lotus_obj.start(
-            opts.target_data.hosts,
-            None,
+            opts.target_data.custom,
             opts.req_opts,
-            ScanTypes::HOSTS,
+            ScanTypes::CUSTOM,
             opts.exit_after,
             fuzz_workers,
         ),
@@ -104,4 +100,8 @@ async fn run_scan() -> Result<(), std::io::Error> {
     runner::scan_futures(scan_futures, 4, None).await;
     BAR.lock().unwrap().finish();
     Ok(())
+}
+
+fn convert_serde_value(data: Vec<String>) -> Vec<serde_json::Value> {
+    data.into_iter().map(|s| serde_json::Value::String(s)).collect()
 }

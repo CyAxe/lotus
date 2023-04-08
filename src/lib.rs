@@ -36,8 +36,7 @@ impl Lotus {
     /// * `exit_after` - exit after how many of errors
     pub async fn start(
         &self,
-        target_data: Vec<String>,
-        target_value: Option<Vec<serde_json::Value>>,
+        target_data: Vec<serde_json::Value>,
         request_option: RequestOpts,
         scan_type: ScanTypes,
         exit_after: i32,
@@ -48,15 +47,6 @@ impl Lotus {
             ScanTypes::URLS =>  valid_scripts(get_scripts(self.script_path.clone()), 2),
             ScanTypes::PATHS => valid_scripts(get_scripts(self.script_path.clone()), 3),
             ScanTypes::CUSTOM => valid_scripts(get_scripts(self.script_path.clone()), 4),
-        };
-        let target_data = if target_data.len() == 0 {
-            if target_value.is_some() {
-                target_value.unwrap()
-            } else {
-                vec![]
-            }
-        } else {
-            vec![]
         };
         let lotus_obj = Arc::new(LuaLoader::new(request_option.clone(), self.output.clone()));
         let scan_type = Arc::new(scan_type);

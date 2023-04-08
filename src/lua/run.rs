@@ -77,7 +77,7 @@ impl LuaLoader {
     /// Run The Targeted Script on the target url
     /// * `target_url` - Target url
     /// * `target_type` - the input type if its HOST or URL
-    pub async fn run_scan<'a, T: Clone + serde::Serialize + serde::Deserialize<'static> + std::fmt::Display>(&self, lua_opts: LuaOptions<'_, T>) -> Result<(), mlua::Error> {
+    pub async fn run_scan<'a>(&self, lua_opts: LuaOptions<'_>) -> Result<(), mlua::Error> {
         let lua = Lua::new();
         let env_vars: mlua::Value = lua.to_value(&lua_opts.env_vars).unwrap();
 
@@ -94,12 +94,12 @@ impl LuaLoader {
                 // for HOSTS, set TARGET_HOST global
                 self.set_lua(None, &lua);
                 lua.globals()
-                    .set("TARGET_HOST", lua_opts.target_url.unwrap().to_string())
+                    .set("TARGET_HOST", lua_opts.target_url.unwrap().as_str().unwrap().to_string())
                     .unwrap();
             }
             ScanTypes::URLS => {
                 // for all other target types, set target URL
-                self.set_lua(Some(lua_opts.target_url.unwrap().to_string().as_str()), &lua);
+                self.set_lua(Some(&&lua_opts.target_url.unwrap().as_str().unwrap().to_string()), &lua);
             },
             ScanTypes::PATHS => {
                 self.set_lua(Some(lua_opts.target_url.unwrap().to_string().as_str()), &lua);
