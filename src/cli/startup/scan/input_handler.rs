@@ -7,7 +7,7 @@ pub fn custom_input_lua(input_data: Vec<String>, code: &str) -> Result<Vec<JsonV
     lua_env.load(code).exec()?;
     let parse_input = lua_env.globals().get::<_, mlua::Function>("parse_input")?;
     log::debug!("Calling parse_input function");
-    let output_data = parse_input.call::<_, Vec<mlua::Table>>(input_data)?;
+    let output_data = parse_input.call::<_, Vec<mlua::Value>>(input_data)?;
     let final_output: Vec<JsonValue> = output_data
         .into_iter()
         .map(|table| serde_json::to_value(&table).unwrap())

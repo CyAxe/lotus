@@ -77,7 +77,7 @@ impl LuaLoader {
     /// Run The Targeted Script on the target url
     /// * `target_url` - Target url
     /// * `target_type` - the input type if its HOST or URL
-    pub async fn run_scan<'a, T: Clone + std::fmt::Display>(&self, lua_opts: LuaOptions<'_, T>) -> Result<(), mlua::Error> {
+    pub async fn run_scan<'a, T: Clone + serde::Serialize + serde::Deserialize<'static> + std::fmt::Display>(&self, lua_opts: LuaOptions<'_, T>) -> Result<(), mlua::Error> {
         let lua = Lua::new();
         let env_vars: mlua::Value = lua.to_value(&lua_opts.env_vars).unwrap();
 
@@ -105,6 +105,8 @@ impl LuaLoader {
                 self.set_lua(Some(lua_opts.target_url.unwrap().to_string().as_str()), &lua);
             }
             ScanTypes::CUSTOM => {
+                let serde_value = serde_json::to_value(lua_opts.target_url).unwrap();
+                lua.globals().set("INPUT_DATA", lua.to_value(&serde_value).unwrap()).unwrap();
                 self.set_lua(None, &lua);
             }
         };
