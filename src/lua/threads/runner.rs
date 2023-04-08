@@ -7,7 +7,7 @@ pub async fn iter_futures<F, T, Fut>(target_iter: Vec<T>, target_function: F, wo
 where
     F: FnOnce(T) -> Fut + Clone,
     Fut: Future<Output = ()>,
-    T: Clone
+    T: Clone,
 {
     stream::iter(target_iter)
         .for_each_concurrent(workers, |out| {

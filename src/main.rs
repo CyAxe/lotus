@@ -55,8 +55,10 @@ async fn run_scan() -> Result<(), std::io::Error> {
         &format!("PATHS: {}", opts.target_data.paths.len()),
         MessageLevel::Info,
     );
-    show_msg(&format!("CUSTOM: {}", opts.target_data.custom.len()), 
-        MessageLevel::Info);
+    show_msg(
+        &format!("CUSTOM: {}", opts.target_data.custom.len()),
+        MessageLevel::Info,
+    );
     // Open two threads for URL/HOST scanning
     create_progress(opts.target_data.urls.len() as u64);
     {
@@ -103,5 +105,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
 }
 
 fn convert_serde_value(data: Vec<String>) -> Vec<serde_json::Value> {
-    data.into_iter().map(|s| serde_json::Value::String(s)).collect()
+    data.into_iter()
+        .map(|s| serde_json::Value::String(s))
+        .collect()
 }

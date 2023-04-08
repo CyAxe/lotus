@@ -25,8 +25,8 @@ use lua::{
     model::LuaOptions, parsing::files::filename_to_string, run::LuaLoader,
     threads::runner::iter_futures,
 };
+pub use model::{Lotus, RequestOpts, ScanTypes};
 use std::sync::Arc;
-pub use model::{ScanTypes, Lotus, RequestOpts};
 
 impl Lotus {
     /// Run The Lua Script with real target
@@ -44,7 +44,7 @@ impl Lotus {
     ) {
         let loaded_scripts = match scan_type {
             ScanTypes::HOSTS => valid_scripts(get_scripts(self.script_path.clone()), 1),
-            ScanTypes::URLS =>  valid_scripts(get_scripts(self.script_path.clone()), 2),
+            ScanTypes::URLS => valid_scripts(get_scripts(self.script_path.clone()), 2),
             ScanTypes::PATHS => valid_scripts(get_scripts(self.script_path.clone()), 3),
             ScanTypes::CUSTOM => valid_scripts(get_scripts(self.script_path.clone()), 4),
         };

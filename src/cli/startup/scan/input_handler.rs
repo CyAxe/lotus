@@ -1,7 +1,10 @@
 use mlua::{Lua, StdLib};
 use serde_json::Value as JsonValue;
 
-pub fn custom_input_lua(input_data: Vec<String>, code: &str) -> Result<Vec<JsonValue>, mlua::Error> {
+pub fn custom_input_lua(
+    input_data: Vec<String>,
+    code: &str,
+) -> Result<Vec<JsonValue>, mlua::Error> {
     let lua_env = Lua::new_with(StdLib::ALL_SAFE, mlua::LuaOptions::new()).unwrap();
     log::debug!("Loading Input handler lua code");
     lua_env.load(code).exec()?;
@@ -12,6 +15,6 @@ pub fn custom_input_lua(input_data: Vec<String>, code: &str) -> Result<Vec<JsonV
         .into_iter()
         .map(|table| serde_json::to_value(&table).unwrap())
         .collect();
-    log::debug!("parse_input function returned {} item",final_output.len());
+    log::debug!("parse_input function returned {} item", final_output.len());
     Ok(final_output)
 }

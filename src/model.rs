@@ -1,8 +1,8 @@
+use reqwest::header::HeaderMap;
 use std::{
     path::PathBuf,
-    sync::{Arc,Mutex}
+    sync::{Arc, Mutex},
 };
-use reqwest::header::HeaderMap;
 
 /// Lotus HTTP Options
 #[derive(Clone)]
@@ -27,7 +27,7 @@ pub enum ScanTypes {
     /// PATHS Scanning under ID number 3
     PATHS,
     /// CUSTOM Scannig under ID number 4
-    CUSTOM
+    CUSTOM,
 }
 
 pub struct Lotus {
@@ -43,4 +43,3 @@ pub struct Lotus {
     pub stop_after: Arc<Mutex<i32>>,
     pub env_vars: serde_json::Value,
 }
-

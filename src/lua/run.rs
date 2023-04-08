@@ -94,19 +94,30 @@ impl LuaLoader {
                 // for HOSTS, set TARGET_HOST global
                 self.set_lua(None, &lua);
                 lua.globals()
-                    .set("TARGET_HOST", lua_opts.target_url.unwrap().as_str().unwrap().to_string())
+                    .set(
+                        "TARGET_HOST",
+                        lua_opts.target_url.unwrap().as_str().unwrap().to_string(),
+                    )
                     .unwrap();
             }
             ScanTypes::URLS => {
                 // for all other target types, set target URL
-                self.set_lua(Some(&&lua_opts.target_url.unwrap().as_str().unwrap().to_string()), &lua);
-            },
+                self.set_lua(
+                    Some(&&lua_opts.target_url.unwrap().as_str().unwrap().to_string()),
+                    &lua,
+                );
+            }
             ScanTypes::PATHS => {
-                self.set_lua(Some(lua_opts.target_url.unwrap().to_string().as_str()), &lua);
+                self.set_lua(
+                    Some(lua_opts.target_url.unwrap().to_string().as_str()),
+                    &lua,
+                );
             }
             ScanTypes::CUSTOM => {
                 let serde_value = serde_json::to_value(lua_opts.target_url).unwrap();
-                lua.globals().set("INPUT_DATA", lua.to_value(&serde_value).unwrap()).unwrap();
+                lua.globals()
+                    .set("INPUT_DATA", lua.to_value(&serde_value).unwrap())
+                    .unwrap();
                 self.set_lua(None, &lua);
             }
         };

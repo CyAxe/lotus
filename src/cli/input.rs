@@ -73,7 +73,6 @@ pub fn get_stdin_input() -> Result<Vec<String>, CliErrors> {
         input_lines.dedup();
         Ok(input_lines)
     }
-
 }
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {
     if url_file.is_some() {
@@ -92,5 +91,5 @@ pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErro
         urls.sort();
         urls.dedup();
         Ok(urls)
-        }
+    }
 }

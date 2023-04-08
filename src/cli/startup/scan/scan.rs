@@ -1,12 +1,12 @@
 use crate::cli::args::Opts;
-use crate::cli::input::{get_stdin_input, get_target_paths, get_target_hosts};
+use crate::cli::input::{get_stdin_input, get_target_hosts, get_target_paths};
 use crate::cli::logger::init_log;
 use crate::lua::parsing::files::filename_to_string;
-use crate::{show_msg, MessageLevel, Lotus, RequestOpts};
+use crate::{show_msg, Lotus, MessageLevel, RequestOpts};
 use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 use url::Url;
-#[path ="input_handler.rs"]
+#[path = "input_handler.rs"]
 mod input_handler;
 use input_handler::custom_input_lua;
 
@@ -26,7 +26,7 @@ pub struct TargetData {
     pub urls: Vec<String>,
     pub hosts: Vec<String>,
     pub paths: Vec<String>,
-    pub custom: Vec<serde_json::Value>
+    pub custom: Vec<serde_json::Value>,
 }
 
 pub fn args_scan() -> ScanArgs {
@@ -62,7 +62,7 @@ pub fn args_scan() -> ScanArgs {
             verbose,
             is_request,
             env_vars,
-            input_handler
+            input_handler,
         } => {
             // setup logger
             init_log(log).unwrap();
@@ -86,7 +86,11 @@ pub fn args_scan() -> ScanArgs {
                     show_msg("Cannot Read the urls file", MessageLevel::Error);
                     std::process::exit(1);
                 }
-                read_file.unwrap().lines().map(|line| line.to_string()).collect::<Vec<String>>()
+                read_file
+                    .unwrap()
+                    .lines()
+                    .map(|line| line.to_string())
+                    .collect::<Vec<String>>()
             } else {
                 match get_stdin_input() {
                     Ok(input_data) => input_data,
@@ -99,10 +103,13 @@ pub fn args_scan() -> ScanArgs {
             let input_handler = if let Some(custom_input) = input_handler {
                 let lua_code = filename_to_string(custom_input.to_str().unwrap());
                 if let Err(err) = lua_code {
-                    show_msg(&format!("Unable to read custom input lua script: {}",err), MessageLevel::Error);
+                    show_msg(
+                        &format!("Unable to read custom input lua script: {}", err),
+                        MessageLevel::Error,
+                    );
                     vec![]
                 } else {
-                    let lua_output = custom_input_lua(input_data.clone(),&lua_code.unwrap());
+                    let lua_output = custom_input_lua(input_data.clone(), &lua_code.unwrap());
                     if let Ok(lua_output) = lua_output {
                         lua_output
                     } else {
@@ -118,7 +125,11 @@ pub fn args_scan() -> ScanArgs {
             let mut paths = vec![];
             let mut hosts = vec![];
             if input_handler.len() == 0 {
-                urls = input_data.iter().filter_map(|target_url| Url::parse(target_url).ok()).map(|url| url.to_string()).collect();
+                urls = input_data
+                    .iter()
+                    .filter_map(|target_url| Url::parse(target_url).ok())
+                    .map(|url| url.to_string())
+                    .collect();
                 paths = match get_target_paths(urls.clone()) {
                     Ok(paths) => paths,
                     Err(err) => {
@@ -152,7 +163,12 @@ pub fn args_scan() -> ScanArgs {
     };
 
     ScanArgs {
-        target_data: TargetData { urls, hosts, paths, custom },
+        target_data: TargetData {
+            urls,
+            hosts,
+            paths,
+            custom,
+        },
         exit_after,
         is_request,
         req_opts,
