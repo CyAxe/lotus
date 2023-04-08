@@ -60,7 +60,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
         MessageLevel::Info,
     );
     // Open two threads for URL/HOST scanning
-    create_progress(opts.target_data.urls.len() as u64);
+    create_progress(( opts.target_data.hosts.len() + opts.target_data.paths.len() + opts.target_data.custom.len() + opts.target_data.urls.len() ) as u64);
     {
         *SLEEP_TIME.lock().unwrap() = opts.delay;
         *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
