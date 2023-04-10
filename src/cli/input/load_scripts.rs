@@ -1,7 +1,10 @@
-use crate::lua::runtime::{
-    encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT,
+use crate::lua::{
+    model::LuaRunTime,
+    runtime::{
+        encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT,
+    },
 };
-use crate::{filename_to_string, show_msg, CliErrors, LuaRunTime, MessageLevel};
+use crate::{filename_to_string, show_msg, CliErrors, MessageLevel};
 use glob::glob;
 use log::error;
 use mlua::Lua;
@@ -35,7 +38,7 @@ fn load_scripts(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors
         match entry {
             Ok(path) => scripts.push((
                 filename_to_string(path.to_str().unwrap()).unwrap(),
-                path.to_str().unwrap().to_string()
+                path.to_str().unwrap().to_string(),
             )),
             Err(e) => error!("{:?}", e),
         }
@@ -80,6 +83,7 @@ pub fn valid_scripts(
         2 => {
             test_target_url = Some("https://example.com");
         }
+        3 => {}
         _ => {}
     }
     let lua_eng = LuaRunTime { lua: &Lua::new() };

@@ -3,6 +3,7 @@ use reqwest::header::{HeaderName, HeaderValue};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use serde_json::Value;
 
 fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
     let parsed_json = serde_json::from_str::<HashMap<String, String>>(raw_headers);
@@ -30,7 +31,10 @@ fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
         });
     Ok(user_headers)
 }
-
+fn get_env_vars(env_vars_json: &str) -> Result<Value, serde_json::Error> {
+    let parsed_vars = serde_json::from_str(env_vars_json)?;
+    Ok(parsed_vars)
+}
 
 #[derive(Debug, StructOpt)]
 pub struct UrlsOpts {
@@ -117,6 +121,8 @@ pub struct UrlsOpts {
         parse(from_os_str)
     )]
     pub urls: Option<PathBuf>,
+    #[structopt(long = "requests", help = "Give input as full request in JSON")]
+    pub is_request: bool,
 
     #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}", help = "Default Headers (eg: '{\"X-API\":\"123\"}')")]
     pub headers: HeaderMap,
@@ -126,4 +132,12 @@ pub struct UrlsOpts {
         help = "Exit after X number of script errors"
     )]
     pub exit_after: i32,
+    #[structopt(long = "env-vars",parse(try_from_str = get_env_vars),default_value="{}",help = "Set Global Vars for scripts")]
+    pub env_vars: Value,
+    #[structopt(
+        long = "input-handler",
+        parse(from_os_str),
+        help = "Create custom input for your scripts"
+    )]
+    pub input_handler: Option<PathBuf>,
 }

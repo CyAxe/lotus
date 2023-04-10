@@ -1,17 +1,14 @@
 use crate::{
     lua::{
-        output::{
-            cve::CveReport,
-            vuln::{AllReports, OutReport},
-        },
-        parsing::url::HttpMessage,
+        model::LuaRunTime,
+        output::report::AllReports,
+        parsing::{files::filename_to_string, url::HttpMessage},
     },
-    CliErrors, LuaRunTime,
+    CliErrors,
 };
 use log::{debug, error, info, warn};
 use mlua::ExternalError;
-use std::fs::File;
-use std::io::prelude::*;
+use std::collections::HashMap;
 use std::path::Path;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -71,6 +68,22 @@ impl HTTPEXT for LuaRunTime<'_> {
                 Ok(())
             })
             .unwrap();
+        let headers_converter = self
+            .lua
+            .create_function(|_, headers_txt: String| {
+                let mut result = HashMap::new();
+                for line in headers_txt.lines() {
+                    if let Some((name, value)) = line.split_once(":") {
+                        result.insert(name.trim().to_string(), value.trim().to_string());
+                    }
+                }
+                Ok(result)
+            })
+            .unwrap();
+        self.lua
+            .globals()
+            .set("make_headers", headers_converter)
+            .unwrap();
         self.lua
             .globals()
             .set(
@@ -103,9 +116,7 @@ impl HTTPEXT for LuaRunTime<'_> {
                 self.lua
                     .create_function(|_ctx, file_path: String| {
                         if Path::new(&file_path).exists() {
-                            let mut file = File::open(&file_path)?;
-                            let mut file_content = String::new();
-                            file.read_to_string(&mut file_content)?;
+                            let file_content = filename_to_string(&file_path)?;
                             Ok(file_content)
                         } else {
                             Err(CliErrors::ReadingError.to_lua_err())
@@ -138,14 +149,6 @@ impl HTTPEXT for LuaRunTime<'_> {
                     reports: Vec::new(),
                 },
             )
-            .unwrap();
-        self.lua
-            .globals()
-            .set("VulnReport", OutReport::init())
-            .unwrap();
-        self.lua
-            .globals()
-            .set("CveReport", CveReport::init())
             .unwrap();
     }
 }

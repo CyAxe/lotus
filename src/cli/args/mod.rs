@@ -13,5 +13,5 @@ pub enum Opts {
     #[structopt(about = "Create a lua example code based on the type of scan")]
     NEW(NewOpts),
     #[structopt(about = "Use CVE, VULN scripts to scan the given URLs")]
-    URLS(UrlsOpts),
+    SCAN(UrlsOpts),
 }

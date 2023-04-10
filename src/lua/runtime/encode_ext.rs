@@ -1,4 +1,4 @@
-use crate::LuaRunTime;
+use crate::lua::model::LuaRunTime;
 
 pub trait EncodeEXT {
     fn add_encode_function(&self);
