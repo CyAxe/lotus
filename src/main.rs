@@ -84,11 +84,8 @@ async fn main() -> Result<(), std::io::Error> {
             runner::scan_futures(scan_futures, 3, None).await;
             BAR.lock().unwrap().finish();
         }
-        Opts::NEW {
-            scan_type,
-            file_name,
-        } => {
-            new_args(scan_type, file_name);
+        Opts::NEW(new_opts) => {
+            new_args(new_opts.scan_type, new_opts.file_name);
             std::process::exit(0);
         }
     };

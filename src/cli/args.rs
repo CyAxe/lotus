@@ -63,105 +63,111 @@ pub enum ScriptType {
 )]
 pub enum Opts {
     #[structopt(about = "Create a lua example code based on the type of scan")]
-    NEW {
-        #[structopt(short = "-s", long, parse(try_from_str = get_script_type))]
-        scan_type: ScriptType,
-        #[structopt(short = "f", long)]
-        file_name: PathBuf,
-    },
+    NEW(NewOpts),
     #[structopt(about = "Use CVE, VULN scripts to scan the given URLs")]
-    URLS {
-        // redirects limit
-        #[structopt(
-            short,
-            long,
-            default_value = "10",
-            help = "Number of allowed http redirects"
-        )]
-        redirects: u32,
-        #[structopt(
-            long = "fuzz-workers",
-            default_value = "15",
-            help = "The number of workers who will be involved in the fuzzing process"
-        )]
-        fuzz_workers: usize,
+    URLS(UrlsOpts),
+}
 
-        // threads
-        #[structopt(
-            short = "w",
-            long = "workers",
-            default_value = "10",
-            help = "Number of workers"
-        )]
-        workers: usize,
-        #[structopt(
-            short = "v",
-            long = "verbose",
-            help = "verbose mode (show sending requests)"
-        )]
-        verbose: bool,
+#[derive(Debug, StructOpt)]
+pub struct NewOpts {
+    #[structopt(short = "-s", long, parse(try_from_str = get_script_type))]
+    pub scan_type: ScriptType,
+    #[structopt(short = "f", long)]
+    pub file_name: PathBuf,
+}
 
-        #[structopt(
-            short = "sw",
-            long = "scripts-worker",
-            default_value = "10",
-            help = "How many scripts to run at the same time for one url"
-        )]
-        scripts_workers: usize,
+#[derive(Debug, StructOpt)]
+pub struct UrlsOpts {
+    // redirects limit
+    #[structopt(
+        short,
+        long,
+        default_value = "10",
+        help = "Number of allowed http redirects"
+    )]
+    pub redirects: u32,
+    #[structopt(
+        long = "fuzz-workers",
+        default_value = "15",
+        help = "The number of workers who will be involved in the fuzzing process"
+    )]
+    pub fuzz_workers: usize,
 
-        // timeout
-        #[structopt(
-            short = "t",
-            long = "timeout",
-            default_value = "10",
-            help = "Connection timeout"
-        )]
-        timeout: u64,
+    // threads
+    #[structopt(
+        short = "w",
+        long = "workers",
+        default_value = "10",
+        help = "Number of workers"
+    )]
+    pub workers: usize,
+    #[structopt(
+        short = "v",
+        long = "verbose",
+        help = "verbose mode (show sending requests)"
+    )]
+    pub verbose: bool,
 
-        /// Input file
-        #[structopt(parse(from_os_str), help = "Scripts path")]
-        script_path: PathBuf,
+    #[structopt(
+        short = "sw",
+        long = "scripts-worker",
+        default_value = "10",
+        help = "How many scripts to run at the same time for one url"
+    )]
+    pub scripts_workers: usize,
 
-        /// Output file, stdout if not present
-        #[structopt(
-            short = "o",
-            long = "output",
-            parse(from_os_str),
-            help = "output json file"
-        )]
-        output: Option<PathBuf>,
+    // timeout
+    #[structopt(
+        short = "t",
+        long = "timeout",
+        default_value = "10",
+        help = "Connection timeout"
+    )]
+    pub timeout: u64,
 
-        #[structopt(
-            short = "p",
-            long = "proxy",
-            help = "Set http proxy for all connections"
-        )]
-        proxy: Option<String>,
-        #[structopt(
-            long = "requests-limit",
-            help = "requests limit",
-            default_value = "2000"
-        )]
-        requests_limit: i32,
-        #[structopt(long = "delay", help = "sleeping dalay", default_value = "5")]
-        delay: u64,
+    /// Input file
+    #[structopt(parse(from_os_str), help = "Scripts path")]
+    pub script_path: PathBuf,
 
-        #[structopt(long = "log", help = "Saving Lotus Logs for debugging")]
-        log: Option<PathBuf>,
-        #[structopt(
-            long = "urls",
-            help = "Reading urls from text file",
-            parse(from_os_str)
-        )]
-        urls: Option<PathBuf>,
+    /// Output file, stdout if not present
+    #[structopt(
+        short = "o",
+        long = "output",
+        parse(from_os_str),
+        help = "output json file"
+    )]
+    pub output: Option<PathBuf>,
 
-        #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}", help = "Default Headers (eg: '{\"X-API\":\"123\"}')")]
-        headers: HeaderMap,
-        #[structopt(
-            long = "exit-after-errors",
-            default_value = "2000",
-            help = "Exit after X number of script errors"
-        )]
-        exit_after: i32,
-    },
+    #[structopt(
+        short = "p",
+        long = "proxy",
+        help = "Set http proxy for all connections"
+    )]
+    pub proxy: Option<String>,
+    #[structopt(
+        long = "requests-limit",
+        help = "requests limit",
+        default_value = "2000"
+    )]
+    pub requests_limit: i32,
+    #[structopt(long = "delay", help = "sleeping dalay", default_value = "5")]
+    pub delay: u64,
+
+    #[structopt(long = "log", help = "Saving Lotus Logs for debugging")]
+    pub log: Option<PathBuf>,
+    #[structopt(
+        long = "urls",
+        help = "Reading urls from text file",
+        parse(from_os_str)
+    )]
+    pub urls: Option<PathBuf>,
+
+    #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}", help = "Default Headers (eg: '{\"X-API\":\"123\"}')")]
+    pub headers: HeaderMap,
+    #[structopt(
+        long = "exit-after-errors",
+        default_value = "2000",
+        help = "Exit after X number of script errors"
+    )]
+    pub exit_after: i32,
 }

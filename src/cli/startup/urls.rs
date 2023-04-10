@@ -39,39 +39,23 @@ pub fn args_urls() -> UrlArgs {
         fuzz_workers,
         verbose,
     ) = match Opts::from_args() {
-        Opts::URLS {
-            redirects,
-            workers,
-            scripts_workers,
-            timeout,
-            script_path,
-            output,
-            proxy,
-            log,
-            urls,
-            headers,
-            exit_after,
-            requests_limit,
-            delay,
-            fuzz_workers,
-            verbose,
-        } => {
+        Opts::URLS(url_opts) => {
             // setup logger
-            init_log(log).unwrap();
+            init_log(url_opts.log).unwrap();
             let req_opts = RequestOpts {
-                headers,
-                proxy,
-                timeout,
-                redirects,
+                headers: url_opts.headers,
+                proxy: url_opts.proxy,
+                timeout: url_opts.timeout,
+                redirects: url_opts.redirects,
             };
             let lotus_obj = Lotus {
-                script_path,
-                output,
-                workers,
-                script_workers: scripts_workers,
+                script_path: url_opts.script_path,
+                output: url_opts.output,
+                workers: url_opts.workers,
+                script_workers: url_opts.scripts_workers,
                 stop_after: Arc::new(Mutex::new(1)),
             };
-            let urls = get_target_urls(urls);
+            let urls = get_target_urls(url_opts.urls);
             if urls.is_err() {
                 match urls {
                     Err(CliErrors::EmptyStdin) => {
@@ -95,13 +79,13 @@ pub fn args_urls() -> UrlArgs {
                 urls_vec,
                 hosts,
                 paths,
-                exit_after,
+                url_opts.exit_after,
                 req_opts,
                 lotus_obj,
-                requests_limit,
-                delay,
-                fuzz_workers,
-                verbose,
+                url_opts.requests_limit,
+                url_opts.delay,
+                url_opts.fuzz_workers,
+                url_opts.verbose,
             )
         }
         _ => {
