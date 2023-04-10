@@ -17,6 +17,8 @@ You can install Lotus from the source code by running the following commands:
 $ apt install libssl-dev pkg-config gcc git -y
 $ cargo install --git=https://github.com/rusty-sec/lotus/
 ```
+> NOTE: you can download the latest version with 0.5-beta branch
+
 Before running the command, ensure that you have installed the openssl-dev package. If you encounter any challenges while compiling, please open an issue on our Github repository for assistance. Alternatively, you can download the binary file suitable for your operating system and run it directly.
 
 Next, you will need to download the Lua scripts from our Github repository and run the following command:
