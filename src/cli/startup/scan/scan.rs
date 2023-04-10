@@ -44,43 +44,24 @@ pub fn args_scan() -> ScanArgs {
         fuzz_workers,
         verbose,
     ) = match Opts::from_args() {
-        Opts::SCAN {
-            redirects,
-            workers,
-            scripts_workers,
-            timeout,
-            script_path,
-            output,
-            proxy,
-            log,
-            urls,
-            headers,
-            exit_after,
-            requests_limit,
-            delay,
-            fuzz_workers,
-            verbose,
-            is_request,
-            env_vars,
-            input_handler,
-        } => {
+        Opts::SCAN(url_opts) => {
             // setup logger
-            init_log(log).unwrap();
+            init_log(url_opts.log).unwrap();
             let req_opts = RequestOpts {
-                headers,
-                proxy,
-                timeout,
-                redirects,
+                headers: url_opts.headers,
+                proxy: url_opts.proxy,
+                timeout: url_opts.timeout,
+                redirects: url_opts.redirects,
             };
             let lotus_obj = Lotus {
-                script_path,
-                output,
-                workers,
-                script_workers: scripts_workers,
+                script_path: url_opts.script_path,
+                output: url_opts.output,
+                workers: url_opts.workers,
+                script_workers: url_opts.scripts_workers,
                 stop_after: Arc::new(Mutex::new(1)),
-                env_vars,
+                env_vars: url_opts.env_vars,
             };
-            let input_data = if let Some(urls_file) = urls {
+            let input_data = if let Some(urls_file) = url_opts.urls {
                 let read_file = filename_to_string(urls_file.to_str().unwrap());
                 if let Err(..) = read_file {
                     show_msg("Cannot Read the urls file", MessageLevel::Error);
@@ -100,7 +81,7 @@ pub fn args_scan() -> ScanArgs {
                     }
                 }
             };
-            let input_handler = if let Some(custom_input) = input_handler {
+            let input_handler = if let Some(custom_input) = url_opts.input_handler {
                 let lua_code = filename_to_string(custom_input.to_str().unwrap());
                 if let Err(err) = lua_code {
                     show_msg(
@@ -147,14 +128,14 @@ pub fn args_scan() -> ScanArgs {
                 hosts,
                 paths,
                 input_handler,
-                exit_after,
-                is_request,
+                url_opts.exit_after,
+                url_opts.is_request,
                 req_opts,
                 lotus_obj,
-                requests_limit,
-                delay,
-                fuzz_workers,
-                verbose,
+                url_opts.requests_limit,
+                url_opts.delay,
+                url_opts.fuzz_workers,
+                url_opts.verbose,
             )
         }
         _ => {

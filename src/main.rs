@@ -29,15 +29,15 @@ use structopt::StructOpt;
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     match Opts::from_args() {
-        Opts::SCAN { .. } => run_scan().await,
-        Opts::NEW {
-            scan_type,
-            file_name,
-        } => {
-            new_args(scan_type, file_name);
+        Opts::SCAN(_) => {
+            run_scan().await.unwrap();
+        }
+        Opts::NEW(new_opts) => {
+            new_args(new_opts.scan_type, new_opts.file_name);
             std::process::exit(0);
         }
     }
+    Ok(())
 }
 
 async fn run_scan() -> Result<(), std::io::Error> {
