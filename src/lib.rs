@@ -43,6 +43,9 @@ impl Lotus {
         exit_after: i32,
         fuzz_workers: usize,
     ) {
+        if target_data.is_empty() {
+            return;
+        }
         let loaded_scripts = match scan_type {
             ScanTypes::HOSTS => valid_scripts(get_scripts(self.script_path.clone()), 1),
             ScanTypes::URLS => valid_scripts(get_scripts(self.script_path.clone()), 2),
