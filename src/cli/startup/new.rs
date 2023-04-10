@@ -1,6 +1,6 @@
 use crate::{
     cli::{
-        args::ScriptType,
+        args::new::ScriptType,
         default_scripts::{
             write_file, CVE_EXAMPLE, FUZZ_EXAMPLE, PASSIVE_EXAMPLE, SERVICE_EXAMPLE,
         },
