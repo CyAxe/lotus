@@ -7,7 +7,7 @@ use crate::lua::{
 use crate::{filename_to_string, show_msg, CliErrors, MessageLevel};
 use glob::glob;
 use log::error;
-use mlua::Lua;
+use mlua::{Lua, ExternalResult};
 use std::path::PathBuf;
 
 /// Return Vector of scripts name and code with both methods
@@ -111,14 +111,14 @@ pub fn valid_scripts(
             .unwrap();
         let code = lua_eng.lua.load(script_code).exec();
         if code.is_err() {
+            let log_msg = &format!("Unable to load {} script: {:?}",script_path, code.to_lua_err().unwrap_err().to_string());
             show_msg(
-                &format!("Unable to load {} script", script_path),
+                log_msg,
                 MessageLevel::Error,
             );
             log::error!(
-                "Script Loading Error {} : {}",
-                script_path,
-                code.unwrap_err()
+                "{}",
+                log_msg
             );
         } else {
             let global = lua_eng.lua.globals();

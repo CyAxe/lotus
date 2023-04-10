@@ -25,6 +25,7 @@ use lua::{
     model::LuaOptions, parsing::files::filename_to_string, run::LuaLoader,
     threads::runner::iter_futures,
 };
+use mlua::ExternalError;
 pub use model::{Lotus, RequestOpts, ScanTypes};
 use std::sync::Arc;
 
@@ -73,7 +74,7 @@ impl Lotus {
                             match lotus_loader.run_scan(lua_opts).await {
                                 Ok(_) => (),
                                 Err(err) => {
-                                    log::error!("script error: {}", err);
+                                    log::error!("script error: {}", err.to_lua_err().to_string());
                                     let mut stop_after = self.stop_after.lock().unwrap();
                                     log::debug!("Errors Counter: {}", *stop_after);
                                     *stop_after += 1;
