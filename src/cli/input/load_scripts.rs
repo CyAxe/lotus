@@ -80,11 +80,9 @@ pub fn valid_scripts(
         1 => {
             test_target_host = Some("example.com");
         }
-        2 => {
+        _ => {
             test_target_url = Some("https://example.com");
         }
-        3 => {}
-        _ => {}
     }
     let lua_eng = LuaRunTime { lua: unsafe { &Lua::unsafe_new_with(mlua::StdLib::ALL_SAFE, mlua::LuaOptions::new())} };
     lua_eng.add_encode_function();
@@ -97,9 +95,14 @@ pub fn valid_scripts(
         lua_eng
             .lua
             .globals()
-            .set("TARGET_HOST", "example.com")
+            .set("INPUT_DATA", "example.com")
             .unwrap();
     } else {
+        lua_eng
+            .lua
+            .globals()
+            .set("INPUT_DATA", Vec::<&str>::new())
+            .unwrap();
         lua_eng.add_httpfuncs(test_target_url);
     }
     let mut used_scripts: Vec<(String, String)> = Vec::new();
