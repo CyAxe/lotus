@@ -62,7 +62,7 @@ $ cargo install --git=https://github.com/BugBlocker/lotus/
 ```
 
 Before running the command, ensure that you have installed the openssl-dev package. If you encounter any challenges while compiling, please open an issue on our Github repository for assistance. Alternatively, you can download the binary file from [Github Release page](https://github.com/BugBlocker/lotus/releases) suitable for your operating system and run it directly.
-You will then need to download the lua scripts from our [github repository](https://github.com/rusty-sec/lotus-scripts) as quick start 
+You will then need to download the lua scripts from our [Github Repository](https://github.com/BugBlocker/lotus-scripts) as quick start 
 we provide you a lot of examples and scripts for diffrent cases
 after downloading the report you will have to run the following command
 ```
