@@ -6,54 +6,46 @@ on:
       - v[0-9]+.*
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: taiki-e/create-gh-release-action@v1
+        env:
+          # (required)
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-assets:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        feature: [luajit, lua53, lua54, lua52, lua51]
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: release
-          toolchain: stable
+      - uses: actions/checkout@v3
       - name: Build binary
-        run: cargo build --release --features ${matrix.feature}
-      - name: Create tarball and zip file
-        run: |
-          tar czf lotus-${{ matrix.feature }}-${{ runner.os }}.tar.gz -C target/release lotus
-          zip lotus-${{ matrix.feature }}-${{ runner.os }}.zip target/release/lotus.exe
-      - name: Upload assets
+        run: cargo build --release --locked
+      - name: Archive binary
         uses: actions/upload-artifact@v2
         with:
-          name: lotus-${{ matrix.feature }}-${{ runner.os }}
+          name: lotus
+          path: target/release/lotus
+      - name: Create and upload compressed binaries
+        uses: jakejarvis/compress-artifacts-action@master
+        with:
+          extensions: |
+            .tar.gz
+            .zip
+          overwrite: true
+      - name: Upload compressed binaries
+        uses: actions/upload-artifact@v2
+        with:
+          name: lotus
           path: |
-            lotus-${{ matrix.feature }}-${{ runner.os }}.tar.gz
-            lotus-${{ matrix.feature }}-${{ runner.os }}.zip
-      - name: Set up Git
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-      - name: Create release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-      - name: Upload binaries to release
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: |
-            lotus-${{ matrix.feature }}-${{ runner.os }}.tar.gz
-            lotus-${{ matrix.feature }}-${{ runner.os }}.zip
-          asset_name: |
-            lotus-${{ matrix.feature }}-${{ runner.os }}.tar.gz
-            lotus-${{ matrix.feature }}-${{ runner.os }}.zip
-          asset_content_type: application/octet-stream
-
+            target/release/lotus.tar.gz
+            target/release/lotus.zip
+        env:
+          # (required)
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
