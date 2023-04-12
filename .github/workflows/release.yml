@@ -24,7 +24,13 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-          - windows-latest
+        lua:
+          - lua54 
+          - lua53 
+          - lua52 
+          - lua51 
+          - luajit
+
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -36,31 +42,8 @@ jobs:
       - run: rustup target add x86_64-pc-windows-gnu
       - uses: actions-rs/cargo@v1
         with:
-          command: build --release --all-features
-          args: --target x86_64-unknown-linux-musl
+          command: build --release --features $lua,vendored
       - uses: actions/upload-artifact@v2
         with:
-          name: lotus-luajit.tar.gz
-          path: target/x86_64-unknown-linux-musl/release/lotus
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build --release --features lua53
-          args: --target x86_64-pc-windows-gnu
-      - uses: actions/upload-artifact@v2
-        with:
-          name: lotus-lua53.zip
-          path: target/x86_64-pc-windows-gnu/release/lotus.exe
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build --release --features lua54
-      - uses: actions/upload-artifact@v2
-        with:
-          name: lotus-lua54.tar.gz
-          path: target/release/lotus
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build --release --features vendored
-      - uses: actions/upload-artifact@v2
-        with:
-          name: lotus-vendored.tar.gz
+          name: lotus-$lua-$
           path: target/release/lotus
