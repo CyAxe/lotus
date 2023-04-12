@@ -9,6 +9,14 @@ description = "Fast Web Security Scanner written in Rust based on Lua Scripts"
 authors = ["Khaled Nassar <knassar702@gmail.com>"]
 readme = "README.md"
 
+[features]
+lua54 = ["tealr/mlua_lua54"]
+lua53 = ["tealr/mlua_lua53"]
+lua52 = ["tealr/mlua_lua52"]
+lua51 = ["tealr/mlua_lua51"]
+luajit = ["tealr/mlua_luajit"]
+vendored = ["tealr/mlua_vendored"]
+
 [[bin]]
 name = "lotus"
 path = "src/main.rs"
@@ -21,7 +29,7 @@ path = "src/main.rs"
 
 # LUA
 mlua = { version = "0.8" , features=["serialize"]}
-tealr = {version="0.9.0-alpha4", features=["mlua", "mlua_luajit", "mlua_vendored", "mlua_async"]} 
+tealr = {version="0.9.0-alpha4", features=["mlua", "mlua_async"]} 
 
 # Threading
 futures = "0.3.24"
