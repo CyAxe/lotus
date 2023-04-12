@@ -1,7 +1,7 @@
 use crate::lua::{
     model::LuaRunTime,
     runtime::{
-        encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT,
+        encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT,
     },
 };
 use crate::{filename_to_string, show_msg, CliErrors, MessageLevel};
@@ -91,7 +91,6 @@ pub fn valid_scripts(
     lua_eng.add_printfunc();
     lua_eng.add_matchingfunc();
     lua_eng.add_threadsfunc();
-    lua_eng.add_payloadsfuncs();
     if test_target_host.is_some() {
         lua_eng.add_httpfuncs(None);
         lua_eng

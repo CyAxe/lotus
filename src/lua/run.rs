@@ -1,5 +1,5 @@
 use crate::lua::runtime::{
-    encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT,
+    encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT,
 };
 use crate::{
     cli::bar::BAR,
@@ -42,7 +42,6 @@ impl LuaLoader {
         lua_eng.add_printfunc();
         lua_eng.add_matchingfunc();
         lua_eng.add_threadsfunc();
-        lua_eng.add_payloadsfuncs();
         lua.globals()
             .set(
                 "ERR_STRING",

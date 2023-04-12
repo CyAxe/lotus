@@ -1,10 +1,7 @@
 use crate::{
     lua::{
         model::LuaRunTime,
-        parsing::{
-            html::{css_selector, html_parse, html_search},
-            text::ResponseMatcher,
-        },
+        parsing::text::ResponseMatcher,
         threads::{LuaThreader, ParamScan},
     },
     BAR,
@@ -35,40 +32,6 @@ impl UtilsEXT for LuaRunTime<'_> {
             .unwrap();
     }
     fn add_matchingfunc(&self) {
-        self.lua
-            .globals()
-            .set(
-                "generate_css_selector",
-                self.lua
-                    .create_function(|_, payload: String| Ok(css_selector(&payload)))
-                    .unwrap(),
-            )
-            .unwrap();
-
-        self.lua
-            .globals()
-            .set(
-                "html_parse",
-                self.lua
-                    .create_function(|_, (html, payload): (String, String)| {
-                        Ok(html_parse(&html, &payload))
-                    })
-                    .unwrap(),
-            )
-            .unwrap();
-
-        self.lua
-            .globals()
-            .set(
-                "html_search",
-                self.lua
-                    .create_function(|_, (html, pattern): (String, String)| {
-                        Ok(html_search(&html, &pattern))
-                    })
-                    .unwrap(),
-            )
-            .unwrap();
-
         self.lua
             .globals()
             .set(
