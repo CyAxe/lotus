@@ -6,37 +6,54 @@ on:
       - v[0-9]+.*
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: taiki-e/create-gh-release-action@v1
-        env:
-          # (required)
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  upload-assets:
+  build:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
-    runs-on: ${{ matrix.os }}
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        feature: [luajit, lua53, lua54, lua52, lua51]
     steps:
-      - uses: actions/checkout@v3
-      - uses: taiki-e/upload-rust-binary-action@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
         with:
-          # (required)
-          bin: lotus
-          # (optional) On which platform to distribute the `.tar.gz` file.
-          # [default value: unix]
-          # [possible values: all, unix, windows, none]
-          tar: unix
-          # (optional) On which platform to distribute the `.zip` file.
-          # [default value: windows]
-          # [possible values: all, unix, windows, none]
-          zip: windows
-        env:
-          # (required)
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          profile: release
+          toolchain: stable
+      - name: Build binary
+        run: cargo build --release --features ${matrix.feature}
+      - name: Create tarball and zip file
+        run: |
+          tar czf lotus-${{ matrix.feature }}-${{ runner.os }}.tar.gz -C target/release lotus
+          zip lotus-${{ matrix.feature }}-${{ runner.os }}.zip target/release/lotus.exe
+      - name: Upload assets
+        uses: actions/upload-artifact@v2
+        with:
+          name: lotus-${{ matrix.feature }}-${{ runner.os }}
+          path: |
+            lotus-${{ matrix.feature }}-${{ runner.os }}.tar.gz
+            lotus-${{ matrix.feature }}-${{ runner.os }}.zip
+      - name: Set up Git
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Create release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload binaries to release
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: |
+            lotus-${{ matrix.feature }}-${{ runner.os }}.tar.gz
+            lotus-${{ matrix.feature }}-${{ runner.os }}.zip
+          asset_name: |
+            lotus-${{ matrix.feature }}-${{ runner.os }}.tar.gz
+            lotus-${{ matrix.feature }}-${{ runner.os }}.zip
+          asset_content_type: application/octet-stream
+
