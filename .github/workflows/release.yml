@@ -41,6 +41,7 @@ jobs:
           # [default value: windows]
           # [possible values: all, unix, windows, none]
           zip: windows
+          target: ${{matrix.lua}}-${{matrix.os}}-${{matrix.target}}
           # (required) Build with the given set of features if any.
           features: ${{ matrix.lua }},vendored
           # (required) GitHub token for uploading assets to GitHub Releases.
