@@ -5,7 +5,7 @@ pub fn custom_input_lua(
     input_data: Vec<String>,
     code: &str,
 ) -> Result<Vec<JsonValue>, mlua::Error> {
-    let lua_env = Lua::new_with(StdLib::ALL_SAFE, mlua::LuaOptions::new()).unwrap();
+    let lua_env = unsafe { Lua::unsafe_new_with(StdLib::ALL_SAFE, mlua::LuaOptions::new()) };
     log::debug!("Loading Input handler lua code");
     lua_env.load(code).exec()?;
     let parse_input = lua_env.globals().get::<_, mlua::Function>("parse_input")?;
