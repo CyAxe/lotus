@@ -19,7 +19,7 @@ pub enum CliErrors {
     #[error("No SCAN_TYPE VAR found")]
     NoScanType,
     #[error("Lua Code Error")]
-    LuaCodeErr
+    LuaCodeErr,
 }
 
 #[derive(Error, Debug)]

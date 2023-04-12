@@ -1,8 +1,8 @@
-pub mod scan;
 pub mod new;
-use structopt::StructOpt;
-use scan::UrlsOpts;
+pub mod scan;
 use new::NewOpts;
+use scan::UrlsOpts;
+use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(

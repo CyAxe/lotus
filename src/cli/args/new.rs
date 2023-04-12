@@ -2,7 +2,6 @@ use crate::cli::errors::CliErrors;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-
 fn get_script_type(script_type: &str) -> Result<ScriptType, CliErrors> {
     let script_type = match script_type {
         "fuzz" => ScriptType::Fuzz,
@@ -18,9 +17,6 @@ fn get_script_type(script_type: &str) -> Result<ScriptType, CliErrors> {
     }
 }
 
-
-
-
 #[derive(Debug, PartialEq)]
 pub enum ScriptType {
     Fuzz,
@@ -30,8 +26,6 @@ pub enum ScriptType {
     NotSupported,
 }
 
-
-
 #[derive(Debug, StructOpt)]
 pub struct NewOpts {
     #[structopt(short = "-s", long, parse(try_from_str = get_script_type))]
@@ -39,4 +33,3 @@ pub struct NewOpts {
     #[structopt(short = "f", long)]
     pub file_name: PathBuf,
 }
-

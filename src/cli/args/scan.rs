@@ -1,9 +1,9 @@
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use structopt::StructOpt;
-use serde_json::Value;
 
 fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
     let parsed_json = serde_json::from_str::<HashMap<String, String>>(raw_headers);

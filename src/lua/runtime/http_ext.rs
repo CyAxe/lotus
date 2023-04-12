@@ -133,7 +133,12 @@ impl HTTPEXT for LuaRunTime<'_> {
         if let Some(url) = target_url {
             self.lua
                 .globals()
-                .set("HttpMessage", HttpMessage { url: Some(Url::parse(&url).unwrap()) })
+                .set(
+                    "HttpMessage",
+                    HttpMessage {
+                        url: Some(Url::parse(&url).unwrap()),
+                    },
+                )
                 .unwrap();
         } else {
             self.lua
