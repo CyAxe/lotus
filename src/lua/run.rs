@@ -78,7 +78,7 @@ impl LuaLoader {
     /// * `target_url` - Target url
     /// * `target_type` - the input type if its HOST or URL
     pub async fn run_scan<'a>(&self, lua_opts: LuaOptions<'_>) -> Result<(), mlua::Error> {
-        let lua = Lua::new_with(mlua::StdLib::ALL_SAFE, mlua::LuaOptions::new()).unwrap();
+        let lua = unsafe { Lua::unsafe_new_with(mlua::StdLib::ALL_SAFE, mlua::LuaOptions::new()) };
         let env_vars: mlua::Value = lua.to_value(&lua_opts.env_vars).unwrap();
 
         lua.globals().set("ENV", env_vars).unwrap();

@@ -86,7 +86,7 @@ pub fn valid_scripts(
         3 => {}
         _ => {}
     }
-    let lua_eng = LuaRunTime { lua: &Lua::new() };
+    let lua_eng = LuaRunTime { lua: unsafe { &Lua::unsafe_new_with(mlua::StdLib::ALL_SAFE, mlua::LuaOptions::new())} };
     lua_eng.add_encode_function();
     lua_eng.add_printfunc();
     lua_eng.add_matchingfunc();
@@ -111,7 +111,7 @@ pub fn valid_scripts(
             .unwrap();
         let code = lua_eng.lua.load(script_code).exec();
         if code.is_err() {
-            let log_msg = &format!("Unable to load {} script: {:?}",script_path, code.to_lua_err().unwrap_err().to_string());
+            let log_msg = &format!("Unable to load {} script: {}",script_path, code.to_lua_err().unwrap_err().to_string());
             show_msg(
                 log_msg,
                 MessageLevel::Error,
