@@ -51,7 +51,7 @@ Our aim is to make security scripting more efficient by providing libraries and 
 - HTTP Requests: Lotus can send HTTP requests with all available options like multipart, all methods, and custom headers.
 - Encode/Decode: Lotus provides functions for encoding and decoding base64, url, and more.
 
-And with our [Lua libraries](https://luarocks.org/labels/lotus) on LuaRocks, you can do even more. 
+And with our Lua libraries on LuaRocks, you can do even more. 
 
 
 ## :rocket: Installation
