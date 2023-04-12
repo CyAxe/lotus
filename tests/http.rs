@@ -12,7 +12,7 @@ async fn test_send() {
             "GET",
             "https://httpbin.org/get".to_string(),
             None,
-            sender.clone()
+            sender.clone(),
         )
         .await;
     assert!(resp.is_ok());

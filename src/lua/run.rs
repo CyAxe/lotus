@@ -1,6 +1,4 @@
-use crate::lua::runtime::{
-    encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT,
-};
+use crate::lua::runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT};
 use crate::{
     cli::bar::BAR,
     lua::{
