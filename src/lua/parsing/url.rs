@@ -18,7 +18,7 @@ mod url_lua;
 
 #[derive(Clone)]
 pub struct HttpMessage {
-    pub url: Url,
+    pub url: Option<Url>,
 }
 
 impl HttpMessage {
@@ -26,8 +26,12 @@ impl HttpMessage {
         let mut scan_params = HashMap::with_capacity(16);
         let mut result = HashMap::with_capacity(16);
 
-        for (key, value) in self.url.query_pairs() {
-            scan_params.insert(key.to_string(), value.to_string());
+        if let Some(the_url) = &self.url {
+            for (key, value) in the_url.query_pairs() {
+                scan_params.insert(key.to_string(), value.to_string());
+            }
+        } else {
+            return result;
         }
 
         for (key, value) in scan_params.iter() {
@@ -42,7 +46,7 @@ impl HttpMessage {
                     new_params.insert(key.to_string(), new_value);
                 }
 
-                let mut new_url = self.url.clone();
+                let mut new_url = self.url.clone().unwrap();
                 new_url.set_query(None);
 
                 for (key, value) in new_params.iter() {
@@ -57,27 +61,32 @@ impl HttpMessage {
     }
 
     pub fn set_urlvalue(&self, param: &str, payload: &str, remove_content: bool) -> String {
-        let mut url = self.url.clone();
-        let new_query = url
-            .query_pairs()
-            .fold(String::new(), |mut acc, (key, value)| {
-                if key == param {
-                    if remove_content {
-                        acc += &format!("{}={}", key, payload);
+        if let Some(mut url) = self.url.clone() {
+            let new_query = url
+                .query_pairs()
+                .fold(String::new(), |mut acc, (key, value)| {
+                    if key == param {
+                        if remove_content {
+                            acc += &format!("{}={}", key, payload);
+                        } else {
+                            acc += &format!("{}={}", key, value + payload);
+                        }
                     } else {
-                        acc += &format!("{}={}", key, value + payload);
+                        acc += &format!("{}={}", key, value.to_string());
                     }
-                } else {
-                    acc += &format!("{}={}", key, value.to_string());
-                }
-                acc += "&";
-                acc
-            });
-        url.set_query(Some(&new_query[..new_query.len() - 1]));
-        url.as_str().to_string()
+                    acc += "&";
+                    acc
+                });
+            url.set_query(Some(&new_query[..new_query.len() - 1]));
+            return url.as_str().to_string();
+        }
+        String::new()
     }
 
     pub fn urljoin(&self, path: &str) -> String {
-        self.url.join(path).unwrap().as_str().to_string()
+        if let Some(url) = &self.url {
+            return url.join(path).unwrap().as_str().to_string();
+        }
+        String::new()
     }
 }
