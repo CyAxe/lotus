@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
       inputs:
          logLevel:
-            description: 'manual run'     
+            description: 'manual run .'     
             required: false
             default: ''
 
@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Rust
-        uses: actions/setup-rust@v1
+        uses: ATiltedTree/setup-rust@v1
         with:
           rust-version: stable
       - run: rustup target add x86_64-unknown-linux-musl
