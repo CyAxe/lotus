@@ -1,5 +1,8 @@
 name: Release
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
@@ -11,39 +14,36 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: taiki-e/create-gh-release-action@v1
-        env:
-          # (required)
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Set the release name to the version from Cargo.toml
-          name: v${{ env.CARGO_PKG_VERSION }}
+          # (optional) Path to changelog.
+          changelog: CHANGELOG.md
+          # (required) GitHub token for creating GitHub Releases.
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   upload-assets:
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-        lua:
-          - lua54 
-          - lua53 
-          - lua52 
-          - lua51 
-          - luajit
-
+        os: [ubuntu-latest, macos-latest]
+        lua: [lua54, lua53, lua52, lua51, luajit]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Rust
-        uses: ATiltedTree/setup-rust@v1
+      - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          rust-version: stable
-      - run: rustup target add x86_64-unknown-linux-musl
-      - run: rustup target add x86_64-apple-darwin
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build --release --features $lua,vendored
-      - uses: actions/upload-artifact@v2
-        with:
-          name: lotus-$lua
-          path: target/release/lotus
+          # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
+          # Note that glob pattern is not supported yet.
+          bin: lotus
+          # (optional) On which platform to distribute the `.tar.gz` file.
+          # [default value: unix]
+          # [possible values: all, unix, windows, none]
+          tar: unix
+          # (optional) On which platform to distribute the `.zip` file.
+          # [default value: windows]
+          # [possible values: all, unix, windows, none]
+          zip: windows
+          # (required) Build with the given set of features if any.
+          features: ${{ matrix.lua }},vendored
+          # (required) GitHub token for uploading assets to GitHub Releases.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # (optional) File name suffix to append to each uploaded file.
+          suffix: ${{ matrix.lua }}
