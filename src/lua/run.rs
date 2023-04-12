@@ -95,7 +95,7 @@ impl LuaLoader {
                 self.set_lua(None, &lua);
                 lua.globals()
                     .set(
-                        "TARGET_HOST",
+                        "INPUT_DATA",
                         lua_opts.target_url.unwrap().as_str().unwrap().to_string(),
                     )
                     .unwrap();

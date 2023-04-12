@@ -130,15 +130,15 @@ impl HTTPEXT for LuaRunTime<'_> {
         self.lua.globals().set("log_debug", log_debug).unwrap();
         self.lua.globals().set("log_warn", log_warn).unwrap();
 
-        if !target_url.is_none() {
+        if let Some(url) = target_url {
             self.lua
                 .globals()
-                .set(
-                    "HttpMessage",
-                    HttpMessage {
-                        url: Url::parse(target_url.unwrap()).unwrap(),
-                    },
-                )
+                .set("HttpMessage", HttpMessage { url: Some(Url::parse(&url).unwrap()) })
+                .unwrap();
+        } else {
+            self.lua
+                .globals()
+                .set("HttpMessage", HttpMessage { url: None })
                 .unwrap();
         }
         self.lua
