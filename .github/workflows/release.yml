@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - v[0-9]+.*
+  workflow_dispatch:
+      inputs:
+         logLevel:
+            description: 'manual run'     
+            required: false
+            default: ''
 
 jobs:
   create-release:
@@ -14,6 +20,9 @@ jobs:
         env:
           # (required)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Set the release name to the version from Cargo.toml
+          name: v${{ env.CARGO_PKG_VERSION }}
 
   upload-assets:
     strategy:
@@ -25,27 +34,39 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - name: Build binary
-        run: cargo build --release --locked
-      - name: Archive binary
-        uses: actions/upload-artifact@v2
+      - name: Set up Rust
+        uses: actions/setup-rust@v1
         with:
-          name: lotus
+          rust-version: stable
+      - run: rustup target add x86_64-unknown-linux-musl
+      - run: rustup target add x86_64-pc-windows-gnu
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build --release --all-features
+          args: --target x86_64-unknown-linux-musl
+      - uses: actions/upload-artifact@v2
+        with:
+          name: lotus-luajit.tar.gz
+          path: target/x86_64-unknown-linux-musl/release/lotus
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build --release --features lua53
+          args: --target x86_64-pc-windows-gnu
+      - uses: actions/upload-artifact@v2
+        with:
+          name: lotus-lua53.zip
+          path: target/x86_64-pc-windows-gnu/release/lotus.exe
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build --release --features lua54
+      - uses: actions/upload-artifact@v2
+        with:
+          name: lotus-lua54.tar.gz
           path: target/release/lotus
-      - name: Create and upload compressed binaries
-        uses: jakejarvis/compress-artifacts-action@master
+      - uses: actions-rs/cargo@v1
         with:
-          extensions: |
-            .tar.gz
-            .zip
-          overwrite: true
-      - name: Upload compressed binaries
-        uses: actions/upload-artifact@v2
+          command: build --release --features vendored
+      - uses: actions/upload-artifact@v2
         with:
-          name: lotus
-          path: |
-            target/release/lotus.tar.gz
-            target/release/lotus.zip
-        env:
-          # (required)
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: lotus-vendored.tar.gz
+          path: target/release/lotus
