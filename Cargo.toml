@@ -23,9 +23,6 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# interactsh
-# TODO: make this crate to sync not async
-# interactsh-rs = { git ="https://github.com/pyroraptor07/interactsh-rs" , version="0.1.0-RC1"}
 
 # LUA
 mlua = { version = "0.8" , features=["serialize"]}
