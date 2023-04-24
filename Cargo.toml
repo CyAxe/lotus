@@ -47,7 +47,6 @@ indicatif = "0.17.0"
 thiserror = "1.0"
 
 # REGEX AND MATCHES
-fancy-regex = "0.10.0"
 regex = "1.7.3"
 scraper = "0.13.0"
 
