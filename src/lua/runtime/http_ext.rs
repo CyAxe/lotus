@@ -2,7 +2,7 @@ use crate::{
     lua::{
         model::LuaRunTime,
         output::report::AllReports,
-        parsing::{files::filename_to_string, url::HttpMessage},
+        parsing::{req::show_response,files::filename_to_string, url::HttpMessage}, network::http::HttpResponse,
     },
     CliErrors,
 };
@@ -20,6 +20,10 @@ pub trait HTTPEXT {
 
 impl HTTPEXT for LuaRunTime<'_> {
     fn add_httpfuncs(&self, target_url: Option<&str>) {
+        self.lua.globals().set("show_response",self.lua.create_function(|_, resp: HttpResponse|{
+        let resp_str = show_response(&resp);
+        Ok(resp_str)
+        }).unwrap()).unwrap();
         self.lua
             .globals()
             .set(
