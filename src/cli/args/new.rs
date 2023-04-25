@@ -6,7 +6,6 @@ fn get_script_type(script_type: &str) -> Result<ScriptType, CliErrors> {
     let script_type = match script_type {
         "fuzz" => ScriptType::Fuzz,
         "cve" => ScriptType::CVE,
-        "passive" => ScriptType::PASSIVE,
         "service" => ScriptType::SERVICE,
         _ => ScriptType::NotSupported,
     };
@@ -21,7 +20,6 @@ fn get_script_type(script_type: &str) -> Result<ScriptType, CliErrors> {
 pub enum ScriptType {
     Fuzz,
     CVE,
-    PASSIVE,
     SERVICE,
     NotSupported,
 }

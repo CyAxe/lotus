@@ -6,7 +6,6 @@ use std::path::PathBuf;
 
 pub const CVE_EXAMPLE: &'static str = include_str!("lua_examples/cve.lua");
 pub const FUZZ_EXAMPLE: &'static str = include_str!("lua_examples/fuzz.lua");
-pub const PASSIVE_EXAMPLE: &'static str = include_str!("lua_examples/passive.lua");
 pub const SERVICE_EXAMPLE: &'static str = include_str!("lua_examples/service.lua");
 
 pub fn write_file(file_name: PathBuf, content_str: &'static str) -> Result<(), CliErrors> {
