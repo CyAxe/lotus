@@ -1,9 +1,7 @@
 use crate::{
     cli::{
         args::new::ScriptType,
-        default_scripts::{
-            write_file, CVE_EXAMPLE, FUZZ_EXAMPLE, SERVICE_EXAMPLE,
-        },
+        default_scripts::{write_file, CVE_EXAMPLE, FUZZ_EXAMPLE, SERVICE_EXAMPLE},
         errors::CliErrors,
     },
     show_msg, MessageLevel,

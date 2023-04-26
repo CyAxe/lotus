@@ -4,7 +4,7 @@ use url::Url;
 
 impl UserData for HttpMessage {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("clone", |_,this,()|{
+        methods.add_method("clone", |_, this, ()| {
             let msg = this.clone();
             Ok(msg)
         });
