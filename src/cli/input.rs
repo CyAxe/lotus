@@ -12,15 +12,21 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
         if parsed_url.is_ok() {
             let parsed_url = parsed_url.unwrap();
             let host = {
-                let host = parsed_url.host().unwrap();
                 if parsed_url.port().is_some() {
+                    let host = parsed_url.host().unwrap();
                     let port = parsed_url.port().unwrap();
                     format!("{}:{}", host, port)
                 } else {
+                    let host = if let Some(host) = parsed_url.host() {
+                        host
+                    } else {
+                        url::Host::Domain("") // Empty Host Name
+                    };
                     host.to_string()
                 }
             };
-            if !hosts.contains(&host) {
+            // Check for Empty & Dups Hosts
+            if !hosts.contains(&host) || !host.len() == 0{
                 hosts.push(host);
             }
         }

@@ -22,11 +22,16 @@ pub struct HttpMessage {
 }
 
 impl HttpMessage {
+    // This method takes a payload string and a boolean indicating whether or not to remove the content of the query parameter
+    // It returns a HashMap of new URLs with the modified query parameter and corresponding value
     pub fn change_urlquery(&self, payload: &str, remove_content: bool) -> HashMap<String, String> {
+        // Create two HashMaps to store the original and modified query parameters
         let mut scan_params = HashMap::with_capacity(16);
         let mut result = HashMap::with_capacity(16);
 
+        // If there is no URL, return an empty HashMap
         if let Some(the_url) = &self.url {
+            // If there is a URL, add its query parameters to scan_params
             for (key, value) in the_url.query_pairs() {
                 scan_params.insert(key.to_string(), value.to_string());
             }
@@ -34,6 +39,7 @@ impl HttpMessage {
             return result;
         }
 
+        // For each query parameter in scan_params, split the payload string by newlines and create a new URL with each modified query parameter
         for (key, value) in scan_params.iter() {
             for pl in payload.split('\n') {
                 let mut new_params = scan_params.clone();
@@ -60,8 +66,12 @@ impl HttpMessage {
         result
     }
 
+    // This method takes a query parameter, a payload string, and a boolean indicating whether or not to remove the content of the query parameter
+    // It returns a new URL with the modified query parameter and corresponding value
     pub fn set_urlvalue(&self, param: &str, payload: &str, remove_content: bool) -> String {
+        // If there is no URL, return an empty String
         if let Some(mut url) = self.url.clone() {
+            // If there is a URL, modify the specified query parameter and return the new URL as a String
             let new_query = url
                 .query_pairs()
                 .fold(String::new(), |mut acc, (key, value)| {
