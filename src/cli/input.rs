@@ -26,7 +26,7 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
                 }
             };
             // Check for Empty & Dups Hosts
-            if !hosts.contains(&host) || !host.len() == 0{
+            if !hosts.contains(&host) && host.len() != 0 {
                 hosts.push(host);
             }
         }
