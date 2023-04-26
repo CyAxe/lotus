@@ -28,14 +28,11 @@ use structopt::StructOpt;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    match Opts::from_args() {
-        Opts::SCAN(_) => {
-            run_scan().await.unwrap();
-        }
-        Opts::NEW(new_opts) => {
-            new_args(new_opts.scan_type, new_opts.file_name);
-            std::process::exit(0);
-        }
+    if let Opts::NEW(new_opts) = Opts::from_args() {
+        new_args(new_opts.scan_type, new_opts.file_name);
+        std::process::exit(0);
+    } else {
+        run_scan().await.unwrap();
     }
     Ok(())
 }
