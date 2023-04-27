@@ -29,6 +29,7 @@ use mlua::ExternalError;
 pub use model::{Lotus, RequestOpts, ScanTypes};
 use std::sync::Arc;
 
+
 impl Lotus {
     /// Run The Lua Script with real target
     /// * `target_data` - Vector with target urls
@@ -71,15 +72,15 @@ impl Lotus {
                             env_vars: self.env_vars.clone(),
                         };
                         if *self.stop_after.lock().unwrap() == exit_after {
-                            log::debug!("Ignoring scripts");
+                            // No script will be executed
                         } else {
-                            log::debug!("Running {} script on {}", script_name, script_data);
+                            log::debug!("Starting script execution: {} on {}", script_name, script_data);
                             match lotus_loader.run_scan(lua_opts).await {
                                 Ok(_) => (),
                                 Err(err) => {
-                                    log::error!("script error: {}", err.to_lua_err().to_string());
+                                    log::error!("An error occurred while executing the script: {}", err.to_lua_err().to_string());
                                     let mut stop_after = self.stop_after.lock().unwrap();
-                                    log::debug!("Errors Counter: {}", *stop_after);
+                                    log::debug!("The current number of errors encountered while executing scripts is: {}", *stop_after);
                                     *stop_after += 1;
                                 }
                             }
