@@ -68,9 +68,6 @@ async fn run_scan() -> Result<(), std::io::Error> {
         *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
         *VERBOSE_MODE.lock().unwrap() = opts.verbose;
     }
-    {
-        BAR.lock().unwrap().suspend(|| {})
-    };
     let scan_futures = vec![
         opts.lotus_obj.start(
             convert_serde_value(opts.target_data.paths),
