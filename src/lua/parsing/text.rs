@@ -39,8 +39,8 @@ impl ResponseMatcher {
             .build()
         {
             Ok(re) => Ok(re.is_match(&resp)),
-            Err(_) => {
-                log::error!("Regex Pattern ERROR  {:?}", pattern);
+            Err(err) => {
+                log::error!("An error occurred while processing the regular expression pattern: {}", err.to_string());
                 Err(CliErrors::RegexPatternError)
             }
         }
@@ -66,8 +66,8 @@ impl ResponseMatcher {
                     .collect();
                 Ok(match_iter)
             }
-            Err(_) => {
-                log::error!("Regex Pattern ERROR  {:?}", regex_pattern);
+            Err(err) => {
+                log::error!("An error occurred while processing the regular expression pattern: {}", err.to_string());
                 Err(CliErrors::RegexPatternError)
             }
         }
@@ -90,8 +90,8 @@ impl ResponseMatcher {
                 let replace_output = re.replacen(response, 2, replacement).to_string();
                 Ok(replace_output)
             }
-            Err(_) => {
-                log::error!("Regex Pattern ERROR  {:?}", regex_pattern);
+            Err(err) => {
+                log::error!("An error occurred while processing the regular expression pattern: {}", err.to_string());
                 Err(CliErrors::RegexPatternError)
             }
         }
@@ -118,8 +118,8 @@ impl ResponseMatcher {
                             counter += 1;
                         }
                     }
-                    Err(_) => {
-                        log::error!("Invalid regex pattern: {:?}", search_pattern);
+                    Err(err) => {
+                        log::error!("An error occurred while processing the regular expression pattern: {}",err.to_string());
                         return Err(CliErrors::RegexPatternError);
                     }
                 },
@@ -155,8 +155,8 @@ impl ResponseMatcher {
                             matched_data.push(pattern);
                         }
                     }
-                    Err(_) => {
-                        log::error!("Invalid regex pattern: {:?}", pattern);
+                    Err(err) => {
+                        log::error!("An error occurred while processing the regular expression pattern: {}",err.to_string());
                         return Err(CliErrors::RegexPatternError);
                     }
                 },

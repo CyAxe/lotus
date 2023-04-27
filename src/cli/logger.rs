@@ -23,8 +23,8 @@ pub fn init_log(log_file: Option<PathBuf>) -> Result<(), std::io::Error> {
     let logger = fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
-                "{}[{}][{}] {}",
-                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                "{} [{}][{}] {}",
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
                 record.target(),
                 record.level(),
                 message
@@ -36,15 +36,15 @@ pub fn init_log(log_file: Option<PathBuf>) -> Result<(), std::io::Error> {
         .level_for("isahc", log::LevelFilter::Warn)
         .level_for("selectors", log::LevelFilter::Warn)
         .level_for("html5ever", log::LevelFilter::Warn);
-    match log_file {
-        Some(log_path) => {
-            // Disalbe unwanted loggers
-            logger
-                .chain(fern::log_file(log_path).unwrap())
-                .apply()
-                .unwrap();
-        }
-        None => {}
+
+    if let Some(log_path) = log_file {
+        // Disable unwanted loggers
+        logger.chain(fern::log_file(log_path.clone()).unwrap()).apply().unwrap();
+        log::info!("Logging initialized. Writing logs to {}", log_path.to_str().unwrap());
+    } else {
+        logger.apply().unwrap();
+        log::info!("Logging initialized. Writing logs to console.");
     }
+    
     Ok(())
 }
