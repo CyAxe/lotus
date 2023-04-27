@@ -41,19 +41,22 @@ async fn run_scan() -> Result<(), std::io::Error> {
     let opts = args_scan();
     let fuzz_workers = opts.fuzz_workers;
     show_msg(
-        &format!("🌐 URLS: {}", opts.target_data.urls.len()),
+        &format!("Number of URLs: {}", opts.target_data.urls.len()),
         MessageLevel::Info,
     );
+
     show_msg(
-        &format!("🏠 HOSTS: {}", opts.target_data.hosts.len()),
+        &format!("Number of hosts: {}", opts.target_data.hosts.len()),
         MessageLevel::Info,
     );
+
     show_msg(
-        &format!("📁 PATHS: {}", opts.target_data.paths.len()),
+        &format!("Number of paths: {}", opts.target_data.paths.len()),
         MessageLevel::Info,
     );
+
     show_msg(
-        &format!("🔧 CUSTOM: {}", opts.target_data.custom.len()),
+        &format!("Number of custom entries: {}", opts.target_data.custom.len()),
         MessageLevel::Info,
     );
     // Open two threads for URL/HOST scanning
