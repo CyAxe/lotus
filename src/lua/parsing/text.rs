@@ -40,7 +40,10 @@ impl ResponseMatcher {
         {
             Ok(re) => Ok(re.is_match(&resp)),
             Err(err) => {
-                log::error!("An error occurred while processing the regular expression pattern: {}", err.to_string());
+                log::error!(
+                    "An error occurred while processing the regular expression pattern: {}",
+                    err.to_string()
+                );
                 Err(CliErrors::RegexPatternError)
             }
         }
@@ -67,7 +70,10 @@ impl ResponseMatcher {
                 Ok(match_iter)
             }
             Err(err) => {
-                log::error!("An error occurred while processing the regular expression pattern: {}", err.to_string());
+                log::error!(
+                    "An error occurred while processing the regular expression pattern: {}",
+                    err.to_string()
+                );
                 Err(CliErrors::RegexPatternError)
             }
         }
@@ -91,7 +97,10 @@ impl ResponseMatcher {
                 Ok(replace_output)
             }
             Err(err) => {
-                log::error!("An error occurred while processing the regular expression pattern: {}", err.to_string());
+                log::error!(
+                    "An error occurred while processing the regular expression pattern: {}",
+                    err.to_string()
+                );
                 Err(CliErrors::RegexPatternError)
             }
         }
@@ -105,24 +114,26 @@ impl ResponseMatcher {
         let mut counter = 0;
         for search_pattern in text.iter() {
             match is_regex.unwrap_or(false) {
-                true => match RegexBuilder::new(&search_pattern)
-                    .multi_line(self.multi_line)
-                    .case_insensitive(self.case_insensitive)
-                    .unicode(self.unicode)
-                    .octal(self.octal)
-                    .dot_matches_new_line(self.dot_matches_new_line)
-                    .build()
-                {
-                    Ok(re_pattern) => {
-                        if re_pattern.is_match(body) {
-                            counter += 1;
+                true => {
+                    match RegexBuilder::new(&search_pattern)
+                        .multi_line(self.multi_line)
+                        .case_insensitive(self.case_insensitive)
+                        .unicode(self.unicode)
+                        .octal(self.octal)
+                        .dot_matches_new_line(self.dot_matches_new_line)
+                        .build()
+                    {
+                        Ok(re_pattern) => {
+                            if re_pattern.is_match(body) {
+                                counter += 1;
+                            }
+                        }
+                        Err(err) => {
+                            log::error!("An error occurred while processing the regular expression pattern: {}",err.to_string());
+                            return Err(CliErrors::RegexPatternError);
                         }
                     }
-                    Err(err) => {
-                        log::error!("An error occurred while processing the regular expression pattern: {}",err.to_string());
-                        return Err(CliErrors::RegexPatternError);
-                    }
-                },
+                }
                 false => {
                     if body.contains(search_pattern) {
                         counter += 1;
@@ -142,24 +153,26 @@ impl ResponseMatcher {
         let mut matched_data = Vec::new();
         for pattern in text {
             match is_regex.unwrap_or(false) {
-                true => match RegexBuilder::new(&pattern)
-                    .multi_line(self.multi_line)
-                    .case_insensitive(self.case_insensitive)
-                    .unicode(self.unicode)
-                    .octal(self.octal)
-                    .dot_matches_new_line(self.dot_matches_new_line)
-                    .build()
-                {
-                    Ok(re) => {
-                        if re.is_match(&body) {
-                            matched_data.push(pattern);
+                true => {
+                    match RegexBuilder::new(&pattern)
+                        .multi_line(self.multi_line)
+                        .case_insensitive(self.case_insensitive)
+                        .unicode(self.unicode)
+                        .octal(self.octal)
+                        .dot_matches_new_line(self.dot_matches_new_line)
+                        .build()
+                    {
+                        Ok(re) => {
+                            if re.is_match(&body) {
+                                matched_data.push(pattern);
+                            }
+                        }
+                        Err(err) => {
+                            log::error!("An error occurred while processing the regular expression pattern: {}",err.to_string());
+                            return Err(CliErrors::RegexPatternError);
                         }
                     }
-                    Err(err) => {
-                        log::error!("An error occurred while processing the regular expression pattern: {}",err.to_string());
-                        return Err(CliErrors::RegexPatternError);
-                    }
-                },
+                }
                 false => {
                     if body.contains(&pattern) {
                         matched_data.push(pattern);
