@@ -3,7 +3,41 @@ use reqwest::header::{HeaderName, HeaderValue};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use structopt::StructOpt;
+use crate::lua::threads::runner::{LAST_CUSTOM_SCAN_ID, LAST_PATH_SCAN_ID,LAST_HOST_SCAN_ID, LAST_URL_SCAN_ID};
+
+fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
+    let file = File::open(file_path)?;
+    let reader = BufReader::new(file);
+
+    for line in reader.lines() {
+        let line = line?;
+        let parts: Vec<&str> = line.split("=").collect();
+        if parts.len() != 2 {
+            continue;
+        }
+
+        match parts[0] {
+            "LAST_URL_SCAN_ID" => {
+                *LAST_URL_SCAN_ID.lock().unwrap() = parts[1].parse().unwrap_or(0);
+            }
+            "LAST_HOST_SCAN_ID" => {
+                *LAST_HOST_SCAN_ID.lock().unwrap() = parts[1].parse().unwrap_or(0);
+            }
+            "LAST_PATH_SCAN_ID" => {
+                *LAST_PATH_SCAN_ID.lock().unwrap() = parts[1].parse().unwrap_or(0);
+            }
+            "LAST_CUSTOM_SCAN_ID" => {
+                *LAST_CUSTOM_SCAN_ID.lock().unwrap() = parts[1].parse().unwrap_or(0);
+            }
+            _ => {}
+        }
+    }
+
+    Ok(())
+}
 
 fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
     let parsed_json = serde_json::from_str::<HashMap<String, String>>(raw_headers);
@@ -140,4 +174,10 @@ pub struct UrlsOpts {
         help = "Create custom input for your scripts"
     )]
     pub input_handler: Option<PathBuf>,
+    #[structopt(
+        long = "resume",
+        parse(try_from_str = read_resume_file),
+        help = "Resume the scan with resume.cfg where your scans progress stopped in the last run"
+    )]
+    _resume: Option<()>
 }
