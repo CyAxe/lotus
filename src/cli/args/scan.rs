@@ -1,12 +1,14 @@
+use crate::lua::threads::runner::{
+    LAST_CUSTOM_SCAN_ID, LAST_HOST_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID,
+};
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 use structopt::StructOpt;
-use crate::lua::threads::runner::{LAST_CUSTOM_SCAN_ID, LAST_PATH_SCAN_ID,LAST_HOST_SCAN_ID, LAST_URL_SCAN_ID};
 
 fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
     let file = File::open(file_path)?;
@@ -179,5 +181,5 @@ pub struct UrlsOpts {
         parse(try_from_str = read_resume_file),
         help = "Resume the scan with resume.cfg where your scans progress stopped in the last run"
     )]
-    _resume: Option<()>
+    _resume: Option<()>,
 }

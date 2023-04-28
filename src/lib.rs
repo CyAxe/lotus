@@ -22,14 +22,16 @@ use cli::{
     input::load_scripts::{get_scripts, valid_scripts},
 };
 use lua::{
-    model::LuaOptions, parsing::files::filename_to_string, run::LuaLoader,
+    model::LuaOptions,
+    parsing::files::filename_to_string,
+    run::LuaLoader,
     threads::runner::{iter_futures, LAST_HOST_SCAN_ID},
 };
 use mlua::ExternalError;
 pub use model::{Lotus, RequestOpts, ScanTypes};
 use std::sync::Arc;
 
-use crate::lua::threads::runner::{LAST_URL_SCAN_ID, LAST_PATH_SCAN_ID, LAST_CUSTOM_SCAN_ID};
+use crate::lua::threads::runner::{LAST_CUSTOM_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID};
 
 impl Lotus {
     /// Run The Lua Script with real target
@@ -48,24 +50,24 @@ impl Lotus {
         if target_data.is_empty() {
             return;
         }
-        let resume_value: usize; 
+        let resume_value: usize;
         let loaded_scripts = match scan_type {
             ScanTypes::HOSTS => {
                 resume_value = *LAST_HOST_SCAN_ID.lock().unwrap();
                 valid_scripts(get_scripts(self.script_path.clone()), 1)
-            },
+            }
             ScanTypes::URLS => {
                 resume_value = *LAST_URL_SCAN_ID.lock().unwrap();
                 valid_scripts(get_scripts(self.script_path.clone()), 2)
-            },
+            }
             ScanTypes::PATHS => {
                 resume_value = *LAST_PATH_SCAN_ID.lock().unwrap();
                 valid_scripts(get_scripts(self.script_path.clone()), 3)
-            },
+            }
             ScanTypes::CUSTOM => {
                 resume_value = *LAST_CUSTOM_SCAN_ID.lock().unwrap();
                 valid_scripts(get_scripts(self.script_path.clone()), 4)
-            },
+            }
         };
         let lotus_obj = Arc::new(LuaLoader::new(request_option.clone(), self.output.clone()));
         let scan_type = Arc::new(scan_type);

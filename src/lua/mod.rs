@@ -1,3 +1,4 @@
+mod encode;
 pub mod model;
 pub mod network;
 pub mod output;

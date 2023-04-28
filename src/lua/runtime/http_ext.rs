@@ -1,13 +1,11 @@
 use crate::{
     lua::{
         model::LuaRunTime,
-        network::http::HttpResponse,
         output::report::AllReports,
         parsing::{files::filename_to_string, req::show_response, url::HttpMessage},
     },
     CliErrors,
 };
-use log::{debug, error, info, warn};
 use mlua::ExternalError;
 use std::collections::HashMap;
 use std::path::Path;
@@ -26,60 +24,9 @@ impl HTTPEXT for LuaRunTime<'_> {
             .set(
                 "show_response",
                 self.lua
-                    .create_function(|_, resp: HttpResponse| {
-                        let resp_str = show_response(&resp);
-                        Ok(resp_str)
-                    })
+                    .create_function(show_response)
                     .unwrap(),
             )
-            .unwrap();
-        self.lua
-            .globals()
-            .set(
-                "JOIN_SCRIPT_DIR",
-                self.lua
-                    .create_function(|c_lua, new_path: String| {
-                        let script_path = c_lua.globals().get::<_, String>("SCRIPT_PATH").unwrap();
-                        let the_path = Path::new(&script_path);
-                        Ok(the_path
-                            .parent()
-                            .unwrap()
-                            .join(new_path)
-                            .to_str()
-                            .unwrap()
-                            .to_string())
-                    })
-                    .unwrap(),
-            )
-            .unwrap();
-
-        let log_info = self
-            .lua
-            .create_function(|_, log_msg: String| {
-                info!("{}", log_msg);
-                Ok(())
-            })
-            .unwrap();
-        let log_warn = self
-            .lua
-            .create_function(|_, log_msg: String| {
-                warn!("{}", log_msg);
-                Ok(())
-            })
-            .unwrap();
-        let log_debug = self
-            .lua
-            .create_function(|_, log_msg: String| {
-                debug!("{}", log_msg);
-                Ok(())
-            })
-            .unwrap();
-        let log_error = self
-            .lua
-            .create_function(|_, log_msg: String| {
-                error!("{}", log_msg);
-                Ok(())
-            })
             .unwrap();
         let headers_converter = self
             .lua
@@ -138,10 +85,6 @@ impl HTTPEXT for LuaRunTime<'_> {
                     .unwrap(),
             )
             .unwrap();
-        self.lua.globals().set("log_info", log_info).unwrap();
-        self.lua.globals().set("log_error", log_error).unwrap();
-        self.lua.globals().set("log_debug", log_debug).unwrap();
-        self.lua.globals().set("log_warn", log_warn).unwrap();
 
         if let Some(url) = target_url {
             self.lua

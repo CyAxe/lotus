@@ -1,3 +1,4 @@
+use crate::lua::encode::base64::{base64_decode, base64_encode};
 use crate::lua::model::LuaRunTime;
 
 pub trait EncodeEXT {
@@ -10,19 +11,14 @@ impl EncodeEXT for LuaRunTime<'_> {
             .globals()
             .set(
                 "base64encode",
-                self.lua
-                    .create_function(|_, data: String| Ok(base64::encode(data)))
-                    .unwrap(),
+                self.lua.create_function(base64_encode).unwrap(),
             )
             .unwrap();
-
         self.lua
             .globals()
             .set(
                 "base64decode",
-                self.lua
-                    .create_function(|_, data: String| Ok(base64::decode(data).unwrap()))
-                    .unwrap(),
+                self.lua.create_function(base64_decode).unwrap(),
             )
             .unwrap();
     }
