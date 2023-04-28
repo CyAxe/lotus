@@ -39,12 +39,18 @@ pub fn init_log(log_file: Option<PathBuf>) -> Result<(), std::io::Error> {
 
     if let Some(log_path) = log_file {
         // Disable unwanted loggers
-        logger.chain(fern::log_file(log_path.clone()).unwrap()).apply().unwrap();
-        log::info!("Logging initialized. Writing logs to {}", log_path.to_str().unwrap());
+        logger
+            .chain(fern::log_file(log_path.clone()).unwrap())
+            .apply()
+            .unwrap();
+        log::info!(
+            "Logging initialized. Writing logs to {}",
+            log_path.to_str().unwrap()
+        );
     } else {
         logger.apply().unwrap();
         log::info!("Logging initialized. Writing logs to console.");
     }
-    
+
     Ok(())
 }
