@@ -105,7 +105,7 @@ pub fn args_scan() -> ScanArgs {
             let mut urls = vec![];
             let mut paths = vec![];
             let mut hosts = vec![];
-            if input_handler.len() == 0 {
+            if input_handler.is_empty() {
                 urls = input_data
                     .iter()
                     .filter_map(|target_url| Url::parse(target_url).ok())

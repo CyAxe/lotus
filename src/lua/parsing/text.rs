@@ -54,7 +54,7 @@ impl ResponseMatcher {
         regex_pattern: &str,
         response: &str,
     ) -> Result<Vec<String>, CliErrors> {
-        match RegexBuilder::new(&regex_pattern)
+        match RegexBuilder::new(regex_pattern)
             .multi_line(self.multi_line)
             .case_insensitive(self.case_insensitive)
             .unicode(self.unicode)
@@ -84,7 +84,7 @@ impl ResponseMatcher {
         replacement: &str,
         response: &str,
     ) -> Result<String, CliErrors> {
-        match RegexBuilder::new(&regex_pattern)
+        match RegexBuilder::new(regex_pattern)
             .multi_line(self.multi_line)
             .case_insensitive(self.case_insensitive)
             .unicode(self.unicode)
@@ -115,7 +115,7 @@ impl ResponseMatcher {
         for search_pattern in text.iter() {
             match is_regex.unwrap_or(false) {
                 true => {
-                    match RegexBuilder::new(&search_pattern)
+                    match RegexBuilder::new(search_pattern)
                         .multi_line(self.multi_line)
                         .case_insensitive(self.case_insensitive)
                         .unicode(self.unicode)

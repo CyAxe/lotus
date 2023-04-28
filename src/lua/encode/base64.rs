@@ -7,9 +7,8 @@ pub fn base64_encode<'lua>(_: &'lua Lua, txt: String) -> LuaResult<String> {
 }
 
 pub fn base64_decode<'lua>(_: &'lua Lua, txt: String) -> Result<Vec<u8>, mlua::Error> {
-    let decoded_base64 = match base64::decode(txt) {
+    match base64::decode(txt) {
         Ok(decoded_content) => Ok(decoded_content),
         Err(err) => Err(err.to_lua_err()),
-    };
-    decoded_base64
+    }
 }

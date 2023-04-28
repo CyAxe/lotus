@@ -16,7 +16,7 @@ fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
 
     for line in reader.lines() {
         let line = line?;
-        let parts: Vec<&str> = line.split("=").collect();
+        let parts: Vec<&str> = line.split('=').collect();
         if parts.len() != 2 {
             continue;
         }
@@ -44,7 +44,7 @@ fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
 fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
     let parsed_json = serde_json::from_str::<HashMap<String, String>>(raw_headers);
 
-    if parsed_json.is_err() {
+    if let Err(..) = parsed_json {
         return Err(parsed_json.unwrap_err());
     }
     let mut user_headers = HeaderMap::new();

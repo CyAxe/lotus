@@ -54,11 +54,11 @@ impl UserData for ParamScan {
                         let target_param = Arc::clone(&target_param);
                         let callback_function = Arc::clone(&callback_function);
                         let accept_nil = Arc::clone(&this.accept_nil);
-                        if *this.finds.lock().unwrap() == true {
+                        if *this.finds.lock().unwrap() {
                             stop_scan = true;
                         }
                         async move {
-                            if stop_scan == false {
+                            if !stop_scan {
                                 let caller = target_func
                                     .call_async::<_, mlua::Value>((
                                         target_param.to_string(),
@@ -67,8 +67,8 @@ impl UserData for ParamScan {
                                     .await
                                     .unwrap();
                                 let is_nil = { caller == mlua::Nil };
-                                if is_nil == true {
-                                    if *accept_nil.lock().unwrap() == true {
+                                if is_nil {
+                                    if *accept_nil.lock().unwrap() {
                                         callback_function
                                             .call_async::<_, bool>(caller)
                                             .await
@@ -104,14 +104,9 @@ impl UserData for LuaThreader {
             stream::iter(iter_data)
                 .map(move |target_table| {
                     let target_func = Arc::clone(&target_func);
-                    let stop_scan: bool;
-                    if *this.stop.lock().unwrap() == true {
-                        stop_scan = true;
-                    } else {
-                        stop_scan = false;
-                    }
+                    let stop_scan: bool = *this.stop.lock().unwrap();
                     async move {
-                        if stop_scan == true {
+                        if stop_scan {
                             // Ignore
                         } else {
                             target_func.call_async::<_, mlua::Value>(target_table).await.unwrap();

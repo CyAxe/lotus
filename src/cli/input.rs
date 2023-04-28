@@ -9,8 +9,7 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     let mut hosts = Vec::new();
     urls.iter().for_each(|x| {
         let parsed_url = Url::parse(x);
-        if parsed_url.is_ok() {
-            let parsed_url = parsed_url.unwrap();
+        if let Ok(parsed_url) = parsed_url {
             let host = {
                 if parsed_url.port().is_some() {
                     let host = parsed_url.host().unwrap();
@@ -26,7 +25,7 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
                 }
             };
             // Check for Empty & Dups Hosts
-            if !hosts.contains(&host) && host.len() != 0 {
+            if !hosts.contains(&host) && host.is_empty() {
                 hosts.push(host);
             }
         }
@@ -83,9 +82,8 @@ pub fn get_stdin_input() -> Result<Vec<String>, CliErrors> {
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {
     if url_file.is_some() {
         let urls = filename_to_string(url_file.unwrap().to_str().unwrap());
-        if urls.is_ok() {
+        if let Ok(urls) = urls {
             Ok(urls
-                .unwrap()
                 .lines()
                 .map(|url| url.to_string())
                 .collect::<Vec<String>>())

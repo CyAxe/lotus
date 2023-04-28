@@ -77,10 +77,9 @@ pub async fn iter_futures<F, T, Fut>(
         .skip(skip_index)
         .for_each_concurrent(workers, |(index_id, out)| {
             let scan_type = Arc::clone(&scan_type);
-            if count_index == true {
+            if count_index {
                 update_index_id(scan_type, index_id);
             }
-            let out = out.clone();
             let target_function = target_function.clone();
             async move { target_function(out).await }
         })
@@ -120,7 +119,7 @@ pub async fn scan_futures<T: Future<Output = ()>>(
 
             // Decrement the number of futures and execute the callback function (if provided)
             let mut num_futures = num_futures.write().await;
-            if call_back.is_some() {
+            if let Some(..) = call_back {
                 log::debug!("Running the Callback function for TASK {}", *num_futures);
                 call_back.unwrap()();
                 log::debug!("The Callback has been finished for TASK {}", *num_futures);
@@ -128,7 +127,7 @@ pub async fn scan_futures<T: Future<Output = ()>>(
             *num_futures -= 1;
 
             // If all futures have completed, close the sink to exit the loop
-            if *num_futures <= 0 {
+            if *num_futures == 0 {
                 log::debug!("Running");
                 sink_lock.write().await.close().await.unwrap();
             }

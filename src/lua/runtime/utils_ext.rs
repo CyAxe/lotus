@@ -78,9 +78,7 @@ impl UtilsEXT for LuaRunTime<'_> {
                 "println",
                 self.lua
                     .create_function(move |_, msg: String| {
-                        {
-                            BAR.lock().unwrap().println(&msg)
-                        };
+                        BAR.lock().unwrap().println(msg);
                         Ok(())
                     })
                     .unwrap(),

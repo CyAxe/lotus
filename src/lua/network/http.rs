@@ -97,7 +97,7 @@ impl Sender {
                         attempt.stop()
                     }
                 }))
-                .default_headers(headers.clone())
+                .default_headers(headers)
                 .proxy(Proxy::all(the_proxy).unwrap())
                 .no_trust_dns()
                 .danger_accept_invalid_certs(true)
@@ -113,7 +113,7 @@ impl Sender {
                 }))
                 .no_proxy()
                 .no_trust_dns()
-                .default_headers(headers.clone())
+                .default_headers(headers)
                 .danger_accept_invalid_certs(true)
                 .build(),
         }
@@ -144,7 +144,7 @@ impl Sender {
             let mut req_sent = REQUESTS_SENT.lock().unwrap();
             if *req_sent >= req_limit {
                 let sleep_time = *SLEEP_TIME.lock().unwrap();
-                BAR.lock().unwrap().println(&format!(
+                BAR.lock().unwrap().println(format!(
                     "The rate limit for requests has been reached. Sleeping for {} seconds...",
                     sleep_time
                 ));

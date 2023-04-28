@@ -33,7 +33,7 @@ impl HTTPEXT for LuaRunTime<'_> {
             .create_function(|_, headers_txt: String| {
                 let mut result = HashMap::new();
                 for line in headers_txt.lines() {
-                    if let Some((name, value)) = line.split_once(":") {
+                    if let Some((name, value)) = line.split_once(':') {
                         result.insert(name.trim().to_string(), value.trim().to_string());
                     }
                 }
@@ -92,7 +92,7 @@ impl HTTPEXT for LuaRunTime<'_> {
                 .set(
                     "HttpMessage",
                     HttpMessage {
-                        url: Some(Url::parse(&url).unwrap()),
+                        url: Some(Url::parse(url).unwrap()),
                     },
                 )
                 .unwrap();
