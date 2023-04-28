@@ -14,6 +14,7 @@
 
 use lotus::{
     cli::{
+        input::load_scripts::get_scripts,
         args::Opts,
         bar::{create_progress, show_msg, MessageLevel, BAR},
         startup::{new::new_args, scan::scan::args_scan},
@@ -69,7 +70,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
         (opts.target_data.hosts.len()
             + opts.target_data.paths.len()
             + opts.target_data.custom.len()
-            + opts.target_data.urls.len()) as u64,
+            + opts.target_data.urls.len() * get_scripts(opts.lotus_obj.script_path.clone()).len()) as u64,
     );
     {
         *SLEEP_TIME.lock().unwrap() = opts.delay;
