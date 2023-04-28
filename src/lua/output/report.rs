@@ -48,16 +48,16 @@ fn format_report(report: &Value) -> String {
 }
 
 fn format_table(key: &str, val_obj: &Map<String, Value>) -> String {
-    let mut table_str = format!("\n  [📂 {}:\n", style(key).bold().green());
+    let mut table_str = format!("\n [* {}:\n", style(key).bold().green());
     for (inner_key, inner_value) in val_obj.iter() {
         if let Some(inner_obj) = inner_value.as_object() {
             table_str.push_str(&format_table(inner_key, inner_obj));
         } else {
             let val_str = if inner_value.is_boolean() {
                 if inner_value.as_bool().unwrap() {
-                    "✅ true".to_owned()
+                    "✔ true".to_owned()
                 } else {
-                    "❌ false".to_owned()
+                    "✖ false".to_owned()
                 }
             } else {
                 inner_value.to_string()
