@@ -1,20 +1,85 @@
 use futures::stream::{self, StreamExt};
 use futures::Future;
 use futures::{channel::mpsc, sink::SinkExt};
+use lazy_static::lazy_static;
+use std::fs::OpenOptions;
+use std::io::prelude::*;
+use std::sync::{Arc, Mutex};
+use tokio::signal::ctrl_c;
 use tokio::sync::RwLock;
+
+use crate::cli::bar::{show_msg, MessageLevel};
+use crate::ScanTypes;
+
+lazy_static! {
+    pub static ref LAST_URL_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+    pub static ref LAST_HOST_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+    pub static ref LAST_PATH_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+    pub static ref LAST_CUSTOM_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+}
+
+pub async fn pause_channel() {
+    tokio::spawn(async move {
+        ctrl_c().await.unwrap();
+        if let Err(err) = generate_resume() {
+            show_msg(&err.to_string(), MessageLevel::Error)
+        }
+        std::process::exit(130)
+    });
+}
+
+fn generate_resume() -> Result<(), std::io::Error> {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open("resume.cfg")?;
+
+    let url_scan_id = LAST_URL_SCAN_ID.lock().unwrap();
+    let host_scan_id = LAST_HOST_SCAN_ID.lock().unwrap();
+    let path_scan_id = LAST_PATH_SCAN_ID.lock().unwrap();
+    let custom_scan_id = LAST_CUSTOM_SCAN_ID.lock().unwrap();
+
+    file.write_all(format!("URL_SCAN_ID={}\n", *url_scan_id).as_bytes())?;
+    file.write_all(format!("HOST_SCAN_ID={}\n", *host_scan_id).as_bytes())?;
+    file.write_all(format!("PATH_SCAN_ID={}\n", *path_scan_id).as_bytes())?;
+    file.write_all(format!("CUSTOM_SCAN_ID={}\n", *custom_scan_id).as_bytes())?;
+
+    Ok(())
+}
+
+fn update_index_id(scan_type: Arc<ScanTypes>, index_id: usize) {
+    match *scan_type {
+        ScanTypes::URLS => *LAST_URL_SCAN_ID.lock().unwrap() = index_id,
+        ScanTypes::HOSTS => *LAST_HOST_SCAN_ID.lock().unwrap() = index_id,
+        ScanTypes::PATHS => *LAST_PATH_SCAN_ID.lock().unwrap() = index_id,
+        ScanTypes::CUSTOM => *LAST_CUSTOM_SCAN_ID.lock().unwrap() = index_id,
+    }
+}
 
 // Asynchronous function to iterate over futures concurrently
 // Takes a vector, a function and a number of workers as arguments
 // The function must return a future with no output
 // The vector must implement cloning
-pub async fn iter_futures<F, T, Fut>(target_iter: Vec<T>, target_function: F, workers: usize)
-where
+pub async fn iter_futures<F, T, Fut>(
+    scan_type: Arc<ScanTypes>,
+    target_iter: Vec<T>,
+    target_function: F,
+    workers: usize,
+    skip_index: usize,
+    count_index: bool,
+) where
     F: FnOnce(T) -> Fut + Clone,
     Fut: Future<Output = ()>,
     T: Clone,
 {
     stream::iter(target_iter)
-        .for_each_concurrent(workers, |out| {
+        .enumerate()
+        .skip(skip_index)
+        .for_each_concurrent(workers, |(index_id, out)| {
+            let scan_type = Arc::clone(&scan_type);
+            if count_index == true {
+                update_index_id(scan_type, index_id);
+            }
             let out = out.clone();
             let target_function = target_function.clone();
             async move { target_function(out).await }

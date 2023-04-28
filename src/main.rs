@@ -38,6 +38,8 @@ async fn main() -> Result<(), std::io::Error> {
 }
 
 async fn run_scan() -> Result<(), std::io::Error> {
+    // Spawn a new thread to handle the exit process when the user presses CTRL + C.
+    runner::pause_channel().await;
     let opts = args_scan();
     let fuzz_workers = opts.fuzz_workers;
     show_msg(
@@ -56,7 +58,10 @@ async fn run_scan() -> Result<(), std::io::Error> {
     );
 
     show_msg(
-        &format!("Number of custom entries: {}", opts.target_data.custom.len()),
+        &format!(
+            "Number of custom entries: {}",
+            opts.target_data.custom.len()
+        ),
         MessageLevel::Info,
     );
     // Open two threads for URL/HOST scanning

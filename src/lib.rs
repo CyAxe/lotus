@@ -23,12 +23,13 @@ use cli::{
 };
 use lua::{
     model::LuaOptions, parsing::files::filename_to_string, run::LuaLoader,
-    threads::runner::iter_futures,
+    threads::runner::{iter_futures, LAST_HOST_SCAN_ID},
 };
 use mlua::ExternalError;
 pub use model::{Lotus, RequestOpts, ScanTypes};
 use std::sync::Arc;
 
+use crate::lua::threads::runner::{LAST_URL_SCAN_ID, LAST_PATH_SCAN_ID, LAST_CUSTOM_SCAN_ID};
 
 impl Lotus {
     /// Run The Lua Script with real target
@@ -47,20 +48,35 @@ impl Lotus {
         if target_data.is_empty() {
             return;
         }
+        let resume_value: usize; 
         let loaded_scripts = match scan_type {
-            ScanTypes::HOSTS => valid_scripts(get_scripts(self.script_path.clone()), 1),
-            ScanTypes::URLS => valid_scripts(get_scripts(self.script_path.clone()), 2),
-            ScanTypes::PATHS => valid_scripts(get_scripts(self.script_path.clone()), 3),
-            ScanTypes::CUSTOM => valid_scripts(get_scripts(self.script_path.clone()), 4),
+            ScanTypes::HOSTS => {
+                resume_value = *LAST_HOST_SCAN_ID.lock().unwrap();
+                valid_scripts(get_scripts(self.script_path.clone()), 1)
+            },
+            ScanTypes::URLS => {
+                resume_value = *LAST_URL_SCAN_ID.lock().unwrap();
+                valid_scripts(get_scripts(self.script_path.clone()), 2)
+            },
+            ScanTypes::PATHS => {
+                resume_value = *LAST_PATH_SCAN_ID.lock().unwrap();
+                valid_scripts(get_scripts(self.script_path.clone()), 3)
+            },
+            ScanTypes::CUSTOM => {
+                resume_value = *LAST_CUSTOM_SCAN_ID.lock().unwrap();
+                valid_scripts(get_scripts(self.script_path.clone()), 4)
+            },
         };
         let lotus_obj = Arc::new(LuaLoader::new(request_option.clone(), self.output.clone()));
         let scan_type = Arc::new(scan_type);
         iter_futures(
+            scan_type.clone(),
             target_data,
             |script_data| async move {
                 let lotus_loader = Arc::clone(&lotus_obj);
                 let scan_type = Arc::clone(&scan_type);
                 iter_futures(
+                    scan_type.clone(),
                     loaded_scripts,
                     |(script_code, script_name)| async move {
                         let lua_opts = LuaOptions {
@@ -87,10 +103,14 @@ impl Lotus {
                         }
                     },
                     self.script_workers,
+                    resume_value,
+                    false,
                 )
                 .await;
             },
             self.workers,
+            resume_value,
+            true,
         )
         .await;
     }
