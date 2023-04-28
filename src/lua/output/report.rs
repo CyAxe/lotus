@@ -32,6 +32,9 @@ fn format_report(report: &Value) -> String {
                 if let Some(val_obj) = value.as_object() {
                     report_str.push_str(&format_table(key, val_obj));
                 } else {
+                    if key.starts_with("full_") {
+                        continue;
+                    }
                     report_str.push_str(&format!(
                         "\n  {} {}: {}\n",
                         style("[#]").blue(),
@@ -50,6 +53,9 @@ fn format_report(report: &Value) -> String {
 fn format_table(key: &str, val_obj: &Map<String, Value>) -> String {
     let mut table_str = format!("\n [* {}:\n", style(key).bold().green());
     for (inner_key, inner_value) in val_obj.iter() {
+        if inner_key.starts_with("full_") {
+            continue;
+        }
         if let Some(inner_obj) = inner_value.as_object() {
             table_str.push_str(&format_table(inner_key, inner_obj));
         } else {
