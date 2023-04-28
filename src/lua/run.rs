@@ -106,7 +106,7 @@ impl LuaLoader {
             }
             ScanTypes::PATHS => {
                 self.set_lua(
-                    Some(lua_opts.target_url.unwrap().to_string().as_str()),
+                    Some(&lua_opts.target_url.unwrap().as_str().unwrap().to_string()),
                     &lua,
                 );
             }

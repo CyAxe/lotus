@@ -92,7 +92,7 @@ impl HTTPEXT for LuaRunTime<'_> {
                 .set(
                     "HttpMessage",
                     HttpMessage {
-                        url: Some(Url::parse(&url).unwrap()),
+                        url: Some(Url::parse(url).unwrap()),
                     },
                 )
                 .unwrap();
