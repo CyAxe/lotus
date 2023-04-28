@@ -69,7 +69,7 @@ impl UserData for Sender {
                 .get::<_, Option<u64>>("timeout")
                 .ok()
                 .flatten()
-                .unwrap_or_else(|| this.timeout);
+                .unwrap_or(this.timeout);
             let proxy = request_option
                 .get::<_, Option<String>>("proxy")
                 .ok()
@@ -79,7 +79,7 @@ impl UserData for Sender {
                 .get::<_, Option<u32>>("redirect")
                 .ok()
                 .flatten()
-                .unwrap_or_else(|| this.redirects);
+                .unwrap_or(this.redirects);
             let headers = match request_option.get::<_, Option<HashMap<String, String>>>("headers")
             {
                 Ok(Some(headers)) => {
@@ -90,7 +90,7 @@ impl UserData for Sender {
                             HeaderValue::from_bytes(value.as_bytes()).unwrap(),
                         );
                     });
-                    if this.merge_headers == true {
+                    if this.merge_headers {
                         current_headers.extend(this.headers.clone());
                     }
                     current_headers
@@ -111,8 +111,8 @@ impl UserData for Sender {
             let resp = this
                 .send(&method, url, body, multipart, current_request)
                 .await;
-            if resp.is_ok() {
-                Ok(resp.unwrap())
+            if let Ok(resp) = resp {
+                Ok(resp)
             } else {
                 Err(resp.unwrap_err())
             }

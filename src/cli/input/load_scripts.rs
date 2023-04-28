@@ -41,22 +41,21 @@ fn load_scripts(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors
             Err(e) => error!("{:?}", e),
         }
     }
-    return Ok(scripts);
+    Ok(scripts)
 }
 
 /// Loading script based on the script path (without glob)
 fn load_script(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors> {
     let mut scripts = Vec::new();
-    let script_path = script_path.clone();
     let read_script_code = filename_to_string(script_path.to_str().unwrap());
-    if read_script_code.is_err() {
+    if let Err(..) = read_script_code {
         Err(CliErrors::ReadingError)
     } else {
         scripts.push((
             read_script_code.unwrap(),
             script_path.to_str().unwrap().to_string(),
         ));
-        return Ok(scripts);
+        Ok(scripts)
     }
 }
 /// Validating the script code by running the scripts with example input based on the script
@@ -116,26 +115,24 @@ pub fn valid_scripts(
             let log_msg = &format!(
                 "Unable to load {} script: {}",
                 script_path,
-                code.to_lua_err().unwrap_err().to_string()
+                code.to_lua_err().unwrap_err()
             );
             show_msg(log_msg, MessageLevel::Error);
             log::error!("{}", log_msg);
         } else {
             let global = lua_eng.lua.globals();
             let scan_type = global.get::<_, usize>("SCAN_TYPE".to_string());
-            if scan_type.is_err() {
+            if let Err(..) = scan_type {
                 show_msg(
                     &format!(
                         "Unvalid Script Type {}: {}",
                         script_path,
-                        scan_type.unwrap_err().to_string()
+                        scan_type.unwrap_err()
                     ),
                     MessageLevel::Error,
                 );
-            } else {
-                if scan_type.unwrap() == number_scantype {
-                    used_scripts.push((script_code.into(), script_path.into()));
-                }
+            } else if scan_type.unwrap() == number_scantype {
+                used_scripts.push((script_code.into(), script_path.into()));
             }
         }
     });

@@ -65,7 +65,7 @@ impl LuaLoader {
             .write(true)
             .append(true)
             .create(true)
-            .open(&self.output_dir.as_ref().unwrap())
+            .open(self.output_dir.as_ref().unwrap())
             .expect("Could not open file")
             .write_all(format!("{}\n", results).as_str().as_bytes())
             .expect("Could not write to file");
@@ -100,7 +100,7 @@ impl LuaLoader {
             ScanTypes::URLS => {
                 // for all other target types, set target URL
                 self.set_lua(
-                    Some(&&lua_opts.target_url.unwrap().as_str().unwrap().to_string()),
+                    Some(&lua_opts.target_url.unwrap().as_str().unwrap().to_string()),
                     &lua,
                 );
             }
@@ -126,13 +126,13 @@ impl LuaLoader {
             let bar = BAR.lock().unwrap();
             let error_msg = format!("An error occurred while running the script:\n\n{}\n\nPlease check the script code and try again.", e);
             bar.inc(1);
-            bar.println(&error_msg);
+            bar.println(error_msg);
             return Err(e);
         }
 
         // call main function
         let main_func = lua.globals().get::<_, mlua::Function>("main");
-        if let Err(_) = main_func {
+        if main_func.is_err() {
             let msg = format!("The script in directory [{}] does not contain a main function.\n\nThe main function is required to execute the script. Please make sure that the script contains a main function and try again.", lua_opts.script_dir);
             log::error!("{}", msg);
             BAR.lock().unwrap().println(msg);

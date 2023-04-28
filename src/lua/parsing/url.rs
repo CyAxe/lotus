@@ -82,7 +82,7 @@ impl HttpMessage {
                             acc += &format!("{}={}", key, value + payload);
                         }
                     } else {
-                        acc += &format!("{}={}", key, value.to_string());
+                        acc += &format!("{}={}", key, value);
                     }
                     acc += "&";
                     acc
