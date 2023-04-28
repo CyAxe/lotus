@@ -74,7 +74,7 @@ pub async fn iter_futures<F, T, Fut>(
 {
     stream::iter(target_iter)
         .enumerate()
-        .skip(skip_index + 1)
+        .skip(skip_index)
         .for_each_concurrent(workers, |(index_id, out)| {
             let scan_type = Arc::clone(&scan_type);
             if count_index {

@@ -105,7 +105,7 @@ impl Lotus {
                         }
                     },
                     self.script_workers,
-                    resume_value,
+                    0,
                     false,
                 )
                 .await;
