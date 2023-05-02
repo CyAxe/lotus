@@ -42,6 +42,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
     // Spawn a new thread to handle the exit process when the user presses CTRL + C.
     runner::pause_channel().await;
     let opts = args_scan();
+    let scripts = get_scripts(opts.lotus_obj.script_path.clone());
     let fuzz_workers = opts.fuzz_workers;
     show_msg(
         &format!("Number of URLs: {}", opts.target_data.urls.len()),
@@ -70,7 +71,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
         (opts.target_data.hosts.len()
             + opts.target_data.paths.len()
             + opts.target_data.custom.len()
-            + opts.target_data.urls.len() * get_scripts(opts.lotus_obj.script_path.clone()).len()) as u64,
+            + opts.target_data.urls.len() * scripts.len()) as u64,
     );
     {
         *SLEEP_TIME.lock().unwrap() = opts.delay;
@@ -80,6 +81,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
     let scan_futures = vec![
         opts.lotus_obj.start(
             convert_serde_value(opts.target_data.paths),
+            scripts.clone(),
             opts.req_opts.clone(),
             ScanTypes::PATHS,
             opts.exit_after,
@@ -87,6 +89,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
         ),
         opts.lotus_obj.start(
             convert_serde_value(opts.target_data.urls),
+            scripts.clone(),
             opts.req_opts.clone(),
             ScanTypes::URLS,
             opts.exit_after,
@@ -94,6 +97,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
         ),
         opts.lotus_obj.start(
             convert_serde_value(opts.target_data.hosts),
+            scripts.clone(),
             opts.req_opts.clone(),
             ScanTypes::HOSTS,
             opts.exit_after,
@@ -101,6 +105,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
         ),
         opts.lotus_obj.start(
             opts.target_data.custom,
+            scripts.clone(),
             opts.req_opts,
             ScanTypes::CUSTOM,
             opts.exit_after,

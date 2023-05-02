@@ -19,7 +19,7 @@ mod model;
 use cli::{
     bar::{show_msg, MessageLevel, BAR},
     errors::CliErrors,
-    input::load_scripts::{get_scripts, valid_scripts},
+    input::load_scripts::valid_scripts,
 };
 use lua::{
     model::LuaOptions,
@@ -42,6 +42,7 @@ impl Lotus {
     pub async fn start(
         &self,
         target_data: Vec<serde_json::Value>,
+        loaded_scripts: Vec<(String, String)>,
         request_option: RequestOpts,
         scan_type: ScanTypes,
         exit_after: i32,
@@ -54,19 +55,19 @@ impl Lotus {
         let loaded_scripts = match scan_type {
             ScanTypes::HOSTS => {
                 resume_value = *LAST_HOST_SCAN_ID.lock().unwrap();
-                valid_scripts(get_scripts(self.script_path.clone()), 1)
+                valid_scripts(loaded_scripts, 1)
             }
             ScanTypes::URLS => {
                 resume_value = *LAST_URL_SCAN_ID.lock().unwrap();
-                valid_scripts(get_scripts(self.script_path.clone()), 2)
+                valid_scripts(loaded_scripts, 2)
             }
             ScanTypes::PATHS => {
                 resume_value = *LAST_PATH_SCAN_ID.lock().unwrap();
-                valid_scripts(get_scripts(self.script_path.clone()), 3)
+                valid_scripts(loaded_scripts, 3)
             }
             ScanTypes::CUSTOM => {
                 resume_value = *LAST_CUSTOM_SCAN_ID.lock().unwrap();
-                valid_scripts(get_scripts(self.script_path.clone()), 4)
+                valid_scripts(loaded_scripts, 4)
             }
         };
         let lotus_obj = Arc::new(LuaLoader::new(request_option.clone(), self.output.clone()));
