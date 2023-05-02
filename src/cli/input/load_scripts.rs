@@ -10,13 +10,7 @@ use std::path::PathBuf;
 
 /// Return Vector of scripts name and code with both methods
 pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
-    let loaded_scripts = {
-        if script_path.is_dir() {
-            load_scripts(script_path)
-        } else {
-            load_script(script_path)
-        }
-    };
+    let loaded_scripts = load_scripts(script_path);
     if loaded_scripts.is_err() {
         show_msg(
             &format!("Loading scripts error: {}", loaded_scripts.unwrap_err()),
@@ -30,7 +24,7 @@ pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
 /// This Function will return a Tuples in Vector with script path and content
 fn load_scripts(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors> {
     let mut scripts = Vec::new();
-    for entry in glob(format!("{}{}", script_path.to_str().unwrap(), "/*.lua").as_str())
+    for entry in glob(script_path.as_os_str().to_str().unwrap())
         .expect("Failed to read glob pattern")
     {
         match entry {
@@ -38,26 +32,12 @@ fn load_scripts(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors
                 filename_to_string(path.to_str().unwrap()).unwrap(),
                 path.to_str().unwrap().to_string(),
             )),
-            Err(e) => error!("{:?}", e),
+            Err(e) => error!("{}",e.to_string()),
         }
     }
     Ok(scripts)
 }
 
-/// Loading script based on the script path (without glob)
-fn load_script(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors> {
-    let mut scripts = Vec::new();
-    let read_script_code = filename_to_string(script_path.to_str().unwrap());
-    if let Err(..) = read_script_code {
-        Err(CliErrors::ReadingError)
-    } else {
-        scripts.push((
-            read_script_code.unwrap(),
-            script_path.to_str().unwrap().to_string(),
-        ));
-        Ok(scripts)
-    }
-}
 /// Validating the script code by running the scripts with example input based on the script
 /// type `example.com` or `https:///example.com`
 /// this function may removing some scripts from the list if it contains errors
