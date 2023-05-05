@@ -10,15 +10,26 @@ use std::path::PathBuf;
 
 /// Return Vector of scripts name and code with both methods
 pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
-    let loaded_scripts = load_scripts(&script_path);
-    if loaded_scripts.is_err() {
-        show_msg(
-            &format!("Loading scripts error: {}", loaded_scripts.unwrap_err()),
-            MessageLevel::Error,
-        );
-        std::process::exit(1);
+    let paths: Vec<&str> = script_path.to_str().unwrap().split(',').collect();
+    let mut scripts = vec![];
+
+    for path in paths {
+        let mut file_path = PathBuf::from(path.trim());
+        if file_path.is_dir() {
+            file_path.push("*.lua");
+        }
+        let loaded_scripts = load_scripts(&file_path);
+        if loaded_scripts.is_err() {
+            show_msg(
+                &format!("Loading scripts error: {}", loaded_scripts.unwrap_err()),
+                MessageLevel::Error,
+            );
+            std::process::exit(1);
+        }
+        scripts.extend(loaded_scripts.unwrap());
     }
-    loaded_scripts.unwrap()
+
+    scripts
 }
 /// Use glob patterns to get script path and content based on script path or directory
 /// This Function will return a Tuples in Vector with script path and content
@@ -29,9 +40,6 @@ fn load_scripts(script_path: &PathBuf) -> Result<Vec<(String, String)>, CliError
     {
         match entry {
             Ok(path) => {
-                if path.is_dir() {
-                    continue;
-                }
                 scripts.push((
                 filename_to_string(path.to_str().unwrap()).unwrap(),
                 path.to_str().unwrap().to_string(),
