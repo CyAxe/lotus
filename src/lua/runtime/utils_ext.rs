@@ -1,18 +1,15 @@
 use crate::{
     lua::{
-        loader::is_match,
-        output::{cve::CveReport, vuln::OutReport},
-        parsing::{
-            html::{css_selector, html_parse, html_search},
-            text::ResponseMatcher,
-        },
+        model::LuaRunTime,
+        parsing::text::ResponseMatcher,
         threads::{LuaThreader, ParamScan},
     },
-    LuaRunTime, BAR,
+    BAR,
 };
-use console::Style;
-use mlua::ExternalError;
 use std::sync::{Arc, Mutex};
+use std::path::Path;
+use log::{debug, error, info, warn};
+
 
 pub trait UtilsEXT {
     fn add_threadsfunc(&self);
@@ -25,88 +22,63 @@ impl UtilsEXT for LuaRunTime<'_> {
         self.lua
             .globals()
             .set(
-                "print_cve_report",
+                "join_script_dir",
                 self.lua
-                    .create_function(move |_, the_report: CveReport| {
-                        let good_msg = format!("[{}]", Style::new().green().apply_to("+"));
-                        let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
-                        let report_msg = format!(
-                            "
-{GOOD} {NAME} on: {URL}
-{INFO} SCAN TYPE: CVE
-{INFO} Description: {Description}
-{INFO} Risk: {RISK}
-{INFO} Matching Pattern: {MATCHING}
-#--------------------------------------------------#
-
-                                     ",
-                            GOOD = good_msg,
-                            INFO = info_msg,
-                            NAME = the_report.name.unwrap(),
-                            URL = the_report.url.unwrap(),
-                            Description = the_report.description.unwrap(),
-                            RISK = the_report.risk.unwrap(),
-                            MATCHING = format!("{:?}", the_report.matchers),
-                        );
-                        {
-                            BAR.lock().unwrap().println(report_msg)
-                        };
-                        Ok(())
-                    })
-                    .unwrap(),
-            )
-            .unwrap();
-        self.lua
-            .globals()
-            .set(
-                "print_vuln_report",
-                self.lua
-                    .create_function(move |_, the_report: OutReport| {
-                        let good_msg = format!("[{}]", Style::new().green().apply_to("+"));
-                        let info_msg = format!("[{}]", Style::new().blue().apply_to("#"));
-                        let report_msg = format!(
-                            "
-{GOOD} {NAME} on: {URL}
-{INFO} SCAN TYPE: VULN
-{INFO} Description: {Description}
-{INFO} Vulnerable Parameter: {PARAM}
-{INFO} Risk: {RISK}
-{INFO} Used Payload: {ATTACK}
-{INFO} Matching Pattern: {MATCHING}
-#--------------------------------------------------#
-
-                                     ",
-                            GOOD = good_msg,
-                            INFO = info_msg,
-                            NAME = the_report.name.unwrap(),
-                            URL = the_report.url.unwrap(),
-                            Description = the_report.description.unwrap(),
-                            PARAM = the_report.param.unwrap(),
-                            RISK = the_report.risk.unwrap(),
-                            ATTACK = the_report.attack.unwrap(),
-                            MATCHING = format!(
-                                "{}",
-                                Style::new().on_red().apply_to(the_report.evidence.unwrap())
-                            ),
-                        );
-                        {
-                            BAR.lock().unwrap().println(report_msg)
-                        };
-                        Ok(())
+                    .create_function(|c_lua, new_path: String| {
+                        let script_path = c_lua.globals().get::<_, String>("SCRIPT_PATH").unwrap();
+                        let the_path = Path::new(&script_path);
+                        Ok(the_path
+                            .parent()
+                            .unwrap()
+                            .join(new_path)
+                            .to_str()
+                            .unwrap()
+                            .to_string())
                     })
                     .unwrap(),
             )
             .unwrap();
 
+        let log_info = self
+            .lua
+            .create_function(|_, log_msg: String| {
+                info!("{}", log_msg);
+                Ok(())
+            })
+            .unwrap();
+        let log_warn = self
+            .lua
+            .create_function(|_, log_msg: String| {
+                warn!("{}", log_msg);
+                Ok(())
+            })
+            .unwrap();
+        let log_debug = self
+            .lua
+            .create_function(|_, log_msg: String| {
+                debug!("{}", log_msg);
+                Ok(())
+            })
+            .unwrap();
+        let log_error = self
+            .lua
+            .create_function(|_, log_msg: String| {
+                error!("{}", log_msg);
+                Ok(())
+            })
+            .unwrap();
+
+        self.lua.globals().set("log_info", log_info).unwrap();
+        self.lua.globals().set("log_error", log_error).unwrap();
+        self.lua.globals().set("log_debug", log_debug).unwrap();
+        self.lua.globals().set("log_warn", log_warn).unwrap();
         self.lua
             .globals()
             .set(
                 "println",
                 self.lua
                     .create_function(move |_, msg: String| {
-                        {
-                            BAR.lock().unwrap().println(&msg)
-                        };
+                        BAR.lock().unwrap().println(msg);
                         Ok(())
                     })
                     .unwrap(),
@@ -117,56 +89,16 @@ impl UtilsEXT for LuaRunTime<'_> {
         self.lua
             .globals()
             .set(
-                "is_match",
-                self.lua
-                    .create_function(|_, (pattern, text): (String, String)| {
-                        let try_match = is_match(pattern, text);
-                        if try_match.is_err() {
-                            Err(try_match.unwrap_err().to_lua_err())
-                        } else {
-                            Ok(try_match.unwrap())
-                        }
-                    })
-                    .unwrap(),
+                "Matcher",
+                ResponseMatcher {
+                    ignore_whitespace: false,
+                    case_insensitive: false,
+                    multi_line: false,
+                    octal: true,
+                    unicode: true,
+                    dot_matches_new_line: false,
+                },
             )
-            .unwrap();
-        self.lua
-            .globals()
-            .set(
-                "generate_css_selector",
-                self.lua
-                    .create_function(|_, payload: String| Ok(css_selector(&payload)))
-                    .unwrap(),
-            )
-            .unwrap();
-
-        self.lua
-            .globals()
-            .set(
-                "html_parse",
-                self.lua
-                    .create_function(|_, (html, payload): (String, String)| {
-                        Ok(html_parse(&html, &payload))
-                    })
-                    .unwrap(),
-            )
-            .unwrap();
-
-        self.lua
-            .globals()
-            .set(
-                "html_search",
-                self.lua
-                    .create_function(|_, (html, pattern): (String, String)| {
-                        Ok(html_search(&html, &pattern))
-                    })
-                    .unwrap(),
-            )
-            .unwrap();
-
-        self.lua
-            .globals()
-            .set("ResponseMatcher", ResponseMatcher {})
             .unwrap();
 
         self.lua

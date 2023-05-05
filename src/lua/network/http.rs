@@ -1,26 +1,26 @@
-/*
- * this file is part of lotus project, an web security scanner written in rust based on lua scripts
- * for details, please see https://github.com/rusty-sec/lotus/
- *
- * copyright (c) 2022 - khaled nassar
- *
- * please note that this file was originally released under the
- * gnu general public license as published by the free software foundation;
- * either version 2 of the license, or (at your option) any later version.
- *
- *
- * unless required by applicable law or agreed to in writing, software
- * distributed under the license is distributed on an "as is" basis,
- * without warranties or conditions of any kind, either express or implied.
- * see the license for the specific language governing permissions and
- * limitations under the license.
- */
+// This file is part of Lotus Project, a web security scanner written in Rust based on Lua scripts.
+// For details, please see https://github.com/rusty-sec/lotus/
+//
+// Copyright (c) 2022 - Khaled Nassar
+//
+// Please note that this file was originally released under the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the License, or (at your option)
+// any later version.
+//
+// Unless required by applicable law or agreed to in writing, software distributed under the
+// License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+// either express or implied. See the License for the specific language governing permissions
+// and limitations under the License.
 
 use crate::BAR;
-use reqwest::{header::HeaderMap, redirect, Client, Method, Proxy};
+use reqwest::{
+    header::{HeaderMap, HeaderName, HeaderValue},
+    multipart::{Form, Part},
+    redirect, Client, Method, Proxy,
+};
 use std::collections::HashMap;
 mod http_lua_api;
-pub use http_lua_api::Sender;
+pub use http_lua_api::{MultiPart, Sender};
 use lazy_static::lazy_static;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -35,6 +35,7 @@ lazy_static! {
 
 #[derive(Debug, FromToLua, TypeName)]
 pub struct HttpResponse {
+    pub is_redirect: bool,
     pub url: String,
     pub status: i32,
     pub body: String,
@@ -50,14 +51,45 @@ impl Sender {
             timeout,
             redirects,
             proxy,
+            merge_headers: true,
         }
     }
 
-    fn build_client(&self) -> Result<reqwest::Client, reqwest::Error> {
-        let redirects = self.redirects;
-        match &self.proxy {
+    fn create_form(&self, multipart: HashMap<String, MultiPart>) -> Form {
+        let mut form = Form::new();
+        for (key, part) in multipart {
+            let mut builder = Part::text(part.content);
+            if let Some(filename) = part.filename {
+                builder = builder.file_name(filename);
+            }
+            if let Some(content_type) = part.content_type {
+                builder = builder.mime_str(&content_type).unwrap();
+            }
+            if let Some(headers) = part.headers {
+                let mut current_headers = HeaderMap::new();
+                headers.iter().for_each(|(name, value)| {
+                    current_headers.insert(
+                        HeaderName::from_bytes(name.as_bytes()).unwrap(),
+                        HeaderValue::from_bytes(value.as_bytes()).unwrap(),
+                    );
+                });
+                builder = builder.headers(current_headers);
+            }
+            form = form.part(key, builder);
+        }
+        form
+    }
+    fn build_client(
+        &self,
+        timeout: u64,
+        headers: HeaderMap,
+        redirects: u32,
+        proxy: Option<String>,
+    ) -> Result<reqwest::Client, reqwest::Error> {
+        let proxy = if proxy.is_none() { &self.proxy } else { &proxy };
+        match proxy {
             Some(the_proxy) => Client::builder()
-                .timeout(Duration::from_secs(self.timeout))
+                .timeout(Duration::from_secs(timeout))
                 .redirect(redirect::Policy::custom(move |attempt| {
                     if attempt.previous().len() != redirects as usize {
                         attempt.follow()
@@ -65,13 +97,13 @@ impl Sender {
                         attempt.stop()
                     }
                 }))
-                .default_headers(self.headers.clone())
+                .default_headers(headers)
                 .proxy(Proxy::all(the_proxy).unwrap())
                 .no_trust_dns()
                 .danger_accept_invalid_certs(true)
                 .build(),
             None => Client::builder()
-                .timeout(Duration::from_secs(self.timeout))
+                .timeout(Duration::from_secs(timeout))
                 .redirect(redirect::Policy::custom(move |attempt| {
                     if attempt.previous().len() == redirects as usize {
                         attempt.stop()
@@ -81,7 +113,7 @@ impl Sender {
                 }))
                 .no_proxy()
                 .no_trust_dns()
-                .default_headers(self.headers.clone())
+                .default_headers(headers)
                 .danger_accept_invalid_certs(true)
                 .build(),
         }
@@ -103,99 +135,115 @@ impl Sender {
         &self,
         method: &str,
         url: String,
-        body: String,
-        headers: HeaderMap,
+        body: Option<String>,
+        multipart: Option<HashMap<String, MultiPart>>,
+        request_option: Sender,
     ) -> Result<HttpResponse, mlua::Error> {
         {
-            let req_limit = REQUESTS_LIMIT.lock().unwrap();
+            let req_limit = *REQUESTS_LIMIT.lock().unwrap();
             let mut req_sent = REQUESTS_SENT.lock().unwrap();
-            if *req_sent >= *req_limit {
-                let sleep_time = SLEEP_TIME.lock().unwrap();
-                let bar = BAR.lock().unwrap();
-                bar.println(format!(
-                    "The rate limit for requests has been raised, please wait {} seconds ",
-                    *sleep_time
+            if *req_sent >= req_limit {
+                let sleep_time = *SLEEP_TIME.lock().unwrap();
+                BAR.lock().unwrap().println(format!(
+                    "The rate limit for requests has been reached. Sleeping for {} seconds...",
+                    sleep_time
                 ));
                 log::debug!(
-                    "{}",
-                    format!(
-                        "The rate limit for requests has been raised, please wait {} seconds ",
-                        *sleep_time
-                    )
+                    "The rate limit for requests has been reached. Sleeping for {} seconds...",
+                    sleep_time
                 );
-                std::thread::sleep(Duration::from_secs(*sleep_time));
+                std::thread::sleep(Duration::from_secs(sleep_time));
                 *req_sent = 1;
-                bar.println("Continue ...");
-                log::debug!("changing req_sent value to 1");
+                BAR.lock().unwrap().println("Continuing...");
+                log::debug!("Resetting req_sent value to 1");
+            } else {
+                *req_sent += 1;
+            }
+        }
+
+        let client = self
+            .build_client(
+                request_option.timeout,
+                request_option.headers.clone(),
+                request_option.redirects,
+                request_option.proxy,
+            )
+            .unwrap();
+        let request = client
+            .request(Method::from_bytes(method.as_bytes()).unwrap(), url.clone())
+            .headers(request_option.headers);
+
+        let request = {
+            if body.is_some() {
+                request.body(body.unwrap())
+            } else {
+                request
             }
         };
-        match self
-            .build_client()
-            .unwrap()
-            .request(Method::from_bytes(method.as_bytes()).unwrap(), url.clone())
-            .headers(headers)
-            .body(body)
-            .send()
-            .await
-        {
+        let request = {
+            if multipart.is_none() {
+                request
+            } else {
+                request.multipart(self.create_form(multipart.unwrap()))
+            }
+        };
+        let response = match request.send().await {
             Ok(resp) => {
-                // Locking Scope
-                {
-                    let mut req_sent = REQUESTS_SENT.lock().unwrap();
-                    let verbose_mode = VERBOSE_MODE.lock().unwrap();
-                    if *verbose_mode == true {
-                        let log_msg = format!("SENDING HTTP REQUEST: {}", url);
-                        log::debug!("{}", log_msg);
-                        BAR.lock().unwrap().println(log_msg);
-                    }
-                    *req_sent += 1;
-                };
-                let mut resp_headers: HashMap<String, String> = HashMap::new();
-                resp.headers()
+                let verbose_mode = *VERBOSE_MODE.lock().unwrap();
+                if verbose_mode {
+                    let msg = format!("Sent HTTP request: {}", &url);
+                    BAR.lock().unwrap().println(&msg);
+                    log::debug!("{}", msg);
+                }
+
+                let resp_headers = resp
+                    .headers()
                     .iter()
-                    .for_each(|(header_name, header_value)| {
-                        resp_headers.insert(
-                            header_name.to_string(),
-                            String::from_utf8_lossy(header_value.as_bytes()).to_string(),
-                        );
-                    });
+                    .map(|(name, value)| {
+                        (
+                            name.to_string(),
+                            String::from_utf8_lossy(value.as_bytes()).to_string(),
+                        )
+                    })
+                    .collect::<HashMap<String, String>>();
+
                 let url = resp.url().to_string();
                 let status = resp.status().as_u16() as i32;
-                let body = resp.bytes().await;
-                if body.is_err(){
-                    let err = mlua::Error::RuntimeError("Timeout Body".to_string());
-                    log::error!("Timeout Body");
-                    return Err(err)
-                } else {
-                    let body = String::from_utf8_lossy(&body.unwrap()).to_string();
-                    let resp_data_struct = HttpResponse {
+                let is_redirect = resp.status().is_redirection();
+                let body = resp
+                    .bytes()
+                    .await
+                    .map(|b| String::from_utf8_lossy(&b).to_string());
+                match body {
+                    Ok(body) => Ok(HttpResponse {
+                        is_redirect,
                         url,
                         status,
                         body,
                         headers: resp_headers,
-                    };
-                    Ok(resp_data_struct)
+                    }),
+                    Err(_) => {
+                        let err = mlua::Error::RuntimeError("Timeout Body".to_string());
+                        log::error!("Timeout Body");
+                        Err(err)
+                    }
                 }
             }
             Err(err) => {
-                let error_code = {
-                    if err.is_timeout() {
-                        "timeout_error"
-                    } else if err.is_connect() {
-                        "connection_error"
-                    } else if err.is_redirect() {
-                        "too_many_redirects"
-                    } else if err.is_body() {
-                        "request_body_error"
-                    } else if err.is_decode() {
-                        "decode_error"
-                    } else {
-                        "external_error"
-                    }
+                let error_code = match () {
+                    _ if err.is_timeout() => "timeout_error",
+                    _ if err.is_connect() => "connection_error",
+                    _ if err.is_redirect() => "too_many_redirects",
+                    _ if err.is_body() => "request_body_error",
+                    _ if err.is_decode() => "decode_error",
+                    _ => "external_error",
                 };
+
                 let err = mlua::Error::RuntimeError(error_code.to_string());
                 Err(err)
             }
-        }
+        };
+
+        response
     }
 }

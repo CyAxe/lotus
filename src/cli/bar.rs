@@ -33,16 +33,18 @@ lazy_static! {
 
 /// Lotus ProgressBar based on the length of `bar` parameter
 pub fn create_progress(bar: u64) {
-    let bar_length = BAR.lock().unwrap().length().unwrap();
-    BAR.lock().unwrap().set_length(bar + bar_length);
-    BAR.lock().unwrap().set_style(
+    let bar_obj = BAR.lock().unwrap();
+    let bar_length = bar_obj.length().unwrap();
+    bar_obj.set_length(bar + bar_length);
+    bar_obj.set_style(
         ProgressStyle::default_bar()
+            .progress_chars("#>-")
+            .tick_strings(&["🌕", "🌖", "🌗", "🌘", "🌑", "🌒", "🌓", "🌔"])
+            //.tick_chars("⣾⣽⣻⢿⡿⣟⣯⣷".to_string().as_str())
             .template(
                 "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos:>7}/{len:7} {msg}",
             )
-            .expect("ProgressBar Error")
-            .tick_chars("⣾⣽⣻⢿⡿⣟⣯⣷".to_string().as_str())
-            .progress_chars("#>-"),
+            .unwrap(),
     );
 }
 
@@ -61,9 +63,6 @@ pub fn show_msg(message: &str, msglevel: MessageLevel) {
             format!("[{}]", Style::new().red().apply_to("ERROR"))
         }
     };
-    if let MessageLevel::Error = msglevel {
-        eprintln!("{print_level} {message}");
-    } else {
-        println!("{print_level} {message}");
-    }
+    let bar = BAR.lock().unwrap();
+    bar.println(format!("{print_level} {message}"));
 }

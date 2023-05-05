@@ -1,63 +1,56 @@
-use crate::lua::runtime::{
-    encode_ext::EncodeEXT, http_ext::HTTPEXT, payloads_ext::PayloadsEXT, utils_ext::UtilsEXT,
+use crate::lua::{
+    model::LuaRunTime,
+    runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT},
 };
-use crate::{filename_to_string, show_msg, CliErrors, LuaRunTime, MessageLevel};
+use crate::{filename_to_string, show_msg, CliErrors, MessageLevel};
 use glob::glob;
 use log::error;
-use mlua::Lua;
+use mlua::{ExternalResult, Lua};
 use std::path::PathBuf;
 
 /// Return Vector of scripts name and code with both methods
 pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
-    let loaded_scripts = {
-        if script_path.is_dir() {
-            load_scripts(script_path)
-        } else {
-            load_script(script_path)
+    let paths: Vec<&str> = script_path.to_str().unwrap().split(',').collect();
+    let mut scripts = vec![];
+
+    for path in paths {
+        let mut file_path = PathBuf::from(path.trim());
+        if file_path.is_dir() {
+            file_path.push("*.lua");
         }
-    };
-    if loaded_scripts.is_err() {
-        show_msg(
-            &format!("Loading scripts error: {}", loaded_scripts.unwrap_err()),
-            MessageLevel::Error,
-        );
-        std::process::exit(1);
+        let loaded_scripts = load_scripts(&file_path);
+        if loaded_scripts.is_err() {
+            show_msg(
+                &format!("Loading scripts error: {}", loaded_scripts.unwrap_err()),
+                MessageLevel::Error,
+            );
+            std::process::exit(1);
+        }
+        scripts.extend(loaded_scripts.unwrap());
     }
-    loaded_scripts.unwrap()
+
+    scripts
 }
 /// Use glob patterns to get script path and content based on script path or directory
 /// This Function will return a Tuples in Vector with script path and content
-fn load_scripts(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors> {
+fn load_scripts(script_path: &PathBuf) -> Result<Vec<(String, String)>, CliErrors> {
     let mut scripts = Vec::new();
-    for entry in glob(format!("{}{}", script_path.to_str().unwrap(), "/*.lua").as_str())
+    for entry in glob(script_path.as_os_str().to_str().unwrap())
         .expect("Failed to read glob pattern")
     {
         match entry {
-            Ok(path) => scripts.push((
+            Ok(path) => {
+                scripts.push((
                 filename_to_string(path.to_str().unwrap()).unwrap(),
-                path.to_str().unwrap().to_string()
-            )),
-            Err(e) => error!("{:?}", e),
+                path.to_str().unwrap().to_string(),
+            ))
+            },
+            Err(e) => error!("{}",e.to_string()),
         }
     }
-    return Ok(scripts);
+    Ok(scripts)
 }
 
-/// Loading script based on the script path (without glob)
-fn load_script(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors> {
-    let mut scripts = Vec::new();
-    let script_path = script_path.clone();
-    let read_script_code = filename_to_string(script_path.to_str().unwrap());
-    if read_script_code.is_err() {
-        Err(CliErrors::ReadingError)
-    } else {
-        scripts.push((
-            read_script_code.unwrap(),
-            script_path.to_str().unwrap().to_string(),
-        ));
-        return Ok(scripts);
-    }
-}
 /// Validating the script code by running the scripts with example input based on the script
 /// type `example.com` or `https:///example.com`
 /// this function may removing some scripts from the list if it contains errors
@@ -77,25 +70,30 @@ pub fn valid_scripts(
         1 => {
             test_target_host = Some("example.com");
         }
-        2 => {
+        _ => {
             test_target_url = Some("https://example.com");
         }
-        _ => {}
     }
-    let lua_eng = LuaRunTime { lua: &Lua::new() };
+    let lua_eng = LuaRunTime {
+        lua: unsafe { &Lua::unsafe_new_with(mlua::StdLib::ALL_SAFE, mlua::LuaOptions::new()) },
+    };
     lua_eng.add_encode_function();
     lua_eng.add_printfunc();
     lua_eng.add_matchingfunc();
     lua_eng.add_threadsfunc();
-    lua_eng.add_payloadsfuncs();
     if test_target_host.is_some() {
         lua_eng.add_httpfuncs(None);
         lua_eng
             .lua
             .globals()
-            .set("TARGET_HOST", "example.com")
+            .set("INPUT_DATA", "example.com")
             .unwrap();
     } else {
+        lua_eng
+            .lua
+            .globals()
+            .set("INPUT_DATA", Vec::<&str>::new())
+            .unwrap();
         lua_eng.add_httpfuncs(test_target_url);
     }
     let mut used_scripts: Vec<(String, String)> = Vec::new();
@@ -107,31 +105,27 @@ pub fn valid_scripts(
             .unwrap();
         let code = lua_eng.lua.load(script_code).exec();
         if code.is_err() {
-            show_msg(
-                &format!("Unable to load {} script", script_path),
-                MessageLevel::Error,
-            );
-            log::error!(
-                "Script Loading Error {} : {}",
+            let log_msg = &format!(
+                "Unable to load {} script: {}",
                 script_path,
-                code.unwrap_err()
+                code.to_lua_err().unwrap_err()
             );
+            show_msg(log_msg, MessageLevel::Error);
+            log::error!("{}", log_msg);
         } else {
             let global = lua_eng.lua.globals();
             let scan_type = global.get::<_, usize>("SCAN_TYPE".to_string());
-            if scan_type.is_err() {
+            if let Err(..) = scan_type {
                 show_msg(
                     &format!(
                         "Unvalid Script Type {}: {}",
                         script_path,
-                        scan_type.unwrap_err().to_string()
+                        scan_type.unwrap_err()
                     ),
                     MessageLevel::Error,
                 );
-            } else {
-                if scan_type.unwrap() == number_scantype {
-                    used_scripts.push((script_code.into(), script_path.into()));
-                }
+            } else if scan_type.unwrap() == number_scantype {
+                used_scripts.push((script_code.into(), script_path.into()));
             }
         }
     });

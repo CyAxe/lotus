@@ -12,13 +12,19 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use std::fs::File;
-use std::io::{BufReader, Read};
+use crate::ScanTypes;
+use mlua::Lua;
 
-pub fn filename_to_string(s: &str) -> Result<String, std::io::Error> {
-    let file = File::open(s)?;
-    let mut buf_reader = BufReader::new(file);
-    let mut s = String::new();
-    buf_reader.read_to_string(&mut s)?;
-    Ok(s)
+/// Setup The Lua Runtime
+pub struct LuaRunTime<'lua> {
+    pub lua: &'lua Lua,
+}
+
+pub struct LuaOptions<'a> {
+    pub target_url: Option<&'a serde_json::Value>,
+    pub target_type: ScanTypes,
+    pub fuzz_workers: usize,
+    pub script_code: &'a str,
+    pub script_dir: &'a str,
+    pub env_vars: serde_json::Value,
 }

@@ -16,6 +16,10 @@ pub enum CliErrors {
     RegexPatternError,
     #[error("Unsupported script type")]
     UnsupportedScript,
+    #[error("No SCAN_TYPE VAR found")]
+    NoScanType,
+    #[error("Lua Code Error")]
+    LuaCodeErr,
 }
 
 #[derive(Error, Debug)]

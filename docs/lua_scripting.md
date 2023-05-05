@@ -1,18 +1,34 @@
+## Lotus Scripting Documentation
+
+- [Starting 101](#Starting-Point)
+- [Url Parsing](#url-parsing)
+- [Change the global request options](#Change the global request options)
+- [Fuzzing](#fuzzing)
+- [Logging](#logging)
+- [Modules](#modules)
+- [String matching](#Text-Matching)
+- [Reporting](#reporting)
+- [Error Handling](#Handle-Connection-Errors)
+- [Custom input handler](#input-handler)
+- [FAQ](#faq)
 
 ### Starting Point
 Make the main() function globally accessible, and try the Lotus utilities to write a great script but make sure to set your Script type first
+but first you've to define which scanning type you will do with your script,
 
 
-| SCAN ID | INPUT TYPE                    |                                           Example |
-| ---     | ---                           |                                               --- |
-| 1       | HOSTS                         |                             `testphp.vulnweb.com` |
-| 2       | FULL URL Including Parameters | `http://testphp.vulnweb.com/artists.php?artist=1` |
-| 3       | Passing URL Paths only without Parameters | `http://testphp.vulnweb.com/artists.php?artist=1` |
+| SCAN ID | INPUT TYPE                                | Example                                           | Access It           |
+| ---     | ---                                       | ---                                               | ---                 |
+| 1       | HOSTS                                     | `testphp.vulnweb.com`                             | `INPUT_DATA`        |
+| 2       | FULL URL Including Parameters             | `http://testphp.vulnweb.com/artists.php?artist=1` | `HttpMessage:url()` |
+| 3       | Passing URL Paths only without Parameters | `http://testphp.vulnweb.com/artists.php?artist=1` | `HttpMessage:url()` |
+| 4       | Custom input handler                      | it can be anything but for example `123.1.2.3.5`  | `INPUT_DATA`        |
+
 
 ```lua 
 -- hacking_script.lua
 
-SCAN_TYPE = 2
+SCAN_TYPE = 2 -- Give me a full url with parameters
 
 function main() 
     println("Hello World :D")
@@ -21,28 +37,13 @@ end
 and then call it
 
 ```bash
-$ echo "http://target.com" | lotus urls hacking_script.lua -o out.json 
+$ echo "http://target.com" | lotus scan hacking_script.lua 
 Hello World :D
 ```
 
-### DEV Enviroment
+> at the moment, lotus 0.5-beta is only sending http requests via one http library that means you cannot send a requests by using Socket or DNS, we're planning to add this in the upcoming version
 
-Use any editor you want but ensure that you've installed the Lua Server Plugin
-and then open the lotus scripts repo you will be able to use automcomplete for lotus function
-finished your script and want to publish it?
-```bash
-$ git checkout -b new_script
-$ git add myscript.lua
-$ git commit -m 'new script for X'
-$ git push origin new_script
-```
-
-
-### Network
-
-> at the moment, lotus 0.4-beta is only sending http requests via one http library that means you cannot send a requests by using Socket or DNS, we're planning to add this in the upcoming version
-
-
+### URL Parsing
 * [Changing the URL Query](#changing-the-url-query)
 * [Sending HTTP Requests](#http-requests)
 * [Chaning the Default Connection options](#change-the-request)
@@ -52,21 +53,21 @@ $ git push origin new_script
 It is possible to use the HttpMessage Lua Class to get your target URL, with this class you are able to perform the following:
 - Get the target URL
 ```lua
--- echo "http://target.com/?is_admin=true" | lotus urls script.lua -o out.json
-local target_url = HttpMessage:Url()
--- http://target.com
+-- echo "http://target.com/?is_admin=true" | lotus scan script.lua 
+local target_url = HttpMessage:url()
+-- http://target.com/?is_admin=true
 ```
 
 - Getting all parameters in String
 ```lua
--- echo "http://target.com/?is_admin=true&year=2023" | lotus urls script.lua -o out.json
-local params = HttpMessage:TxtParams()
+-- echo "http://target.com/?is_admin=true&year=2023" | lotus scan script.lua
+local params = HttpMessage:param_str()
 -- "is_admin=true&year=2023"
 ```
 - Get iterator with all url query
 ```lua
--- echo "http://target.com/?is_admin=true&year=2023" | lotus urls script.lua -o out.json
-local iter_params = HttpMessage:Params()
+-- echo "http://target.com/?is_admin=true&year=2023" | lotus scan script.lua 
+local iter_params = HttpMessage:param_list()
 
 for param_name, param_value in ipairs(iter_params) do 
     -- param_name: is_admin
@@ -76,26 +77,30 @@ end
 - Changing the value of custom Parameter
 ```lua
 -- URL = https://target.com/users?name=Mike&age=20
-local new_url = HttpMessage:setParam("age","23")
+local new_url = HttpMessage:param_set("age","23")
 -- https://target.com/users?name=Mikehacker&age=2023
-Changing the value of all parameters
+```
+
+- Changing the value of all parameters
+```lua
 -- URL = https://target.com/users?name=Mike&age=20
-local new_params = HttpMessage:setAllParams("<h1>",true) -- true = remove the parameter value
+local new_params = HttpMessage:param_set_all("<h1>",true) -- true = remove the parameter value
 for param_name,param_value in ipairs(new_params) do 
     -- param_name: name
     -- param_value: <h1>
     -- continue ..
 end
 ```
+
 - Join URL Path for root path
 ```lua
 make sure to make the global variable SCAN_TYPE value to 3 to make lotus pass the full path instead of parameters to avoid dups inputs
 -- URL = https://target.com/users?name=Mike&age=20
-local new_url = HttpMessage:urlJoin("/admin/login?login=true")
+local new_url = HttpMessage:urljoin("/admin/login?login=true")
 -- URL = https://target.com/admin/login?login=true
 Join URL Path for current path
 -- make sure that your path doesn't starts with /
-local new_url = pathjoin(HttpMessage:Path(),"admin/login.php")
+local new_url = pathjoin(HttpMessage:path(),"admin/login.php")
 -- http://target.com/index.php/admin.login.php
 ```
 
@@ -103,13 +108,13 @@ local new_url = pathjoin(HttpMessage:Path(),"admin/login.php")
 Your lua script must call the HTTP lua class whose methods are assigned to the rust HTTP module in order to send HTTP requests
 Send any method that you wish with a body and headers, but make sure that the headers are in Lua tables rather than strings
 Sending normal GET request
-Using the 'http:send()' function will permit you to send an HTTP request directly, but make sure you add the method and the URL first since these fields are required by the function Keep in mind that http:send takes the connection options from the user options. If you need to change the connection options for your script, you can visit #change-the-request.
+Using the 'http:send()' function will permit you to send an HTTP request directly, but make sure you add the URL first since this field is required by the function, Keep in mind that `http:send` takes the connection options from the user options. If you need to change the connection options for your script, you can visit [#change the request](#change-the-request).
 
 ```lua
-local resp = http:send("GET", "https://google.com")
+local resp = http:send{ url = "https://google.com" }
 by adding this line you will call the https://google.com with GET method you will recive table with the response body/headers/url
 
-local resp = http:send("GET", "https://google.com")
+local resp = http:send{ url = "https://google.com"}
 println(resp.body) -- use println function to print message above the progress bar
 for header_name,header_value in ipairs(resp.headers) do 
     println(string.format("%s: %s",header_name, header_value))
@@ -120,9 +125,36 @@ end
 local headers = {}
 headers["X-API"] = "RANDOM_DATA"
 headers["Content-Type"] = "application/json"
-local resp = http:send("POST","http://target.com/api/users",'{"user_id":1}',headers)
+local resp = http:send{ method = "POST", url = "http://target.com/api/users", body = '{"user_id":1}', headers = headers }
 ```
-### Change the request
+
+- Sending multipart
+```lua
+multipart = {} -- {param_name: content}
+param_content = {}
+param_content["content"] = "khaled" // parameter body [required]
+param_content["content_type"] = "text/html" // parameter content-type [optional]
+param_content["filename"] = "name.html" // filename [optional]
+multipart["name"] = param_content
+local resp = http:send{method="POST",url="http://google.com",multipart = multipart, timeout=10, headers=headers})
+```
+- Merge Headers (remove default headers if its has the same name of your headers)
+
+```lua
+http:merge_headers(true)
+
+local headers = {}
+headers["User-agent"] = "<img src=x onerror=alert()>"
+local resp = http:send{url="http://google.com", headers=headers}
+```
+
+- Change redirects limit
+```lua
+http:send{url="http://google.com",redirects=5}
+```
+
+### Change the global request options
+
 You can change the default http connection options of your script
 - Connection timeout
 ```lua
@@ -131,13 +163,47 @@ http:set_timeout(10) -- 10 secs
 - limits of redirects
 ```lua
 http:set_redirects(1) -- no redirects
-http:set_redirects(1) -- only one redirect
+http:set_redirects(2) -- only one redirect
 ```
 - Custom Proxy
 ```lua
 http:set_proxy("http://localhost:8080")
 ```
 keep in mind this will only works in your script not in all scripts, so every time you call http:send function, the options that you changed will be called
+
+
+### Input Handing
+To handle input, create a new Lua script with a `parse_input` function. This function should take an input string and parse it according to your specific logic, then return a Lua table as output.
+
+Here is an example implementation of the parse_input function:
+
+like this
+```lua
+function parse_input(input)
+    local output = {}
+    output["hacker"] = 1,
+    output["admin"] = 2,
+    return output
+end
+```
+
+
+Here is an example implementation of the parse_input function:
+
+```lua
+SCAN_TYPE = 4
+
+
+function main()
+    println(INPUT_DATA) -- LuaTable[hacker = 1]
+end
+```
+Note that the main function in this example simply prints out the value of the hacker key in the parsed input table, but you can modify this function to suit your specific needs.
+
+
+```bash
+$ echo "hello" | lotus scan script.lua --input-handler input.lua 
+```
 ### Handle Connection Errors
 When using the "http:send" function, you might encounter a connections error because of the target response, so to ensure your script is not panicked, call the function within the protect function in the Lua language. This statement only returns a boolean value indicating whether the function has errors or not. For more information about pcall, please see the following link.
 ```lua
@@ -262,86 +328,21 @@ end
 
 ## Reporting
 
-Lotus is giving you one simple way to report/save the output of your script, you have two types
-General information
-Vuln report
-CVE report
-General information
-every time you run a script lotus would expect a list of findings in your report, it means you can include many finidings in the same report and the script as well so first you've to set the report information and after that call a global Lua Class called Reports
+Lotus is giving you one simple way to report/save the output of your script, every time you run a script lotus would expect a list of findings in your report, it means you can include many finidings in the same report and the script as well so first you've to set the report information and after that call a global Lua Class called Reports
 
-##### Vuln Report
-```lua
-local function send_report(url,parameter,payload,matching_txt)
-    VulnReport:setName("Template Injection") -- vulnerability name
-    VulnReport:setDescription("https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection") -- simple description
-    VulnReport:setRisk("high") -- vulnerability risk
-    VulnReport:setUrl(url) -- Vulnrable URL
-    VulnReport:setParam(parameter) -- Vulnrable Parameter
-    VulnReport:setAttack(payload) -- Used Payload
-    VulnReport:setEvidence(matching_txt) -- Matched Text
-    print_vuln_report(VulnReport) -- Print The Current Value of the report to the CLI
-    Reports:addVulnReport(VulnReport) -- Save the current value of the Class to the script report list
-end
+`Reports:add` accepts any value so feel free to add whatever you want in the report
 
-function main() 
-    -- SOME LOGIC
-    send_report("http://hello.com/?name=%7B%7B2%2A2%7D%7D","name","%7B%7B2%2A2%7D%7D","4")
-end
+```lua
+local match = {}
+match["123"]
+match["456"]
+Reports:add{
+    url = "http://target.com",
+    match = match
+}
 ```
+after that you will find the results in CLI and the json output (-o json)
 
-##### CVE Report
-in CVE report you can add many Matchers like if you have a CVE that detect a vulnrablite based on the response header and body soo you have to include that in the report, to fix that you can use CveReport:addMatcher function to add whatever you want based on the Match ID
-
-> The Match ID is allocating for custom part of the response
-
-| Match ID | Match Type         |
-| ---      | --                 |
-| 1        | Full Response      |
-| 2        | Response Headers   |
-| 3        | Response Body      |
-| 4        | Status Code        |
-| 5        | General (anything) |
-
-- Full Response
-```lua
-CveReport:addMatcher("<h1>Hi</h1>",1)
-```
-- Response Headers
-```lua
-CveReport:addMatcher("Content-Type: text/html",2)
-```
-- Response Body
-```lua
-CveReport:addMatcher("<h1>H1</h1>",3)
-```
-- Response Status
-```lua
-CveReport:addMatcher("301",4)
-```
-- General (Request or Response)
-```lua
-CveReport:addMatcher("IDK WHERE I FOUND THAT HONESTLY",5)
-```
-when you can the send_report function all matches that you added will be mentioned the in report, if you want to clear the matchers for example adding a new finding in the same script you can use CveReport:clearMatcher() to clear the matching list
-```lua
-local function send_report(url)
-    CveReport:setName("CVE-2020-11450") -- CVE Name
-    CveReport:setDescription("MicroStrategy Web 10.4 is susceptible to information disclosure. The JVM configuration, CPU architecture, installation folder, and other information are exposed through /MicroStrategyWS/happyaxis.jsp. An attacker can use this vulnerability to learn more about the application environment and thereby possibly obtain sensitive information, modify data, and/or execute unauthorized operations.") -- Description
-    CveReport:setRisk("high") -- Risk
-    CveReport:setUrl(url)  -- URL
-    Reports:addCveReport(CveReport) -- Save The Current value of CveReport to report list
-    print_cve_report(CveReport) -- Print CVE report to CLI
-    CveReport:clearMatcher() -- Clear the matching List
-end
-
-function main() 
-    -- Some Logic 
-    CveReport:addMatcher('url: xss://"-alert(document.domain)',3)  -- 3 = response body
-    CveReport:addMatcher('text/html',2)  -- 2 = response headers
-    CveReport:addMatcher("200",4)  -- 4 = response status
-    send_report("http://target.com/wp-content/plugins/embed-swagger/swagger-iframe.php?url=xss://%22-alert(document.domain)-%22")
-end
-```
 
 
 ### Logging
@@ -374,6 +375,11 @@ $ cat log.txt
 
 
 
+### Modules
+While we strive to provide as many functions as possible, there may be cases where you require additional libraries for specific purposes. To address this, we have released packages on luarocks.org written in Rust for improved memory safety.
+
+To use these packages, it is important to first install Rust from here. Once Rust is installed, you can search for packages released by the knas user on luarocks.org. Additionally, you can use any Lua modules written in different languages such as C.
+
 ### Fuzzing
 
 lotus is focusing to make the fuzzing or multi-threading process easy and simple by providing two class to help in common fuzzing cases
@@ -397,14 +403,14 @@ in you callback function parse the target function output and see if this able i
 SCAN_TYPE = 2
 
 local function send_report(url,parameter,payload,matching_error)
-    VulnReport:setName("Template Injection")
-    VulnReport:setDescription("https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection")
-    VulnReport:setRisk("high")
-    VulnReport:setUrl(url)
-    VulnReport:setParam(parameter)
-    VulnReport:setAttack(payload)
-    VulnReport:setEvidence(matching_error)
-    print_vuln_report(VulnReport)
+    Reports:add {
+        name = "Template Injection",
+        link = "https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection",
+        risk = "high",
+        url = url,
+        match = matching_error,
+        param = parameter
+    }
 end
 
 SSTI_PAYLOADS = {
@@ -524,7 +530,7 @@ pathjoin("/etc/","passwd") -- /etc/passwd
 - Path Join in the script directory 
 ```lua
 -- script dir /home/docker/scripts/main.lua
-JOIN_SCRIPT_DIR("payloads/sqli.txt")
+join_script_dir("payloads/sqli.txt")
 -- /home/docker/scripts/payloads/sqli.txt
 ```
 - Convert files to iterators by new lines

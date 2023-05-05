@@ -1,9 +1,7 @@
 use crate::{
     cli::{
-        args::ScriptType,
-        default_scripts::{
-            write_file, CVE_EXAMPLE, FUZZ_EXAMPLE, PASSIVE_EXAMPLE, SERVICE_EXAMPLE,
-        },
+        args::new::ScriptType,
+        default_scripts::{write_file, CVE_EXAMPLE, FUZZ_EXAMPLE, SERVICE_EXAMPLE},
         errors::CliErrors,
     },
     show_msg, MessageLevel,
@@ -14,7 +12,6 @@ pub fn new_args(scan_type: ScriptType, file_name: PathBuf) {
     let script_code = match scan_type {
         ScriptType::Fuzz => FUZZ_EXAMPLE,
         ScriptType::CVE => CVE_EXAMPLE,
-        ScriptType::PASSIVE => PASSIVE_EXAMPLE,
         ScriptType::SERVICE => SERVICE_EXAMPLE,
         ScriptType::NotSupported => "",
     };

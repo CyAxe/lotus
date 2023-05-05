@@ -1,20 +1,16 @@
-/*
- * This file is part of Lotus Project, an Web Security Scanner written in Rust based on Lua Scripts
- * For details, please see https://github.com/rusty-sec/lotus/
- *
- * Copyright (c) 2022 - Khaled Nassar
- *
- * Please note that this file was originally released under the
- * GNU General Public License as published by the Free Software Foundation;
- * either version 2 of the License, or (at your option) any later version.
- *
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// This file is part of Lotus Project, a web security scanner written in Rust based on Lua scripts.
+// For details, please see https://github.com/rusty-sec/lotus/
+//
+// Copyright (c) 2022 - Khaled Nassar
+//
+// Please note that this file was originally released under the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the License, or (at your option)
+// any later version.
+//
+// Unless required by applicable law or agreed to in writing, software distributed under the
+// License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+// either express or implied. See the License for the specific language governing permissions
+// and limitations under the License.
 
 use std::collections::HashMap;
 use url::Url;
@@ -22,65 +18,85 @@ mod url_lua;
 
 #[derive(Clone)]
 pub struct HttpMessage {
-    pub url: Url,
+    pub url: Option<Url>,
 }
 
 impl HttpMessage {
-    pub fn change_urlquery(
-        &self,
-        payload: String,
-        remove_content: bool,
-    ) -> HashMap<String, String> {
-        let url = self.url.clone();
-        let mut scan_params = HashMap::new();
-        let mut result: HashMap<String, String> = HashMap::new();
-        let mut param_list = Vec::new();
-        url.query_pairs()
-            .collect::<HashMap<_, _>>()
-            .iter()
-            .for_each(|(key, value)| {
-                scan_params.insert(key.to_string(), value.to_string());
-                param_list.push(key.to_string());
-            });
+    // This method takes a payload string and a boolean indicating whether or not to remove the content of the query parameter
+    // It returns a HashMap of new URLs with the modified query parameter and corresponding value
+    pub fn change_urlquery(&self, payload: &str, remove_content: bool) -> HashMap<String, String> {
+        // Create two HashMaps to store the original and modified query parameters
+        let mut scan_params = HashMap::with_capacity(16);
+        let mut result = HashMap::with_capacity(16);
 
-        scan_params.iter().for_each(|(key, value)| {
-            payload.split('\n').into_iter().for_each(|payload| {
+        // If there is no URL, return an empty HashMap
+        if let Some(the_url) = &self.url {
+            // If there is a URL, add its query parameters to scan_params
+            for (key, value) in the_url.query_pairs() {
+                scan_params.insert(key.to_string(), value.to_string());
+            }
+        } else {
+            return result;
+        }
+
+        // For each query parameter in scan_params, split the payload string by newlines and create a new URL with each modified query parameter
+        for (key, value) in scan_params.iter() {
+            for pl in payload.split('\n') {
                 let mut new_params = scan_params.clone();
                 if remove_content {
-                    new_params.insert(key.to_string(), payload.to_string());
+                    new_params.insert(key.to_string(), pl.to_string());
                 } else {
-                    new_params.insert(key.to_string(), value.as_str().to_owned() + payload);
+                    let mut new_value = String::with_capacity(value.len() + pl.len());
+                    new_value.push_str(value);
+                    new_value.push_str(pl);
+                    new_params.insert(key.to_string(), new_value);
                 }
-                let mut new_url = url.clone();
-                new_url.query_pairs_mut().clear();
 
-                new_url.query_pairs_mut().extend_pairs(&new_params);
+                let mut new_url = self.url.clone().unwrap();
+                new_url.set_query(None);
+
+                for (key, value) in new_params.iter() {
+                    new_url.query_pairs_mut().append_pair(key, value);
+                }
 
                 result.insert(key.to_string(), new_url.as_str().to_string());
-            });
-        });
+            }
+        }
+
         result
     }
-    pub fn set_urlvalue(&self, param: &str, payload: &str) -> String {
-        let mut url = self.url.clone();
-        let mut final_params = HashMap::new();
-        url.query_pairs()
-            .into_iter()
-            .collect::<HashMap<_, _>>()
-            .iter()
-            .for_each(|(k, v)| {
-                if k == param {
-                    final_params.insert(k.to_string(), format!("{}{}", v, payload));
-                } else {
-                    final_params.insert(k.to_string(), v.to_string());
-                }
-            });
-        url.query_pairs_mut().clear();
-        url.query_pairs_mut().extend_pairs(final_params);
-        url.as_str().to_string()
+
+    // This method takes a query parameter, a payload string, and a boolean indicating whether or not to remove the content of the query parameter
+    // It returns a new URL with the modified query parameter and corresponding value
+    pub fn set_urlvalue(&self, param: &str, payload: &str, remove_content: bool) -> String {
+        // If there is no URL, return an empty String
+        if let Some(mut url) = self.url.clone() {
+            // If there is a URL, modify the specified query parameter and return the new URL as a String
+            let new_query = url
+                .query_pairs()
+                .fold(String::new(), |mut acc, (key, value)| {
+                    if key == param {
+                        if remove_content {
+                            acc += &format!("{}={}", key, payload);
+                        } else {
+                            acc += &format!("{}={}", key, value + payload);
+                        }
+                    } else {
+                        acc += &format!("{}={}", key, value);
+                    }
+                    acc += "&";
+                    acc
+                });
+            url.set_query(Some(&new_query[..new_query.len() - 1]));
+            return url.as_str().to_string();
+        }
+        String::new()
     }
 
-    pub fn urljoin(&self, path: String) -> String {
-        self.url.join(&path).unwrap().as_str().to_string()
+    pub fn urljoin(&self, path: &str) -> String {
+        if let Some(url) = &self.url {
+            return url.join(path).unwrap().as_str().to_string();
+        }
+        String::new()
     }
 }

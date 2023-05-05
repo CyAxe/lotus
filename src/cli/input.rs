@@ -3,23 +3,29 @@ use crate::CliErrors;
 use std::{io, io::BufRead, path::PathBuf};
 use url::Url;
 pub mod load_scripts;
+pub mod parse_requests;
 
 pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     let mut hosts = Vec::new();
     urls.iter().for_each(|x| {
         let parsed_url = Url::parse(x);
-        if parsed_url.is_ok() {
-            let parsed_url = parsed_url.unwrap();
+        if let Ok(parsed_url) = parsed_url {
             let host = {
-                let host = parsed_url.host().unwrap();
                 if parsed_url.port().is_some() {
+                    let host = parsed_url.host().unwrap();
                     let port = parsed_url.port().unwrap();
                     format!("{}:{}", host, port)
                 } else {
+                    let host = if let Some(host) = parsed_url.host() {
+                        host
+                    } else {
+                        url::Host::Domain("") // Empty Host Name
+                    };
                     host.to_string()
                 }
             };
-            if !hosts.contains(&host) {
+            // Check for Empty & Dups Hosts
+            if !hosts.contains(&host) && host.is_empty() {
                 hosts.push(host);
             }
         }
@@ -29,30 +35,55 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     hosts
 }
 
-pub fn get_target_paths(urls: Vec<String>) -> Vec<String> {
+pub fn get_target_paths(urls: Vec<String>) -> Result<Vec<String>, String> {
     let mut paths: Vec<String> = Vec::new();
-    urls.iter().for_each(|x| {
-        let the_path = Url::parse(x).unwrap().path().to_string();
-        let new_url = Url::join(&Url::parse(x).unwrap(), &the_path);
-        if new_url.is_ok(){
-            let new_url = new_url.unwrap().to_string();
-            if !paths.contains(&new_url) {
-                paths.push(new_url);
+    for url_str in urls {
+        let url = match Url::parse(&url_str) {
+            Ok(url) => url,
+            Err(err) => {
+                log::error!("Failed to parse URL {}: {}", url_str, err);
+                continue;
             }
-        } else {
-            log::error!("Cannot URL Join {} with {}",x,&the_path);
-            log::error!("UNWRAP ERROR {}",new_url.unwrap_err());
+        };
+        let path = match url.path().to_string().as_str() {
+            "" => "/".to_string(),
+            path => path.to_string(),
+        };
+        let new_url = match url.join(&path) {
+            Ok(new_url) => new_url,
+            Err(err) => {
+                log::error!("Failed to join URL {} with path {}: {}", url, path, err);
+                continue;
+            }
+        };
+        let new_url_str = new_url.to_string();
+        if !paths.contains(&new_url_str) {
+            paths.push(new_url_str);
         }
-    });
-    paths
+    }
+    Ok(paths)
 }
 
+pub fn get_stdin_input() -> Result<Vec<String>, CliErrors> {
+    if atty::is(atty::Stream::Stdin) {
+        Err(CliErrors::EmptyStdin)
+    } else {
+        let stdin = io::stdin();
+        let mut input_lines: Vec<String> = Vec::new();
+        stdin.lock().lines().for_each(|x| {
+            let the_line = x.unwrap();
+            input_lines.push(the_line);
+        });
+        input_lines.sort();
+        input_lines.dedup();
+        Ok(input_lines)
+    }
+}
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {
     if url_file.is_some() {
         let urls = filename_to_string(url_file.unwrap().to_str().unwrap());
-        if urls.is_ok() {
+        if let Ok(urls) = urls {
             Ok(urls
-                .unwrap()
                 .lines()
                 .map(|url| url.to_string())
                 .collect::<Vec<String>>())
@@ -60,25 +91,9 @@ pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErro
             Err(CliErrors::ReadingError)
         }
     } else {
-        if atty::is(atty::Stream::Stdin) {
-            Err(CliErrors::EmptyStdin)
-        } else {
-            let stdin = io::stdin();
-            let mut urls: Vec<String> = Vec::new();
-            stdin.lock().lines().for_each(|x| {
-                let the_url = x.unwrap();
-                match url::Url::parse(&the_url) {
-                    Ok(..) => {
-                        urls.push(the_url);
-                    }
-                    Err(..) => {
-                        log::error!("Cannot Parse {} url, ignoring ..", the_url);
-                    }
-                };
-            });
-            urls.sort();
-            urls.dedup();
-            Ok(urls)
-        }
+        let mut urls = get_stdin_input()?;
+        urls.sort();
+        urls.dedup();
+        Ok(urls)
     }
 }

@@ -1,17 +1,13 @@
 use crate::{
     lua::{
-        output::{
-            cve::CveReport,
-            vuln::{AllReports, OutReport},
-        },
-        parsing::url::HttpMessage,
+        model::LuaRunTime,
+        output::report::AllReports,
+        parsing::{files::filename_to_string, req::show_response, url::HttpMessage},
     },
-    CliErrors, LuaRunTime,
+    CliErrors,
 };
-use log::{debug, error, info, warn};
 use mlua::ExternalError;
-use std::fs::File;
-use std::io::prelude::*;
+use std::collections::HashMap;
 use std::path::Path;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -26,50 +22,27 @@ impl HTTPEXT for LuaRunTime<'_> {
         self.lua
             .globals()
             .set(
-                "JOIN_SCRIPT_DIR",
+                "show_response",
                 self.lua
-                    .create_function(|c_lua, new_path: String| {
-                        let script_path = c_lua.globals().get::<_, String>("SCRIPT_PATH").unwrap();
-                        let the_path = Path::new(&script_path);
-                        Ok(the_path
-                            .parent()
-                            .unwrap()
-                            .join(new_path)
-                            .to_str()
-                            .unwrap()
-                            .to_string())
-                    })
+                    .create_function(show_response)
                     .unwrap(),
             )
             .unwrap();
-
-        let log_info = self
+        let headers_converter = self
             .lua
-            .create_function(|_, log_msg: String| {
-                info!("{}", log_msg);
-                Ok(())
+            .create_function(|_, headers_txt: String| {
+                let mut result = HashMap::new();
+                for line in headers_txt.lines() {
+                    if let Some((name, value)) = line.split_once(':') {
+                        result.insert(name.trim().to_string(), value.trim().to_string());
+                    }
+                }
+                Ok(result)
             })
             .unwrap();
-        let log_warn = self
-            .lua
-            .create_function(|_, log_msg: String| {
-                warn!("{}", log_msg);
-                Ok(())
-            })
-            .unwrap();
-        let log_debug = self
-            .lua
-            .create_function(|_, log_msg: String| {
-                debug!("{}", log_msg);
-                Ok(())
-            })
-            .unwrap();
-        let log_error = self
-            .lua
-            .create_function(|_, log_msg: String| {
-                error!("{}", log_msg);
-                Ok(())
-            })
+        self.lua
+            .globals()
+            .set("make_headers", headers_converter)
             .unwrap();
         self.lua
             .globals()
@@ -103,9 +76,7 @@ impl HTTPEXT for LuaRunTime<'_> {
                 self.lua
                     .create_function(|_ctx, file_path: String| {
                         if Path::new(&file_path).exists() {
-                            let mut file = File::open(&file_path)?;
-                            let mut file_content = String::new();
-                            file.read_to_string(&mut file_content)?;
+                            let file_content = filename_to_string(&file_path)?;
                             Ok(file_content)
                         } else {
                             Err(CliErrors::ReadingError.to_lua_err())
@@ -114,20 +85,21 @@ impl HTTPEXT for LuaRunTime<'_> {
                     .unwrap(),
             )
             .unwrap();
-        self.lua.globals().set("log_info", log_info).unwrap();
-        self.lua.globals().set("log_error", log_error).unwrap();
-        self.lua.globals().set("log_debug", log_debug).unwrap();
-        self.lua.globals().set("log_warn", log_warn).unwrap();
 
-        if !target_url.is_none() {
+        if let Some(url) = target_url {
             self.lua
                 .globals()
                 .set(
                     "HttpMessage",
                     HttpMessage {
-                        url: Url::parse(target_url.unwrap()).unwrap(),
+                        url: Some(Url::parse(url).unwrap()),
                     },
                 )
+                .unwrap();
+        } else {
+            self.lua
+                .globals()
+                .set("HttpMessage", HttpMessage { url: None })
                 .unwrap();
         }
         self.lua
@@ -138,14 +110,6 @@ impl HTTPEXT for LuaRunTime<'_> {
                     reports: Vec::new(),
                 },
             )
-            .unwrap();
-        self.lua
-            .globals()
-            .set("VulnReport", OutReport::init())
-            .unwrap();
-        self.lua
-            .globals()
-            .set("CveReport", CveReport::init())
             .unwrap();
     }
 }
