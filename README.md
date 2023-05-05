@@ -56,7 +56,7 @@ And with our Lua libraries on LuaRocks, you can do even more.
 ## :rocket: Installation
 You can install Lotus from the source code by running the following commands:
 ```bash
-$ apt install libssl-dev pkg-config gcc git -y
+$ apt install libssl-dev pkg-config gcc git lua53 liblua5.3-0 liblua5.3-dev -y
 $ cargo install --git=https://github.com/BugBlocker/lotus/
 ```
 
