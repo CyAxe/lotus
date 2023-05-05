@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 /// Return Vector of scripts name and code with both methods
 pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
-    let loaded_scripts = load_scripts(script_path);
+    let loaded_scripts = load_scripts(&script_path);
     if loaded_scripts.is_err() {
         show_msg(
             &format!("Loading scripts error: {}", loaded_scripts.unwrap_err()),
@@ -22,16 +22,21 @@ pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
 }
 /// Use glob patterns to get script path and content based on script path or directory
 /// This Function will return a Tuples in Vector with script path and content
-fn load_scripts(script_path: PathBuf) -> Result<Vec<(String, String)>, CliErrors> {
+fn load_scripts(script_path: &PathBuf) -> Result<Vec<(String, String)>, CliErrors> {
     let mut scripts = Vec::new();
     for entry in glob(script_path.as_os_str().to_str().unwrap())
         .expect("Failed to read glob pattern")
     {
         match entry {
-            Ok(path) => scripts.push((
+            Ok(path) => {
+                if path.is_dir() {
+                    continue;
+                }
+                scripts.push((
                 filename_to_string(path.to_str().unwrap()).unwrap(),
                 path.to_str().unwrap().to_string(),
-            )),
+            ))
+            },
             Err(e) => error!("{}",e.to_string()),
         }
     }
