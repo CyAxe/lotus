@@ -163,7 +163,7 @@ http:set_timeout(10) -- 10 secs
 - limits of redirects
 ```lua
 http:set_redirects(1) -- no redirects
-http:set_redirects(1) -- only one redirect
+http:set_redirects(2) -- only one redirect
 ```
 - Custom Proxy
 ```lua
