@@ -12,7 +12,6 @@ Our aim is to make security scripting more efficient by providing libraries and 
 - [What lotus scripts can do](#what-lotus-scripts-can-do)
 - [Installation](#rocket-installation)
 - [Documentation](#book-documentation)
-- [ScreenShots](#screenshots)
 
 ### Why Lotus?
 - Powerful Lua API
