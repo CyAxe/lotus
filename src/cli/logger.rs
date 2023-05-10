@@ -18,15 +18,16 @@
 
 // Lotus init logger
 use std::path::PathBuf;
+use std::time::SystemTime;
 
 pub fn init_log(log_file: Option<PathBuf>) -> Result<(), std::io::Error> {
     let logger = fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
-                "{} [{}][{}] {}",
-                chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
-                record.target(),
+                "[{} {} {}] {}",
+                humantime::format_rfc3339_seconds(SystemTime::now()),
                 record.level(),
+                record.target(),
                 message
             ))
         })
