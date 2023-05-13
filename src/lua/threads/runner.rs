@@ -12,6 +12,7 @@ use crate::cli::bar::{show_msg, MessageLevel};
 use crate::ScanTypes;
 
 lazy_static! {
+    pub static ref LAST_HTTP_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
     pub static ref LAST_URL_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
     pub static ref LAST_HOST_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
     pub static ref LAST_PATH_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
