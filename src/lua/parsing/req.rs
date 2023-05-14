@@ -2,7 +2,10 @@ use crate::lua::network::http::HttpResponse;
 use mlua::Lua;
 use std::borrow::Cow;
 
-pub fn show_response<'lua>(_: &'lua Lua,res: HttpResponse) -> Result<Cow<'static, str>, mlua::Error> {
+pub fn show_response<'lua>(
+    _: &'lua Lua,
+    res: HttpResponse,
+) -> Result<Cow<'static, str>, mlua::Error> {
     let headers_str = {
         let mut headers_str = String::new();
         res.headers.iter().for_each(|(headername, headervalue)| {

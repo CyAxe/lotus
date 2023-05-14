@@ -1,4 +1,5 @@
 use crate::{
+    cli::input::parse_requests::FullRequest,
     lua::{
         model::LuaRunTime,
         output::report::AllReports,
@@ -14,20 +15,21 @@ use tokio::time::sleep;
 use url::Url;
 
 pub trait HTTPEXT {
-    fn add_httpfuncs(&self, target_url: Option<&str>);
+    fn add_httpfuncs(&self, target_url: Option<&str>, full_httpmsg: Option<FullRequest>);
 }
 
 impl HTTPEXT for LuaRunTime<'_> {
-    fn add_httpfuncs(&self, target_url: Option<&str>) {
+    fn add_httpfuncs(&self, target_url: Option<&str>, full_httpmsg: Option<FullRequest>) {
         self.lua
             .globals()
             .set(
                 "show_response",
-                self.lua
-                    .create_function(show_response)
-                    .unwrap(),
+                self.lua.create_function(show_response).unwrap(),
             )
             .unwrap();
+        if let Some(full_httpmsg) = full_httpmsg {
+            self.lua.globals().set("full_req", full_httpmsg).unwrap();
+        }
         let headers_converter = self
             .lua
             .create_function(|_, headers_txt: String| {

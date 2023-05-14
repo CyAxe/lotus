@@ -18,8 +18,9 @@ pub struct RequestOpts {
 }
 
 /// Scanning type For `SCAN_TYPE` in lua scripts
-#[derive(Clone, Copy)]
+#[derive(Debug,Clone, Copy)]
 pub enum ScanTypes {
+    #[allow(non_camel_case_types)]
     FULL_HTTP,
     /// HOSTS Scanning under ID number 1
     HOSTS,

@@ -1,4 +1,5 @@
 use crate::cli::args::Opts;
+use crate::cli::input::parse_requests::FullRequest;
 use crate::cli::input::{get_stdin_input, get_target_hosts, get_target_paths};
 use crate::cli::logger::init_log;
 use crate::lua::parsing::files::filename_to_string;
@@ -6,6 +7,7 @@ use crate::{show_msg, Lotus, MessageLevel, RequestOpts};
 use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 use url::Url;
+use serde_json::Value;
 #[path = "input_handler.rs"]
 mod input_handler;
 use input_handler::custom_input_lua;
@@ -26,7 +28,8 @@ pub struct TargetData {
     pub urls: Vec<String>,
     pub hosts: Vec<String>,
     pub paths: Vec<String>,
-    pub custom: Vec<serde_json::Value>,
+    pub parse_requests: Vec<Value>,
+    pub custom: Vec<Value>,
 }
 
 pub fn args_scan() -> ScanArgs {
@@ -34,6 +37,7 @@ pub fn args_scan() -> ScanArgs {
         urls,
         hosts,
         paths,
+        parse_requests,
         custom,
         exit_after,
         is_request,
@@ -101,32 +105,49 @@ pub fn args_scan() -> ScanArgs {
             } else {
                 vec![]
             };
-            log::debug!("{:?}", input_handler);
             let mut urls = vec![];
             let mut paths = vec![];
             let mut hosts = vec![];
+            let mut parsed_request: Vec<Value> = vec![];
             if input_handler.is_empty() {
-                urls = input_data
-                    .iter()
-                    .filter_map(|target_url| Url::parse(target_url).ok())
-                    .map(|url| url.to_string())
-                    .collect();
-                paths = match get_target_paths(urls.clone()) {
-                    Ok(paths) => paths,
-                    Err(err) => {
-                        show_msg(
-                            &format!("Failed to get target paths: {}", err),
-                            MessageLevel::Error,
-                        );
-                        vec![]
-                    }
-                };
-                hosts = get_target_hosts(urls.clone());
+
+                let input_str = input_data.join("\n");
+                let is_json = is_json_string(&input_str);
+                log::debug!("input data is json: {} \n{}",is_json,&input_str);
+                if is_json {
+                    let parsed_json: Vec<FullRequest> = match serde_json::from_str(&input_str) {
+                        Ok(parsed_request) => parsed_request,
+                        Err(err) => {
+                            show_msg(&format!("Not Valid JSON Data for Http Request parser: {}",err.to_string()), MessageLevel::Error);
+                            std::process::exit(0);
+                        }
+                    };
+                    log::debug!("JSON Data has benn Parsed successfully");
+                    parsed_request = parsed_json.iter().map(|req| serde_json::to_value(req).unwrap()).collect();
+                } else {
+                    urls = input_data
+                        .iter()
+                        .filter_map(|target_url| Url::parse(target_url).ok())
+                        .map(|url| url.to_string())
+                        .collect();
+                    paths = match get_target_paths(urls.clone()) {
+                        Ok(paths) => paths,
+                        Err(err) => {
+                            show_msg(
+                                &format!("Failed to get target paths: {}", err),
+                                MessageLevel::Error,
+                            );
+                            vec![]
+                        }
+                    };
+                    hosts = get_target_hosts(urls.clone());
+                }
             }
             (
                 urls,
                 hosts,
                 paths,
+                parsed_request,
                 input_handler,
                 url_opts.exit_after,
                 url_opts.is_request,
@@ -143,12 +164,18 @@ pub fn args_scan() -> ScanArgs {
         }
     };
 
+    log::debug!("HOSTS: {}", hosts.len());
+    log::debug!("HTTPMSGS: {}", parse_requests.len());
+    log::debug!("URLS: {}",urls.len());
+    log::debug!("PATHS: {}", paths.len());
+    log::debug!("CUSTOM: {}", custom.len());
     ScanArgs {
         target_data: TargetData {
             urls,
             hosts,
             paths,
             custom,
+            parse_requests
         },
         exit_after,
         is_request,
@@ -160,3 +187,12 @@ pub fn args_scan() -> ScanArgs {
         verbose,
     }
 }
+
+
+fn is_json_string(json_str: &str) -> bool {
+    match serde_json::from_str::<Value>(json_str) {
+        Ok(_) => true,
+        Err(_) => false,
+    }
+}
+

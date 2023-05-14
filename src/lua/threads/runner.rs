@@ -35,11 +35,13 @@ fn generate_resume() -> Result<(), std::io::Error> {
         .create(true)
         .open("resume.cfg")?;
 
+    let http_scan_id = LAST_HTTP_SCAN_ID.lock().unwrap();
     let url_scan_id = LAST_URL_SCAN_ID.lock().unwrap();
     let host_scan_id = LAST_HOST_SCAN_ID.lock().unwrap();
     let path_scan_id = LAST_PATH_SCAN_ID.lock().unwrap();
     let custom_scan_id = LAST_CUSTOM_SCAN_ID.lock().unwrap();
 
+    file.write_all(format!("HTTP_SCAN_ID={}\n", *http_scan_id).as_bytes())?;
     file.write_all(format!("URL_SCAN_ID={}\n", *url_scan_id).as_bytes())?;
     file.write_all(format!("HOST_SCAN_ID={}\n", *host_scan_id).as_bytes())?;
     file.write_all(format!("PATH_SCAN_ID={}\n", *path_scan_id).as_bytes())?;
@@ -50,6 +52,7 @@ fn generate_resume() -> Result<(), std::io::Error> {
 
 fn update_index_id(scan_type: Arc<ScanTypes>, index_id: usize) {
     match *scan_type {
+        ScanTypes::FULL_HTTP => *LAST_HTTP_SCAN_ID.lock().unwrap() = index_id,
         ScanTypes::URLS => *LAST_URL_SCAN_ID.lock().unwrap() = index_id,
         ScanTypes::HOSTS => *LAST_HOST_SCAN_ID.lock().unwrap() = index_id,
         ScanTypes::PATHS => *LAST_PATH_SCAN_ID.lock().unwrap() = index_id,

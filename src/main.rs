@@ -14,9 +14,9 @@
 
 use lotus::{
     cli::{
-        input::load_scripts::get_scripts,
         args::Opts,
         bar::{create_progress, show_msg, MessageLevel, BAR},
+        input::load_scripts::get_scripts,
         startup::{new::new_args, scan::scan::args_scan},
     },
     lua::{
@@ -55,6 +55,10 @@ async fn run_scan() -> Result<(), std::io::Error> {
     );
 
     show_msg(
+        &format!("Number of HTTP MSGS: {}", opts.target_data.parse_requests.len()),
+        MessageLevel::Info,
+    );
+    show_msg(
         &format!("Number of paths: {}", opts.target_data.paths.len()),
         MessageLevel::Info,
     );
@@ -79,6 +83,14 @@ async fn run_scan() -> Result<(), std::io::Error> {
         *VERBOSE_MODE.lock().unwrap() = opts.verbose;
     }
     let scan_futures = vec![
+        opts.lotus_obj.start(
+            opts.target_data.parse_requests,
+            scripts.clone(),
+            opts.req_opts.clone(),
+            ScanTypes::FULL_HTTP,
+            opts.exit_after,
+            fuzz_workers,
+        ),
         opts.lotus_obj.start(
             convert_serde_value(opts.target_data.paths),
             scripts.clone(),
