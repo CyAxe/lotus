@@ -12,27 +12,6 @@ pub struct FullRequest {
     pub url: String,
     pub headers: HashMap<String, String>,
     pub body: String,
-    #[serde(skip_serializing)]
-    pub injection_place: InjectionPlace
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct InjectionPlace {
-    pub url_scan: bool,
-    pub path_scan: bool,
-    pub headers_scan: bool,
-    pub body_scan: bool,
-}
-
-impl Default for InjectionPlace {
-    fn default() -> Self {
-        Self {
-            url_scan: true,
-            path_scan: false,
-            headers_scan: false,
-            body_scan: false
-        }
-    }
 }
 
 impl Default for FullRequest {
@@ -43,7 +22,6 @@ impl Default for FullRequest {
             url: "http://example.com".to_string(),
             headers,
             body: "".to_string(),
-            injection_place: InjectionPlace::default()
         }
     }
 }
@@ -63,7 +41,7 @@ impl FullRequest {
 
 impl UserData for FullRequest {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("set_param", |_, this, (payload ,remove_param_content) : (String, Option<bool>)| {
+        methods.add_method("set_url_param", |_, this, (payload ,remove_param_content) : (String, Option<bool>)| {
             let remove_content = remove_param_content.unwrap_or(false);
             let test_data = this.inject_payloads(&payload,remove_content);
             Ok(test_data)
