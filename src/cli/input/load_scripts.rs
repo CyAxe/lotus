@@ -66,7 +66,7 @@ pub fn valid_scripts(
     let mut test_target_url: Option<&str> = None;
     let mut test_target_host: Option<&str> = None;
     let mut test_http_msg: Option<FullRequest> = None;
-    log::debug!("Checking Scan Number ID: {}",number_scantype);
+    log::debug!("Checking Scan Number ID: {}", number_scantype);
     match number_scantype {
         0 => test_http_msg = Some(FullRequest::default()),
         1 => {
@@ -117,7 +117,7 @@ pub fn valid_scripts(
             show_msg(log_msg, MessageLevel::Error);
             log::error!("{}", log_msg);
         } else {
-            log::debug!("LOADING STATUS {:?}",code);
+            log::debug!("LOADING STATUS {:?}", code);
             let global = lua_eng.lua.globals();
             let scan_type = global.get::<_, usize>("SCAN_TYPE".to_string());
             if let Err(..) = scan_type {
@@ -134,6 +134,6 @@ pub fn valid_scripts(
             }
         }
     });
-    log::debug!("Loaded scripts: {:?}",used_scripts);
+    log::debug!("Loaded scripts: {:?}", used_scripts);
     used_scripts
 }

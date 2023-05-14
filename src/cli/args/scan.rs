@@ -1,5 +1,5 @@
 use crate::lua::threads::runner::{
-    LAST_CUSTOM_SCAN_ID, LAST_HOST_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID, LAST_HTTP_SCAN_ID,
+    LAST_CUSTOM_SCAN_ID, LAST_HOST_SCAN_ID, LAST_HTTP_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID,
 };
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};

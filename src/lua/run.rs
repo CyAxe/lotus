@@ -89,12 +89,13 @@ impl LuaLoader {
 
         match lua_opts.target_type {
             ScanTypes::FULL_HTTP => {
-                let request_value: FullRequest = serde_json::from_value(lua_opts.target_url.unwrap().clone()).unwrap();
-                self.set_lua(None,Some(request_value), &lua)
+                let request_value: FullRequest =
+                    serde_json::from_value(lua_opts.target_url.unwrap().clone()).unwrap();
+                self.set_lua(None, Some(request_value), &lua)
             }
             ScanTypes::HOSTS => {
                 // for HOSTS, set TARGET_HOST global
-                self.set_lua(None,None, &lua);
+                self.set_lua(None, None, &lua);
                 lua.globals()
                     .set(
                         "INPUT_DATA",
@@ -122,7 +123,7 @@ impl LuaLoader {
                 lua.globals()
                     .set("INPUT_DATA", lua.to_value(&serde_value).unwrap())
                     .unwrap();
-                self.set_lua(None, None,&lua);
+                self.set_lua(None, None, &lua);
             }
         };
 

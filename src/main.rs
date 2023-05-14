@@ -55,7 +55,10 @@ async fn run_scan() -> Result<(), std::io::Error> {
     );
 
     show_msg(
-        &format!("Number of HTTP MSGS: {}", opts.target_data.parse_requests.len()),
+        &format!(
+            "Number of HTTP MSGS: {}",
+            opts.target_data.parse_requests.len()
+        ),
         MessageLevel::Info,
     );
     show_msg(
