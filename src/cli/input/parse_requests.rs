@@ -43,8 +43,8 @@ impl UserData for FullRequest {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method("set_url_param", |_, this, (payload ,remove_param_content) : (String, Option<bool>)| {
             let remove_content = remove_param_content.unwrap_or(false);
-            let test_data = this.inject_payloads(&payload,remove_content);
-            Ok(test_data)
+            let injected_params = this.inject_payloads(&payload,remove_content);
+            Ok(injected_params)
         });
     }
 }
