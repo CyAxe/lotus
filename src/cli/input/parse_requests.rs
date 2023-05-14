@@ -35,33 +35,32 @@ impl Default for FullRequest {
 
 impl FullRequest {
     fn inject_headers(
-        &mut self,
+        &self,
         payload: &str,
         remove_content: bool,
     ) -> HashMap<String, FullRequest> {
+        let mut results = HashMap::new();
         let headers = &self.headers;
-        let mut results: HashMap<String, FullRequest> = HashMap::new();
-        headers.iter().for_each(|(headername, headervalue)| {
-            let current_headers = &mut self.headers.clone();
-            let mut current_results: HashMap<String, String> = HashMap::new();
-            current_results.insert(headername.into(), {
-                if remove_content {
-                    format!("{}{}", headervalue, payload)
-                } else {
-                    format!("{}", payload)
-                }
-            });
-            current_headers.extend(current_results);
-            results.insert(
-                headername.into(),
-                FullRequest {
-                    method: self.method.clone(),
-                    url: self.url.clone(),
-                    headers: current_headers.clone(),
-                    body: self.body.clone(),
-                },
-            );
-        });
+
+        let cloned_headers = headers.clone();
+        for (headername, headervalue) in headers.iter() {
+            let mut current_headers = cloned_headers.clone();
+            let mut current_results = HashMap::new();
+            let new_headervalue = if remove_content {
+                format!("{}{}", headervalue, payload)
+            } else {
+                format!("{}", payload)
+            };
+            current_headers.insert(headername.clone(), new_headervalue.clone());
+            current_results.insert(headername.clone(), new_headervalue);
+            let new_request = FullRequest {
+                method: self.method.clone(),
+                url: self.url.clone(),
+                headers: current_headers,
+                body: self.body.clone(),
+            };
+            results.insert(headername.clone(), new_request);
+        }
         results
     }
     fn inject_payloads(
@@ -77,20 +76,17 @@ impl FullRequest {
                     url: Some(Url::parse(&self.url).unwrap()),
                 };
                 let iter_params = url_parser.change_urlquery(payload, remove_content);
-                let mut results: HashMap<String, FullRequest> = HashMap::new();
-                iter_params.iter().for_each(|(k, v)| {
-                    results.insert(
-                        k.to_string(),
-                        FullRequest {
-                            method: self.method.clone(),
-                            url: v.to_string(),
-                            headers: self.headers.clone(),
-                            body: self.body.clone(),
-                        },
-                    );
-                });
+                let (method, headers, body) = (self.method.clone(), self.headers.clone(), self.body.clone());
+                let results: Vec<(String, FullRequest)> = iter_params.iter().map(|(k, v)| {
+                    (k.to_string(), FullRequest {
+                        method: method.clone(),
+                        url: v.to_string(),
+                        headers: headers.clone(),
+                        body: body.clone(),
+                    })
+                }).collect();
                 injected_params.extend(iter_params);
-                results
+                results.into_iter().collect()
             }
             InjectionLocation::Headers => self.inject_headers(payload, remove_content),
             _ => HashMap::new(),
