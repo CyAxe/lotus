@@ -63,6 +63,19 @@ impl FullRequest {
         }
         results
     }
+
+    fn inject_body(&self, payload: &str, remove_content: bool) -> HashMap<String, FullRequest> {
+        let mut results = HashMap::new();
+        let req_body = &self.body;
+        results
+    }
+
+    fn is_json(&self, data: &str) -> bool {
+        match serde_json::from_str::<serde_json::Value>(data) {
+            Ok(..) => true,
+            Err(..) => false
+        }
+    }
     fn inject_payloads(
         &mut self,
         payload: &str,
