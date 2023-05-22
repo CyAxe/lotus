@@ -52,11 +52,9 @@ impl Lotus {
             return;
         }
         let resume_value: usize;
-        log::debug!("START SCAN : {:?} {:?}", scan_type, target_data);
         let loaded_scripts = match scan_type {
             ScanTypes::FULL_HTTP => {
                 resume_value = *LAST_HTTP_SCAN_ID.lock().unwrap();
-                log::debug!("SCAN {:?}", loaded_scripts);
                 valid_scripts(loaded_scripts, 0)
             }
             ScanTypes::HOSTS => {
