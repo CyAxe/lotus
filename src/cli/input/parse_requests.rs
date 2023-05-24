@@ -2,6 +2,7 @@ use mlua::UserData;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use std::collections::HashMap;
 use tealr::TypeName;
 
@@ -101,6 +102,59 @@ impl FullRequest {
         Ok(request_opts
             .send(&method, url, Some(body), None, request_opts.clone())
             .await?)
+    }
+
+    fn inject_body_json(&self, payload: &str, remove_content: bool) -> HashMap<String, FullRequest> {
+        let mut results = HashMap::new();
+        let req_body = &self.body;
+
+        // Parse the JSON body
+        let parsed_params: Value = serde_json::from_str(req_body).unwrap_or_else(|_| json!({}));
+
+        // Iterate over each key-value pair in the parsed JSON
+        if let Some(params) = parsed_params.as_object() {
+            for (param, value) in params.iter() {
+                let mut current_req = self.clone();
+
+                // Modify the value based on the 'remove_content' flag
+                let mut value = value.clone();
+                self.modify_value(&mut value, payload, remove_content);
+                let mut current_parsed_params = parsed_params.clone();
+                current_parsed_params[param] = value;
+
+                // Convert the modified JSON back to a string
+                let modified_body = serde_json::to_string(&current_parsed_params).unwrap();
+
+                current_req.body = modified_body;
+                results.insert(param.clone(), current_req.clone());
+            }
+        }
+
+        results
+    }
+
+
+    fn modify_value(&self,value: &mut Value, payload: &str, remove_content: bool) {
+        match value {
+            Value::String(s) => {
+                *s = if remove_content {
+                    payload.to_string()
+                } else {
+                    s.to_string() + payload
+                };
+            }
+            Value::Array(arr) => {
+                for item in arr.iter_mut() {
+                    self.modify_value(item, payload, remove_content);
+                }
+            }
+            Value::Object(obj) => {
+                for (_, item) in obj.iter_mut() {
+                    self.modify_value(item, payload, remove_content);
+                }
+            }
+            _ => {}
+        }
     }
 
     fn inject_body(&self, payload: &str, remove_content: bool) -> HashMap<String, FullRequest> {
@@ -205,6 +259,11 @@ impl UserData for FullRequest {
                 Ok(injected_params)
             },
         );
+        methods.add_method_mut("set_json_param", |_,this, (payload, remove_param_content): (String, Option<bool>)| {
+            let remove_content = remove_param_content.unwrap_or(false);
+            let inject_params = this.inject_body_json(&payload, remove_content);
+            Ok(inject_params)
+        });
         methods.add_async_method(
             "send",
             |_, this, (req, sender): (FullRequest, Sender)| async move {
