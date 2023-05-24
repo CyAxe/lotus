@@ -1,6 +1,6 @@
 use crate::filename_to_string;
 use crate::CliErrors;
-use std::{io, io::BufRead, path::PathBuf};
+use std::{io, io::Read, path::PathBuf};
 use url::Url;
 pub mod load_scripts;
 pub mod parse_requests;
@@ -69,13 +69,11 @@ pub fn get_stdin_input() -> Result<Vec<String>, CliErrors> {
         Err(CliErrors::EmptyStdin)
     } else {
         let stdin = io::stdin();
-        let mut input_lines: Vec<String> = Vec::new();
-        stdin.lock().lines().for_each(|x| {
-            let the_line = x.unwrap();
-            input_lines.push(the_line);
-        });
-        input_lines.sort();
-        input_lines.dedup();
+        let mut input_string = String::new();
+        stdin.lock().read_to_string(&mut input_string).unwrap();
+        let input_lines: Vec<String> = input_string.lines().map(|s| s.to_string()).collect();
+        // input_lines.sort();
+        //input_lines.dedup();
         Ok(input_lines)
     }
 }

@@ -1,3 +1,4 @@
+use crate::cli::input::parse_requests::FullRequest;
 use crate::lua::runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT};
 use crate::{
     cli::bar::BAR,
@@ -32,10 +33,10 @@ impl LuaLoader {
 
     /// Set Lua Functions for http and matching
     ///
-    fn set_lua(&self, target_url: Option<&str>, lua: &Lua) {
+    fn set_lua(&self, target_url: Option<&str>, fullhttp_msg: Option<FullRequest>, lua: &Lua) {
         // Adding Lotus Lua Function
         let lua_eng = LuaRunTime { lua };
-        lua_eng.add_httpfuncs(target_url);
+        lua_eng.add_httpfuncs(target_url, fullhttp_msg);
         lua_eng.add_encode_function();
         lua_eng.add_printfunc();
         lua_eng.add_matchingfunc();
@@ -87,9 +88,14 @@ impl LuaLoader {
             .unwrap();
 
         match lua_opts.target_type {
+            ScanTypes::FULL_HTTP => {
+                let request_value: FullRequest =
+                    serde_json::from_value(lua_opts.target_url.unwrap().clone()).unwrap();
+                self.set_lua(None, Some(request_value), &lua)
+            }
             ScanTypes::HOSTS => {
                 // for HOSTS, set TARGET_HOST global
-                self.set_lua(None, &lua);
+                self.set_lua(None, None, &lua);
                 lua.globals()
                     .set(
                         "INPUT_DATA",
@@ -101,12 +107,14 @@ impl LuaLoader {
                 // for all other target types, set target URL
                 self.set_lua(
                     Some(&lua_opts.target_url.unwrap().as_str().unwrap().to_string()),
+                    None,
                     &lua,
                 );
             }
             ScanTypes::PATHS => {
                 self.set_lua(
                     Some(&lua_opts.target_url.unwrap().as_str().unwrap().to_string()),
+                    None,
                     &lua,
                 );
             }
@@ -115,7 +123,7 @@ impl LuaLoader {
                 lua.globals()
                     .set("INPUT_DATA", lua.to_value(&serde_value).unwrap())
                     .unwrap();
-                self.set_lua(None, &lua);
+                self.set_lua(None, None, &lua);
             }
         };
 

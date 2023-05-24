@@ -1,3 +1,4 @@
+use crate::cli::input::parse_requests::FullRequest;
 use crate::lua::{
     model::LuaRunTime,
     runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT},
@@ -35,17 +36,15 @@ pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
 /// This Function will return a Tuples in Vector with script path and content
 fn load_scripts(script_path: &PathBuf) -> Result<Vec<(String, String)>, CliErrors> {
     let mut scripts = Vec::new();
-    for entry in glob(script_path.as_os_str().to_str().unwrap())
-        .expect("Failed to read glob pattern")
+    for entry in
+        glob(script_path.as_os_str().to_str().unwrap()).expect("Failed to read glob pattern")
     {
         match entry {
-            Ok(path) => {
-                scripts.push((
+            Ok(path) => scripts.push((
                 filename_to_string(path.to_str().unwrap()).unwrap(),
                 path.to_str().unwrap().to_string(),
-            ))
-            },
-            Err(e) => error!("{}",e.to_string()),
+            )),
+            Err(e) => error!("{}", e.to_string()),
         }
     }
     Ok(scripts)
@@ -66,7 +65,10 @@ pub fn valid_scripts(
 ) -> Vec<(String, String)> {
     let mut test_target_url: Option<&str> = None;
     let mut test_target_host: Option<&str> = None;
+    let mut test_http_msg: Option<FullRequest> = None;
+    log::debug!("Checking Scan Number ID: {}", number_scantype);
     match number_scantype {
+        0 => test_http_msg = Some(FullRequest::default()),
         1 => {
             test_target_host = Some("example.com");
         }
@@ -82,19 +84,21 @@ pub fn valid_scripts(
     lua_eng.add_matchingfunc();
     lua_eng.add_threadsfunc();
     if test_target_host.is_some() {
-        lua_eng.add_httpfuncs(None);
+        lua_eng.add_httpfuncs(None, None);
         lua_eng
             .lua
             .globals()
             .set("INPUT_DATA", "example.com")
             .unwrap();
+    } else if test_http_msg.is_some() {
+        lua_eng.add_httpfuncs(None, test_http_msg)
     } else {
         lua_eng
             .lua
             .globals()
             .set("INPUT_DATA", Vec::<&str>::new())
             .unwrap();
-        lua_eng.add_httpfuncs(test_target_url);
+        lua_eng.add_httpfuncs(test_target_url, None);
     }
     let mut used_scripts: Vec<(String, String)> = Vec::new();
     scripts.iter().for_each(|(script_code, script_path)| {
@@ -113,6 +117,7 @@ pub fn valid_scripts(
             show_msg(log_msg, MessageLevel::Error);
             log::error!("{}", log_msg);
         } else {
+            log::debug!("LOADING STATUS {:?}", code);
             let global = lua_eng.lua.globals();
             let scan_type = global.get::<_, usize>("SCAN_TYPE".to_string());
             if let Err(..) = scan_type {
@@ -124,10 +129,11 @@ pub fn valid_scripts(
                     ),
                     MessageLevel::Error,
                 );
-            } else if scan_type.unwrap() == number_scantype {
+            } else if scan_type.clone().unwrap() == number_scantype {
                 used_scripts.push((script_code.into(), script_path.into()));
             }
         }
     });
+    log::debug!("Loaded scripts: {:?}", used_scripts);
     used_scripts
 }

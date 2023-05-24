@@ -98,6 +98,7 @@ impl Sender {
                     }
                 }))
                 .default_headers(headers)
+                .http1_title_case_headers()
                 .proxy(Proxy::all(the_proxy).unwrap())
                 .no_trust_dns()
                 .danger_accept_invalid_certs(true)
@@ -112,6 +113,7 @@ impl Sender {
                     }
                 }))
                 .no_proxy()
+                .http1_title_case_headers()
                 .no_trust_dns()
                 .default_headers(headers)
                 .danger_accept_invalid_certs(true)

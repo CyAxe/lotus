@@ -1,5 +1,5 @@
 use crate::lua::threads::runner::{
-    LAST_CUSTOM_SCAN_ID, LAST_HOST_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID,
+    LAST_CUSTOM_SCAN_ID, LAST_HOST_SCAN_ID, LAST_HTTP_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID,
 };
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
@@ -22,6 +22,10 @@ fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
         }
 
         match parts[0] {
+            "HTTP_SCAN_ID" => {
+                let mut scan_id = LAST_HTTP_SCAN_ID.lock().unwrap();
+                *scan_id = parts[1].parse().unwrap_or(0);
+            }
             "URL_SCAN_ID" => {
                 let mut scan_id = LAST_URL_SCAN_ID.lock().unwrap();
                 *scan_id = parts[1].parse().unwrap_or(0);

@@ -13,7 +13,7 @@ pub fn custom_input_lua(
     };
     lua_env.add_printfunc();
     lua_env.add_matchingfunc();
-    lua_env.add_httpfuncs(None);
+    lua_env.add_httpfuncs(None, None);
     log::debug!("Loading Input handler lua code");
     lua_env.lua.load(code).exec()?;
     let parse_input = lua_env

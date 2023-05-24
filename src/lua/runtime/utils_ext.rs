@@ -6,10 +6,9 @@ use crate::{
     },
     BAR,
 };
-use std::sync::{Arc, Mutex};
-use std::path::Path;
 use log::{debug, error, info, warn};
-
+use std::path::Path;
+use std::sync::{Arc, Mutex};
 
 pub trait UtilsEXT {
     fn add_threadsfunc(&self);

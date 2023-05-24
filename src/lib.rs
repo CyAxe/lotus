@@ -25,7 +25,7 @@ use lua::{
     model::LuaOptions,
     parsing::files::filename_to_string,
     run::LuaLoader,
-    threads::runner::{iter_futures, LAST_HOST_SCAN_ID},
+    threads::runner::{iter_futures, LAST_HOST_SCAN_ID, LAST_HTTP_SCAN_ID},
 };
 use mlua::ExternalError;
 pub use model::{Lotus, RequestOpts, ScanTypes};
@@ -53,6 +53,10 @@ impl Lotus {
         }
         let resume_value: usize;
         let loaded_scripts = match scan_type {
+            ScanTypes::FULL_HTTP => {
+                resume_value = *LAST_HTTP_SCAN_ID.lock().unwrap();
+                valid_scripts(loaded_scripts, 0)
+            }
             ScanTypes::HOSTS => {
                 resume_value = *LAST_HOST_SCAN_ID.lock().unwrap();
                 valid_scripts(loaded_scripts, 1)
