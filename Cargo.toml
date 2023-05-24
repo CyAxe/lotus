@@ -57,7 +57,9 @@ base64 = "0.13.1"
 
 # HTTP & URLS
 serde_json = "1.0.85"
+serde_urlencoded = "0.7.1"
 serde = { version = "1.0.144", features = ["derive"] }
+multipart = "0.18.0"
 reqwest = { version = "0.11.12", features = ["multipart"] }
 url = "2.2.2"
 
