@@ -1,5 +1,5 @@
 use mlua::UserData;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -67,41 +67,38 @@ impl FullRequest {
     async fn send(
         &self,
         request: FullRequest,
-        request_opts: Sender,
+        mut request_opts: Sender,
     ) -> Result<HttpResponse, mlua::Error> {
-        let method = request.method;
-        let url = request.url;
-        let current_headers = request.headers;
-        let mut headers: HeaderMap<HeaderValue>;
-        let mut request_opts = request_opts.clone();
-        let body = request.body;
-        let sender = request_opts.clone();
-        if sender.merge_headers {
-            headers = request_opts.headers;
-            current_headers
-                .iter()
-                .for_each(|(header_name, header_value)| {
-                    headers.insert(
-                        HeaderName::from_bytes(header_name.as_bytes()).unwrap(),
-                        HeaderValue::from_str(header_value).unwrap(),
-                    );
-                });
+        let FullRequest {
+            method,
+            url,
+            headers: current_headers,
+            body,
+        } = request;
+
+        let headers = if request_opts.merge_headers {
+            request_opts.headers.extend(current_headers.iter().map(|(name, value)| {
+                (
+                    HeaderName::from_bytes(name.as_bytes()).unwrap(),
+                    HeaderValue::from_str(value).unwrap(),
+                )
+            }));
+            request_opts.headers
         } else {
-            let mut header_map = HeaderMap::new();
             current_headers
                 .iter()
-                .for_each(|(header_name, header_value)| {
-                    header_map.insert(
-                        HeaderName::from_bytes(header_name.as_bytes()).unwrap(),
-                        HeaderValue::from_str(header_value).unwrap(),
-                    );
-                });
-            headers = header_map;
-        }
+                .map(|(name, value)| {
+                    (
+                        HeaderName::from_bytes(name.as_bytes()).unwrap(),
+                        HeaderValue::from_str(value).unwrap(),
+                    )
+                })
+                .collect()
+        };
+
         request_opts.headers = headers;
-        Ok(request_opts
-            .send(&method, url, Some(body), None, request_opts.clone())
-            .await?)
+
+        request_opts.send(&method, url, Some(body), None, request_opts.clone()).await
     }
 
     fn inject_body_json(&self, payload: &str, remove_content: bool) -> HashMap<String, FullRequest> {
