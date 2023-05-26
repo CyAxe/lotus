@@ -103,6 +103,8 @@ impl Sender {
 
         if let Some(the_proxy) = proxy {
             builder = builder.proxy(Proxy::all(the_proxy).unwrap());
+        } else if let Some(the_proxy) = proxy {
+            builder = builder.proxy(Proxy::all(the_proxy).unwrap());
         } else {
             builder = builder.no_proxy();
         }
