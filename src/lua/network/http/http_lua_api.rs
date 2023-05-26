@@ -11,6 +11,13 @@ pub struct Sender {
     pub timeout: u64,
     pub redirects: u32,
     pub merge_headers: bool,
+    pub http_options: HttpVersion,
+}
+
+#[derive(Clone)]
+pub struct HttpVersion {
+    pub http2_only: bool,
+    pub http1_only: bool,
 }
 
 #[derive(TypeName, FromToLua)]
@@ -21,6 +28,14 @@ pub struct MultiPart {
     pub headers: Option<HashMap<String, String>>,
 }
 
+impl Default for HttpVersion {
+    fn default() -> Self {
+        Self {
+            http1_only: false,
+            http2_only: false,
+        }
+    }
+}
 /// Adding OOP for http sender class
 impl UserData for Sender {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -65,6 +80,16 @@ impl UserData for Sender {
                 .ok()
                 .flatten()
                 .unwrap_or_else(|| "GET".to_string());
+            let http2_only = request_option
+                .get::<_, Option<bool>>("http2_only")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| false);
+            let http1_only = request_option
+                .get::<_, Option<bool>>("http1_only")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| false);
             let timeout = request_option
                 .get::<_, Option<u64>>("timeout")
                 .ok()
@@ -107,6 +132,10 @@ impl UserData for Sender {
                 headers,
                 redirects,
                 merge_headers: true,
+                http_options: HttpVersion {
+                    http2_only,
+                    http1_only,
+                },
             };
             let resp = this
                 .send(&method, url, body, multipart, current_request)
