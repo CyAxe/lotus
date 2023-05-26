@@ -11,6 +11,15 @@ pub struct Sender {
     pub timeout: u64,
     pub redirects: u32,
     pub merge_headers: bool,
+    pub http_options: HttpVersion,
+}
+
+#[derive(Clone)]
+pub struct HttpVersion {
+    pub http2_only: bool,
+    pub http1_only: bool,
+    pub http2_max_frame: i32,
+    pub http2_connection_window_size: i32,
 }
 
 #[derive(TypeName, FromToLua)]
@@ -21,6 +30,16 @@ pub struct MultiPart {
     pub headers: Option<HashMap<String, String>>,
 }
 
+impl Default for HttpVersion {
+    fn default() -> Self {
+        Self {
+            http1_only: false,
+            http2_only: false,
+            http2_max_frame: 65536,
+            http2_connection_window_size: 131072,
+        }
+    }
+}
 /// Adding OOP for http sender class
 impl UserData for Sender {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
@@ -65,6 +84,26 @@ impl UserData for Sender {
                 .ok()
                 .flatten()
                 .unwrap_or_else(|| "GET".to_string());
+            let http2_only = request_option
+                .get::<_, Option<bool>>("http2_only")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| false);
+            let http1_only = request_option
+                .get::<_, Option<bool>>("http1_only")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| false);
+            let http2_connection_window_size = request_option
+                .get::<_, Option<i32>>("http2_connection_window_size")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| 131072);
+            let http2_max_frame = request_option
+                .get::<_, Option<i32>>("http2_max_frame")
+                .ok()
+                .flatten()
+                .unwrap_or_else(|| 65536);
             let timeout = request_option
                 .get::<_, Option<u64>>("timeout")
                 .ok()
@@ -107,6 +146,12 @@ impl UserData for Sender {
                 headers,
                 redirects,
                 merge_headers: true,
+                http_options: HttpVersion {
+                    http2_only,
+                    http1_only,
+                    http2_max_frame,
+                    http2_connection_window_size,
+                },
             };
             let resp = this
                 .send(&method, url, body, multipart, current_request)
