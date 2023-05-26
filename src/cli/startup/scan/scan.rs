@@ -114,8 +114,15 @@ pub fn args_scan() -> ScanArgs {
                 let is_json = is_json_string(&input_str);
                 log::debug!("input data is json: {} \n{}", is_json, &input_str);
                 if is_json {
-                    let parsed_json: Vec<FullRequest> = match serde_json::from_str(&input_str) {
-                        Ok(parsed_request) => parsed_request,
+                    let parsed_json = match serde_json::from_str::<Vec<FullRequest>>(&input_str) {
+                        Ok(parsed_request) => {
+                            parsed_request.iter().for_each(|the_request|{
+                                urls.push(the_request.url.clone());
+                                urls.dedup();
+                                urls.sort();
+                            });
+                            parsed_request
+                        },
                         Err(err) => {
                             show_msg(
                                 &format!(
@@ -128,6 +135,19 @@ pub fn args_scan() -> ScanArgs {
                         }
                     };
                     log::debug!("JSON Data has benn Parsed successfully");
+                    if urls.len() > 0 {
+                        paths = match get_target_paths(urls.clone()) {
+                            Ok(paths) => paths,
+                            Err(err) => {
+                                show_msg(
+                                    &format!("Failed to get target paths: {}", err),
+                                    MessageLevel::Error,
+                                );
+                                vec![]
+                            }
+                        };
+                        hosts = get_target_hosts(urls.clone());
+                    };
                     parsed_request = parsed_json
                         .iter()
                         .map(|req| serde_json::to_value(req).unwrap())
