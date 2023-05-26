@@ -36,7 +36,7 @@ Our aim is to make security scripting more efficient by providing libraries and 
 
 - Collaboration
 
-    Lotus encourages collaboration and welcomes contributions from the community. If you encounter any issues or have suggestions for improving Lotus, you can reach out to the development team via Github repository issues page or join the Discord server.
+    Lotus encourages collaboration and welcomes contributions from the community. If you encounter any issues or have suggestions for improving Lotus, you can reach out to the development team via Github repository issues page or join the [Discord server](https://discord.gg/nBYDPTzjSq).
 
 
 ### What Lotus scripts can do
