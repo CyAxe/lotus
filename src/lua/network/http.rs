@@ -109,6 +109,7 @@ impl Sender {
             builder = builder.no_proxy();
         }
 
+        builder = builder.http1_title_case_headers();
         builder = builder.no_trust_dns();
         builder = builder.danger_accept_invalid_certs(true);
 
