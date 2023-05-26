@@ -77,12 +77,14 @@ impl FullRequest {
         } = request;
 
         let headers = if request_opts.merge_headers {
-            request_opts.headers.extend(current_headers.iter().map(|(name, value)| {
-                (
-                    HeaderName::from_bytes(name.as_bytes()).unwrap(),
-                    HeaderValue::from_str(value).unwrap(),
-                )
-            }));
+            request_opts
+                .headers
+                .extend(current_headers.iter().map(|(name, value)| {
+                    (
+                        HeaderName::from_bytes(name.as_bytes()).unwrap(),
+                        HeaderValue::from_str(value).unwrap(),
+                    )
+                }));
             request_opts.headers
         } else {
             current_headers
@@ -98,10 +100,16 @@ impl FullRequest {
 
         request_opts.headers = headers;
 
-        request_opts.send(&method, url, Some(body), None, request_opts.clone()).await
+        request_opts
+            .send(&method, url, Some(body), None, request_opts.clone())
+            .await
     }
 
-    fn inject_body_json(&self, payload: &str, remove_content: bool) -> HashMap<String, FullRequest> {
+    fn inject_body_json(
+        &self,
+        payload: &str,
+        remove_content: bool,
+    ) -> HashMap<String, FullRequest> {
         let mut results = HashMap::new();
         let req_body = &self.body;
 
@@ -130,8 +138,7 @@ impl FullRequest {
         results
     }
 
-
-    fn modify_value(&self,value: &mut Value, payload: &str, remove_content: bool) {
+    fn modify_value(&self, value: &mut Value, payload: &str, remove_content: bool) {
         match value {
             Value::String(s) => {
                 *s = if remove_content {
@@ -256,11 +263,14 @@ impl UserData for FullRequest {
                 Ok(injected_params)
             },
         );
-        methods.add_method_mut("set_json_param", |_,this, (payload, remove_param_content): (String, Option<bool>)| {
-            let remove_content = remove_param_content.unwrap_or(false);
-            let inject_params = this.inject_body_json(&payload, remove_content);
-            Ok(inject_params)
-        });
+        methods.add_method_mut(
+            "set_json_param",
+            |_, this, (payload, remove_param_content): (String, Option<bool>)| {
+                let remove_content = remove_param_content.unwrap_or(false);
+                let inject_params = this.inject_body_json(&payload, remove_content);
+                Ok(inject_params)
+            },
+        );
         methods.add_async_method(
             "send",
             |_, this, (req, sender): (FullRequest, Sender)| async move {
