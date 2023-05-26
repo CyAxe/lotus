@@ -52,6 +52,7 @@ impl Sender {
             redirects,
             proxy,
             merge_headers: true,
+            http_options: http_lua_api::HttpVersion::default(),
         }
     }
 
@@ -86,39 +87,36 @@ impl Sender {
         redirects: u32,
         proxy: Option<String>,
     ) -> Result<reqwest::Client, reqwest::Error> {
-        let proxy = if proxy.is_none() { &self.proxy } else { &proxy };
-        match proxy {
-            Some(the_proxy) => Client::builder()
-                .timeout(Duration::from_secs(timeout))
-                .redirect(redirect::Policy::custom(move |attempt| {
-                    if attempt.previous().len() != redirects as usize {
-                        attempt.follow()
-                    } else {
-                        attempt.stop()
-                    }
-                }))
-                .default_headers(headers)
-                .http1_title_case_headers()
-                .proxy(Proxy::all(the_proxy).unwrap())
-                .no_trust_dns()
-                .danger_accept_invalid_certs(true)
-                .build(),
-            None => Client::builder()
-                .timeout(Duration::from_secs(timeout))
-                .redirect(redirect::Policy::custom(move |attempt| {
-                    if attempt.previous().len() == redirects as usize {
-                        attempt.stop()
-                    } else {
-                        attempt.follow()
-                    }
-                }))
-                .no_proxy()
-                .http1_title_case_headers()
-                .no_trust_dns()
-                .default_headers(headers)
-                .danger_accept_invalid_certs(true)
-                .build(),
+        let http1_only = self.http_options.http1_only;
+        let http2_only = self.http_options.http2_only;
+
+        let mut builder = Client::builder();
+        builder = builder.timeout(Duration::from_secs(timeout));
+        builder = builder.redirect(redirect::Policy::custom(move |attempt| {
+            if attempt.previous().len() != redirects as usize {
+                attempt.follow()
+            } else {
+                attempt.stop()
+            }
+        }));
+        builder = builder.default_headers(headers);
+
+        if let Some(the_proxy) = proxy {
+            builder = builder.proxy(Proxy::all(the_proxy).unwrap());
+        } else {
+            builder = builder.no_proxy();
         }
+
+        builder = builder.no_trust_dns();
+        builder = builder.danger_accept_invalid_certs(true);
+
+        if http1_only {
+            builder = builder.http1_only();
+        } else if http2_only {
+            builder = builder.http2_prior_knowledge();
+        }
+
+        builder.build()
     }
     /// Send http request to custom url with user options (proxy, headers, etc.)
     /// the response should be HashMap with RespType enum
