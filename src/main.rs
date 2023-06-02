@@ -81,9 +81,9 @@ async fn run_scan() -> Result<(), std::io::Error> {
             + opts.target_data.urls.len() * scripts.len()) as u64,
     );
     {
-        *SLEEP_TIME.lock().unwrap() = opts.delay;
-        *REQUESTS_LIMIT.lock().unwrap() = opts.requests_limit;
-        *VERBOSE_MODE.lock().unwrap() = opts.verbose;
+        *SLEEP_TIME.lock().await = opts.delay;
+        *REQUESTS_LIMIT.lock().await = opts.requests_limit;
+        *VERBOSE_MODE.lock().await = opts.verbose;
     }
     let scan_futures = vec![
         opts.lotus_obj.start(

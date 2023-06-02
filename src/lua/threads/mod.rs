@@ -1,7 +1,8 @@
 pub mod runner;
-use futures::{stream, StreamExt};
+use futures::{stream, StreamExt, executor::block_on};
 use mlua::UserData;
-use std::sync::{Arc, Mutex};
+use tokio::sync::Mutex;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct LuaThreader {
@@ -15,23 +16,23 @@ pub struct ParamScan {
 }
 
 impl ParamScan {
-    pub fn stop_scan(&mut self) {
-        *self.finds.lock().unwrap() = true;
+    pub async fn stop_scan(&mut self) {
+        *self.finds.lock().await = true;
     }
 }
 
 impl UserData for ParamScan {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("start_scan", |_, this, ()| {
-            *this.finds.lock().unwrap() = false;
+        methods.add_async_method("start_scan", |_, this, ()| async move {
+            *this.finds.lock().await = false;
             Ok(())
         });
-        methods.add_method("accept_nil", |_, this, accept_nil: bool| {
-            *this.accept_nil.lock().unwrap() = accept_nil;
+        methods.add_async_method("accept_nil", |_, this, accept_nil: bool| async move {
+            *this.accept_nil.lock().await = accept_nil;
             Ok(())
         });
         methods.add_method("is_accept_nil", |_, this, ()| {
-            Ok(*this.accept_nil.lock().unwrap())
+            Ok(*block_on(this.accept_nil.lock()))
         });
         methods.add_async_method(
             "add_scan",
@@ -54,7 +55,7 @@ impl UserData for ParamScan {
                         let target_param = Arc::clone(&target_param);
                         let callback_function = Arc::clone(&callback_function);
                         let accept_nil = Arc::clone(&this.accept_nil);
-                        if *this.finds.lock().unwrap() {
+                        if *block_on(this.finds.lock()) {
                             stop_scan = true;
                         }
                         async move {
@@ -68,7 +69,7 @@ impl UserData for ParamScan {
                                     .unwrap();
                                 let is_nil = { caller == mlua::Nil };
                                 if is_nil {
-                                    if *accept_nil.lock().unwrap() {
+                                    if *accept_nil.lock().await {
                                         callback_function
                                             .call_async::<_, bool>(caller)
                                             .await
@@ -90,10 +91,10 @@ impl UserData for ParamScan {
             },
         );
         methods.add_method_mut("stop_scan", |_, this, ()| {
-            this.stop_scan();
+            block_on(this.stop_scan());
             Ok(())
         });
-        methods.add_method("is_stop", |_, this, ()| Ok(*this.finds.lock().unwrap()));
+        methods.add_method("is_stop", |_, this, ()| {Ok(*block_on(this.finds.lock()))});
     }
 }
 
@@ -104,7 +105,7 @@ impl UserData for LuaThreader {
             stream::iter(iter_data)
                 .map(move |target_table| {
                     let target_func = Arc::clone(&target_func);
-                    let stop_scan: bool = *this.stop.lock().unwrap();
+                    let stop_scan: bool = *block_on(this.stop.lock());
                     async move {
                         if stop_scan {
                             // Ignore
@@ -121,6 +122,6 @@ impl UserData for LuaThreader {
             this.stop = Arc::new(Mutex::new(true));
             Ok(())
         });
-        methods.add_method("is_stop", |_, this, ()| Ok(*this.stop.lock().unwrap()));
+        methods.add_async_method("is_stop", |_, this, ()| async move {Ok(*this.stop.lock().await)});
     }
 }

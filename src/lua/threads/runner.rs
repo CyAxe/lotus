@@ -1,10 +1,12 @@
 use futures::stream::{self, StreamExt};
 use futures::Future;
 use futures::{channel::mpsc, sink::SinkExt};
+use futures::executor::block_on;
 use lazy_static::lazy_static;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tokio::signal::ctrl_c;
 use tokio::sync::RwLock;
 
@@ -22,24 +24,24 @@ lazy_static! {
 pub async fn pause_channel() {
     tokio::spawn(async move {
         ctrl_c().await.unwrap();
-        if let Err(err) = generate_resume() {
+        if let Err(err) = generate_resume().await {
             show_msg(&err.to_string(), MessageLevel::Error)
         }
         std::process::exit(130)
     });
 }
 
-fn generate_resume() -> Result<(), std::io::Error> {
+async fn generate_resume() -> Result<(), std::io::Error> {
     let mut file = OpenOptions::new()
         .write(true)
         .create(true)
         .open("resume.cfg")?;
 
-    let http_scan_id = LAST_HTTP_SCAN_ID.lock().unwrap();
-    let url_scan_id = LAST_URL_SCAN_ID.lock().unwrap();
-    let host_scan_id = LAST_HOST_SCAN_ID.lock().unwrap();
-    let path_scan_id = LAST_PATH_SCAN_ID.lock().unwrap();
-    let custom_scan_id = LAST_CUSTOM_SCAN_ID.lock().unwrap();
+    let http_scan_id = LAST_HTTP_SCAN_ID.lock().await;
+    let url_scan_id = LAST_URL_SCAN_ID.lock().await;
+    let host_scan_id = LAST_HOST_SCAN_ID.lock().await;
+    let path_scan_id = LAST_PATH_SCAN_ID.lock().await;
+    let custom_scan_id = LAST_CUSTOM_SCAN_ID.lock().await;
 
     file.write_all(format!("HTTP_SCAN_ID={}\n", *http_scan_id).as_bytes())?;
     file.write_all(format!("URL_SCAN_ID={}\n", *url_scan_id).as_bytes())?;
@@ -50,13 +52,13 @@ fn generate_resume() -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn update_index_id(scan_type: Arc<ScanTypes>, index_id: usize) {
+async fn update_index_id(scan_type: Arc<ScanTypes>, index_id: usize) {
     match *scan_type {
-        ScanTypes::FULL_HTTP => *LAST_HTTP_SCAN_ID.lock().unwrap() = index_id,
-        ScanTypes::URLS => *LAST_URL_SCAN_ID.lock().unwrap() = index_id,
-        ScanTypes::HOSTS => *LAST_HOST_SCAN_ID.lock().unwrap() = index_id,
-        ScanTypes::PATHS => *LAST_PATH_SCAN_ID.lock().unwrap() = index_id,
-        ScanTypes::CUSTOM => *LAST_CUSTOM_SCAN_ID.lock().unwrap() = index_id,
+        ScanTypes::FULL_HTTP => *LAST_HTTP_SCAN_ID.lock().await = index_id,
+        ScanTypes::URLS => *LAST_URL_SCAN_ID.lock().await = index_id,
+        ScanTypes::HOSTS => *LAST_HOST_SCAN_ID.lock().await = index_id,
+        ScanTypes::PATHS => *LAST_PATH_SCAN_ID.lock().await = index_id,
+        ScanTypes::CUSTOM => *LAST_CUSTOM_SCAN_ID.lock().await = index_id,
     }
 }
 
@@ -82,7 +84,7 @@ pub async fn iter_futures<F, T, Fut>(
         .for_each_concurrent(workers, |(index_id, out)| {
             let scan_type = Arc::clone(&scan_type);
             if count_index {
-                update_index_id(scan_type, index_id);
+                block_on(update_index_id(scan_type, index_id));
             }
             let target_function = target_function.clone();
             async move { target_function(out).await }

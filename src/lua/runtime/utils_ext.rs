@@ -8,7 +8,8 @@ use crate::{
 };
 use log::{debug, error, info, warn};
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use tokio::sync::Mutex;
+use std::sync::Arc;
 
 pub trait UtilsEXT {
     fn add_threadsfunc(&self);

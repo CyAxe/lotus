@@ -1,6 +1,7 @@
 use crate::lua::threads::runner::{
     LAST_CUSTOM_SCAN_ID, LAST_HOST_SCAN_ID, LAST_HTTP_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID,
 };
+use futures::executor::block_on;
 use reqwest::header::HeaderMap;
 use reqwest::header::{HeaderName, HeaderValue};
 use serde_json::Value;
@@ -21,25 +22,26 @@ fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
             continue;
         }
 
+
         match parts[0] {
             "HTTP_SCAN_ID" => {
-                let mut scan_id = LAST_HTTP_SCAN_ID.lock().unwrap();
+                let mut scan_id = block_on(LAST_HTTP_SCAN_ID.lock());
                 *scan_id = parts[1].parse().unwrap_or(0);
             }
             "URL_SCAN_ID" => {
-                let mut scan_id = LAST_URL_SCAN_ID.lock().unwrap();
+                let mut scan_id = block_on(LAST_URL_SCAN_ID.lock());
                 *scan_id = parts[1].parse().unwrap_or(0);
             }
             "HOST_SCAN_ID" => {
-                let mut scan_id = LAST_HOST_SCAN_ID.lock().unwrap();
+                let mut scan_id = block_on(LAST_HOST_SCAN_ID.lock());
                 *scan_id = parts[1].parse().unwrap_or(0);
             }
             "PATH_SCAN_ID" => {
-                let mut scan_id = LAST_PATH_SCAN_ID.lock().unwrap();
+                let mut scan_id = block_on(LAST_PATH_SCAN_ID.lock());
                 *scan_id = parts[1].parse().unwrap_or(0);
             }
             "CUSTOM_SCAN_ID" => {
-                let mut scan_id = LAST_CUSTOM_SCAN_ID.lock().unwrap();
+                let mut scan_id = block_on(LAST_CUSTOM_SCAN_ID.lock());
                 *scan_id = parts[1].parse().unwrap_or(0);
             }
             _ => {}

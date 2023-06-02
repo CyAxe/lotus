@@ -22,7 +22,8 @@ use std::collections::HashMap;
 mod http_lua_api;
 pub use http_lua_api::{MultiPart, Sender};
 use lazy_static::lazy_static;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use std::time::Duration;
 use tealr::{mlu::FromToLua, TypeName};
 
@@ -143,10 +144,10 @@ impl Sender {
         request_option: Sender,
     ) -> Result<HttpResponse, mlua::Error> {
         {
-            let req_limit = *REQUESTS_LIMIT.lock().unwrap();
-            let mut req_sent = REQUESTS_SENT.lock().unwrap();
+            let req_limit = *REQUESTS_LIMIT.lock().await;
+            let mut req_sent = REQUESTS_SENT.lock().await;
             if *req_sent >= req_limit {
-                let sleep_time = *SLEEP_TIME.lock().unwrap();
+                let sleep_time = *SLEEP_TIME.lock().await;
                 BAR.lock().unwrap().println(format!(
                     "The rate limit for requests has been reached. Sleeping for {} seconds...",
                     sleep_time
@@ -192,7 +193,7 @@ impl Sender {
         };
         let response = match request.send().await {
             Ok(resp) => {
-                let verbose_mode = *VERBOSE_MODE.lock().unwrap();
+                let verbose_mode = *VERBOSE_MODE.lock().await;
                 if verbose_mode {
                     let msg = format!("Sent HTTP request: {}", &url);
                     BAR.lock().unwrap().println(&msg);
