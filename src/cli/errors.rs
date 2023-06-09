@@ -20,6 +20,8 @@ pub enum CliErrors {
     NoScanType,
     #[error("Lua Code Error")]
     LuaCodeErr,
+    #[error("Unsupported Content-type")]
+    UnsupportedScanType,
 }
 
 #[derive(Error, Debug)]

@@ -1,13 +1,13 @@
+use futures::executor::block_on;
 use futures::stream::{self, StreamExt};
 use futures::Future;
 use futures::{channel::mpsc, sink::SinkExt};
-use futures::executor::block_on;
 use lazy_static::lazy_static;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use tokio::signal::ctrl_c;
+use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
 use crate::cli::bar::{show_msg, MessageLevel};

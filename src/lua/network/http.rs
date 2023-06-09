@@ -23,9 +23,9 @@ mod http_lua_api;
 pub use http_lua_api::{MultiPart, Sender};
 use lazy_static::lazy_static;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use std::time::Duration;
 use tealr::{mlu::FromToLua, TypeName};
+use tokio::sync::Mutex;
 
 lazy_static! {
     pub static ref REQUESTS_LIMIT: Arc<Mutex<i32>> = Arc::new(Mutex::new(5));

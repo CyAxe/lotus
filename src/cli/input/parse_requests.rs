@@ -1,14 +1,23 @@
+use futures::executor::block_on;
+use lazy_static::lazy_static;
 use mlua::UserData;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use std::sync::Arc;
 use tealr::TypeName;
+use tokio::sync::Mutex;
 
 use crate::lua::network::http::HttpResponse;
 use crate::lua::network::http::Sender;
 use crate::lua::parsing::url::HttpMessage;
+
+lazy_static! {
+    pub static ref SCAN_CONTENT_TYPE: Arc<Mutex<Vec<InjectionLocation>>> =
+        Arc::new(Mutex::new(vec![InjectionLocation::Url, InjectionLocation::BodyJson, InjectionLocation::Body]));
+}
 
 #[derive(TypeName, Clone, Deserialize, Serialize)]
 pub struct FullRequest {
@@ -18,11 +27,13 @@ pub struct FullRequest {
     pub body: String,
 }
 
+#[derive(PartialEq,TypeName)]
 pub enum InjectionLocation {
     Url,
     Path,
     Headers,
     Body,
+    BodyJson
 }
 
 impl Default for FullRequest {
@@ -160,13 +171,17 @@ impl FullRequest {
             _ => {}
         }
     }
-
     fn inject_body(&self, payload: &str, remove_content: bool) -> HashMap<String, FullRequest> {
         let mut results = HashMap::new();
         let req_body = &self.body;
-        let parsed_params = url::form_urlencoded::parse(req_body.as_bytes())
-            .into_owned()
-            .collect::<HashMap<String, String>>();
+
+        let parsed_params = if serde_json::from_str::<serde::de::IgnoredAny>(&req_body).is_err() {
+            url::form_urlencoded::parse(req_body.as_bytes())
+                .into_owned()
+                .collect::<HashMap<String, String>>()
+        } else {
+            HashMap::new()
+        };
         parsed_params.iter().for_each(|(param, _)| {
             let mut current_req = self.clone();
             let mut current_parsed_param = parsed_params.clone();
@@ -217,6 +232,7 @@ impl FullRequest {
             }
             InjectionLocation::Headers => self.inject_headers(payload, remove_content),
             InjectionLocation::Body => self.inject_body(payload, remove_content),
+            InjectionLocation::BodyJson => self.inject_body_json(payload, remove_content),
             _ => HashMap::new(),
         }
     }
@@ -228,9 +244,13 @@ impl UserData for FullRequest {
             "set_url_param",
             |_, this, (payload, remove_param_content): (String, Option<bool>)| {
                 let remove_content = remove_param_content.unwrap_or(false);
-                let injected_params =
-                    this.inject_payloads(&payload, remove_content, InjectionLocation::Url);
-                Ok(injected_params)
+                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::Url) {
+                    let injected_params =
+                        this.inject_payloads(&payload, remove_content, InjectionLocation::Url);
+                    Ok(injected_params)
+                } else {
+                    Ok(HashMap::new())
+                }
             },
         );
 
@@ -238,9 +258,13 @@ impl UserData for FullRequest {
             "set_path_param",
             |_, this, (payload, remove_param_content): (String, Option<bool>)| {
                 let remove_content = remove_param_content.unwrap_or(false);
-                let injected_params =
-                    this.inject_payloads(&payload, remove_content, InjectionLocation::Path);
-                Ok(injected_params)
+                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::Path) {
+                    let injected_params =
+                        this.inject_payloads(&payload, remove_content, InjectionLocation::Path);
+                    Ok(injected_params)
+                } else {
+                    Ok(HashMap::new())
+                }
             },
         );
 
@@ -248,9 +272,13 @@ impl UserData for FullRequest {
             "set_body_param",
             |_, this, (payload, remove_param_content): (String, Option<bool>)| {
                 let remove_content = remove_param_content.unwrap_or(false);
-                let injected_params =
-                    this.inject_payloads(&payload, remove_content, InjectionLocation::Body);
-                Ok(injected_params)
+                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::Body) {
+                    let injected_params =
+                        this.inject_payloads(&payload, remove_content, InjectionLocation::Body);
+                    Ok(injected_params)
+                } else {
+                    Ok(HashMap::new())
+                }
             },
         );
 
@@ -258,17 +286,25 @@ impl UserData for FullRequest {
             "set_headers_param",
             |_, this, (payload, remove_param_content): (String, Option<bool>)| {
                 let remove_content = remove_param_content.unwrap_or(false);
-                let injected_params =
-                    this.inject_payloads(&payload, remove_content, InjectionLocation::Headers);
-                Ok(injected_params)
+                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::Headers) {
+                    let injected_params =
+                        this.inject_payloads(&payload, remove_content, InjectionLocation::Headers);
+                    Ok(injected_params)
+                } else {
+                    Ok(HashMap::new())
+                }
             },
         );
         methods.add_method_mut(
             "set_json_param",
             |_, this, (payload, remove_param_content): (String, Option<bool>)| {
                 let remove_content = remove_param_content.unwrap_or(false);
-                let inject_params = this.inject_body_json(&payload, remove_content);
-                Ok(inject_params)
+                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::BodyJson) {
+                    let inject_params = this.inject_payloads(&payload, remove_content,InjectionLocation::BodyJson);
+                    Ok(inject_params)
+                } else {
+                    Ok(HashMap::new())
+                }
             },
         );
         methods.add_async_method(

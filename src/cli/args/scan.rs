@@ -1,3 +1,5 @@
+use crate::cli::errors::CliErrors;
+use crate::cli::input::parse_requests::{InjectionLocation, SCAN_CONTENT_TYPE};
 use crate::lua::threads::runner::{
     LAST_CUSTOM_SCAN_ID, LAST_HOST_SCAN_ID, LAST_HTTP_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID,
 };
@@ -11,6 +13,36 @@ use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+fn parse_scan_content_type(input_content: &str) -> Result<(), CliErrors> {
+    let mut is_error = false;
+    // Removing The Default Option
+    block_on(async { SCAN_CONTENT_TYPE.lock().await.clear()});
+
+    input_content.split(",").for_each(|the_scan_type| {
+        if the_scan_type == "url" {
+            block_on(async { SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::Url) });
+        } else if the_scan_type == "body" {
+            block_on(async { SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::Body) });
+        } else if the_scan_type == "json" {
+            block_on(async { SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::BodyJson) });
+        } else if the_scan_type == "headers" {
+            block_on(async {
+                SCAN_CONTENT_TYPE
+                    .lock()
+                    .await
+                    .push(InjectionLocation::Headers)
+            });
+        } else {
+            is_error = true;
+        }
+    });
+    if is_error {
+        Err(CliErrors::UnsupportedScanType)
+    } else {
+        Ok(())
+    }
+}
+
 fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
@@ -21,7 +53,6 @@ fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
         if parts.len() != 2 {
             continue;
         }
-
 
         match parts[0] {
             "HTTP_SCAN_ID" => {
@@ -98,6 +129,14 @@ pub struct UrlsOpts {
         help = "The number of workers who will be involved in the fuzzing process"
     )]
     pub fuzz_workers: usize,
+
+    #[structopt(
+        short,
+        long = "content-type",
+        default_value = "url,body,headers",
+        parse(try_from_str = parse_scan_content_type)
+        )]
+    pub _content_type: (),
 
     // threads
     #[structopt(

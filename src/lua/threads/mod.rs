@@ -1,8 +1,8 @@
 pub mod runner;
-use futures::{stream, StreamExt, executor::block_on};
+use futures::{executor::block_on, stream, StreamExt};
 use mlua::UserData;
-use tokio::sync::Mutex;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 #[derive(Clone)]
 pub struct LuaThreader {
@@ -94,7 +94,7 @@ impl UserData for ParamScan {
             block_on(this.stop_scan());
             Ok(())
         });
-        methods.add_method("is_stop", |_, this, ()| {Ok(*block_on(this.finds.lock()))});
+        methods.add_method("is_stop", |_, this, ()| Ok(*block_on(this.finds.lock())));
     }
 }
 
@@ -122,6 +122,8 @@ impl UserData for LuaThreader {
             this.stop = Arc::new(Mutex::new(true));
             Ok(())
         });
-        methods.add_async_method("is_stop", |_, this, ()| async move {Ok(*this.stop.lock().await)});
+        methods.add_async_method("is_stop", |_, this, ()| async move {
+            Ok(*this.stop.lock().await)
+        });
     }
 }

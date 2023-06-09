@@ -116,13 +116,13 @@ pub fn args_scan() -> ScanArgs {
                 if is_json {
                     let parsed_json = match serde_json::from_str::<Vec<FullRequest>>(&input_str) {
                         Ok(parsed_request) => {
-                            parsed_request.iter().for_each(|the_request|{
+                            parsed_request.iter().for_each(|the_request| {
                                 urls.push(the_request.url.clone());
                                 urls.dedup();
                                 urls.sort();
                             });
                             parsed_request
-                        },
+                        }
                         Err(err) => {
                             show_msg(
                                 &format!(
