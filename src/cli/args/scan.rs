@@ -206,8 +206,6 @@ pub struct UrlsOpts {
         parse(from_os_str)
     )]
     pub urls: Option<PathBuf>,
-    #[structopt(long = "requests", help = "Give input as full request in JSON")]
-    pub is_request: bool,
 
     #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}", help = "Default Headers (eg: '{\"X-API\":\"123\"}')")]
     pub headers: HeaderMap,
