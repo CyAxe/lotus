@@ -39,20 +39,19 @@ impl UserData for ParamScan {
             |_,
              this,
              (target_param, iter_payload, target_func, callback_function, workers): (
-                String,
+                mlua::Value,
                 Vec<mlua::Value>,
                 mlua::Function,
                 mlua::Function,
                 usize,
             )| async move {
                 let target_func = Arc::new(target_func);
-                let target_param = Arc::new(target_param);
                 let callback_function = Arc::new(callback_function);
                 stream::iter(iter_payload)
                     .map(move |target_table| {
                         let mut stop_scan = false;
                         let target_func = Arc::clone(&target_func);
-                        let target_param = Arc::clone(&target_param);
+                        let target_param = target_param.clone();
                         let callback_function = Arc::clone(&callback_function);
                         let accept_nil = Arc::clone(&this.accept_nil);
                         if *block_on(this.finds.lock()) {
@@ -60,9 +59,10 @@ impl UserData for ParamScan {
                         }
                         async move {
                             if !stop_scan {
+                                let target_param = target_param.clone();
                                 let caller = target_func
                                     .call_async::<_, mlua::Value>((
-                                        target_param.to_string(),
+                                        target_param,
                                         target_table,
                                     ))
                                     .await
