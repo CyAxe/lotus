@@ -16,7 +16,7 @@ use structopt::StructOpt;
 fn parse_scan_content_type(input_content: &str) -> Result<(), CliErrors> {
     let mut is_error = false;
     // Removing The Default Option
-    block_on(async { SCAN_CONTENT_TYPE.lock().await.clear()});
+    block_on(async { SCAN_CONTENT_TYPE.lock().await.clear() });
 
     input_content.split(",").for_each(|the_scan_type| {
         if the_scan_type == "url" {
@@ -24,7 +24,12 @@ fn parse_scan_content_type(input_content: &str) -> Result<(), CliErrors> {
         } else if the_scan_type == "body" {
             block_on(async { SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::Body) });
         } else if the_scan_type == "json" {
-            block_on(async { SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::BodyJson) });
+            block_on(async {
+                SCAN_CONTENT_TYPE
+                    .lock()
+                    .await
+                    .push(InjectionLocation::BodyJson)
+            });
         } else if the_scan_type == "headers" {
             block_on(async {
                 SCAN_CONTENT_TYPE
