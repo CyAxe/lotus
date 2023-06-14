@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tealr::TypeName;
 use tealr::mlu::FromToLua;
+use tealr::TypeName;
 use tokio::sync::Mutex;
 
 use crate::lua::network::http::HttpResponse;
@@ -17,7 +17,11 @@ use crate::lua::parsing::url::HttpMessage;
 
 lazy_static! {
     pub static ref SCAN_CONTENT_TYPE: Arc<Mutex<Vec<InjectionLocation>>> =
-        Arc::new(Mutex::new(vec![InjectionLocation::Url, InjectionLocation::BodyJson, InjectionLocation::Body]));
+        Arc::new(Mutex::new(vec![
+            InjectionLocation::Url,
+            InjectionLocation::BodyJson,
+            InjectionLocation::Body
+        ]));
 }
 
 #[derive(TypeName, Clone, Deserialize, Serialize)]
@@ -28,13 +32,13 @@ pub struct FullRequest {
     pub body: String,
 }
 
-#[derive(Debug,PartialEq,TypeName, FromToLua)]
+#[derive(Debug, PartialEq, TypeName, FromToLua)]
 pub enum InjectionLocation {
     Url,
     Path,
     Headers,
     Body,
-    BodyJson
+    BodyJson,
 }
 
 impl Default for FullRequest {
@@ -243,14 +247,21 @@ impl UserData for FullRequest {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut(
             "set",
-            |_, this, (injection_location, payload, remove_param_content): (InjectionLocation, String, Option<bool>)| {
+            |_,
+             this,
+             (injection_location, payload, remove_param_content): (
+                InjectionLocation,
+                String,
+                Option<bool>,
+            )| {
                 let remove_content = remove_param_content.unwrap_or(false);
                 if block_on(SCAN_CONTENT_TYPE.lock()).contains(&injection_location) {
-                    log::debug!("Change {:?} parameter to {}",injection_location, payload);
-                    let injected_params = this.inject_payloads(&payload, remove_content, injection_location);
+                    log::debug!("Change {:?} parameter to {}", injection_location, payload);
+                    let injected_params =
+                        this.inject_payloads(&payload, remove_content, injection_location);
                     Ok(injected_params)
                 } else {
-                    log::debug!("The {:?} is not allowed",injection_location);
+                    log::debug!("The {:?} is not allowed", injection_location);
                     Ok(HashMap::new())
                 }
             },
@@ -263,9 +274,9 @@ impl UserData for FullRequest {
             },
         );
 
-        methods.add_method("json", |_,_,()|{Ok(InjectionLocation::BodyJson)});
-        methods.add_method("body", |_,_,()|{Ok(InjectionLocation::Body)});
-        methods.add_method("url", |_,_,()|{Ok(InjectionLocation::Url)});
-        methods.add_method("headers", |_,_,()|{Ok(InjectionLocation::Headers)});
+        methods.add_method("json", |_, _, ()| Ok(InjectionLocation::BodyJson));
+        methods.add_method("body", |_, _, ()| Ok(InjectionLocation::Body));
+        methods.add_method("url", |_, _, ()| Ok(InjectionLocation::Url));
+        methods.add_method("headers", |_, _, ()| Ok(InjectionLocation::Headers));
     }
 }
