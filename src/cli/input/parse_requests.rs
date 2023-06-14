@@ -8,6 +8,7 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tealr::TypeName;
+use tealr::mlu::FromToLua;
 use tokio::sync::Mutex;
 
 use crate::lua::network::http::HttpResponse;
@@ -27,7 +28,7 @@ pub struct FullRequest {
     pub body: String,
 }
 
-#[derive(PartialEq,TypeName)]
+#[derive(Debug,PartialEq,TypeName, FromToLua)]
 pub enum InjectionLocation {
     Url,
     Path,
@@ -241,77 +242,30 @@ impl FullRequest {
 impl UserData for FullRequest {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut(
-            "set_url_param",
-            |_, this, (payload, remove_param_content): (String, Option<bool>)| {
+            "set",
+            |_, this, (injection_location, payload, remove_param_content): (InjectionLocation, String, Option<bool>)| {
                 let remove_content = remove_param_content.unwrap_or(false);
-                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::Url) {
-                    let injected_params =
-                        this.inject_payloads(&payload, remove_content, InjectionLocation::Url);
+                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&injection_location) {
+                    log::debug!("Change {:?} parameter to {}",injection_location, payload);
+                    let injected_params = this.inject_payloads(&payload, remove_content, injection_location);
                     Ok(injected_params)
                 } else {
+                    log::debug!("The {:?} is not allowed",injection_location);
                     Ok(HashMap::new())
                 }
             },
         );
 
-        methods.add_method_mut(
-            "set_path_param",
-            |_, this, (payload, remove_param_content): (String, Option<bool>)| {
-                let remove_content = remove_param_content.unwrap_or(false);
-                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::Path) {
-                    let injected_params =
-                        this.inject_payloads(&payload, remove_content, InjectionLocation::Path);
-                    Ok(injected_params)
-                } else {
-                    Ok(HashMap::new())
-                }
-            },
-        );
-
-        methods.add_method_mut(
-            "set_body_param",
-            |_, this, (payload, remove_param_content): (String, Option<bool>)| {
-                let remove_content = remove_param_content.unwrap_or(false);
-                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::Body) {
-                    let injected_params =
-                        this.inject_payloads(&payload, remove_content, InjectionLocation::Body);
-                    Ok(injected_params)
-                } else {
-                    Ok(HashMap::new())
-                }
-            },
-        );
-
-        methods.add_method_mut(
-            "set_headers_param",
-            |_, this, (payload, remove_param_content): (String, Option<bool>)| {
-                let remove_content = remove_param_content.unwrap_or(false);
-                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::Headers) {
-                    let injected_params =
-                        this.inject_payloads(&payload, remove_content, InjectionLocation::Headers);
-                    Ok(injected_params)
-                } else {
-                    Ok(HashMap::new())
-                }
-            },
-        );
-        methods.add_method_mut(
-            "set_json_param",
-            |_, this, (payload, remove_param_content): (String, Option<bool>)| {
-                let remove_content = remove_param_content.unwrap_or(false);
-                if block_on(SCAN_CONTENT_TYPE.lock()).contains(&InjectionLocation::BodyJson) {
-                    let inject_params = this.inject_payloads(&payload, remove_content,InjectionLocation::BodyJson);
-                    Ok(inject_params)
-                } else {
-                    Ok(HashMap::new())
-                }
-            },
-        );
         methods.add_async_method(
             "send",
             |_, this, (req, sender): (FullRequest, Sender)| async move {
                 Ok(this.send(req, sender).await?)
             },
         );
+
+        methods.add_method("json", |_,_,()|{Ok(InjectionLocation::BodyJson)});
+        methods.add_method("body", |_,_,()|{Ok(InjectionLocation::Body)});
+        methods.add_method("url", |_,_,()|{Ok(InjectionLocation::Url)});
+        methods.add_method("headers", |_,_,()|{Ok(InjectionLocation::Headers)});
     }
 }
