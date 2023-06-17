@@ -63,9 +63,9 @@ impl FullRequest {
             let mut current_headers = cloned_headers.clone();
             let mut current_results = HashMap::new();
             let new_headervalue = if remove_content {
-                format!("{}{}", headervalue, payload)
-            } else {
                 format!("{}", payload)
+            } else {
+                format!("{}{}", headervalue, payload)
             };
             current_headers.insert(headername.clone(), new_headervalue.clone());
             current_results.insert(headername.clone(), new_headervalue);
