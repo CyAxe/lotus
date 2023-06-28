@@ -1,6 +1,7 @@
 <p align="center">
 <p align="center">
-<img src="https://user-images.githubusercontent.com/45688522/222855427-5a328880-1ded-4adf-ac8e-35d0ba1c8cdd.png" width="470px" >
+
+<img src="https://raw.githubusercontent.com/BugBlocker/lotus/master/logo/logo.png" width="470px" >
 <!-- img src="https://user-images.githubusercontent.com/45688522/222831284-09899d3b-322b-4215-ba99-8294d4bf8a9b.png" width="170px" -->
 </p>
 Lotus is an automation system for Dynamic Application Security Testing (DAST) that simplifies web security scripting by providing a Lua API with numerous functions that can be used to automate web security processes in just a few lines of code
