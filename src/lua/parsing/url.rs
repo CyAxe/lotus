@@ -77,14 +77,15 @@ impl HttpMessage {
                 .fold(String::new(), |mut acc, (key, value)| {
                     if key == param {
                         if remove_content {
-                            acc += &format!("{}={}", key, payload);
+                            acc.push_str(&format!("{}={}", key, payload));
                         } else {
-                            acc += &format!("{}={}", key, value + payload);
+                            let new_value = format!("{}{}", value, payload);
+                            acc.push_str(&format!("{}={}", key, new_value));
                         }
                     } else {
-                        acc += &format!("{}={}", key, value);
+                        acc.push_str(&format!("{}={}", key, value));
                     }
-                    acc += "&";
+                    acc.push('&');
                     acc
                 });
             url.set_query(Some(&new_query[..new_query.len() - 1]));
