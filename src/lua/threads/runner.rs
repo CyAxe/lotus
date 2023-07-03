@@ -27,6 +27,13 @@ pub async fn pause_channel() {
         if let Err(err) = generate_resume().await {
             show_msg(&err.to_string(), MessageLevel::Error)
         }
+        /*
+        match BROWSER_DRIVER.lock().await.close_window().await {
+            Ok(..) => {}
+            Err(err) => {
+                show_msg(&err.to_string(), MessageLevel::Error);
+            }
+        }*/
         std::process::exit(130)
     });
 }

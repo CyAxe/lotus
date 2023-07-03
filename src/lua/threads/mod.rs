@@ -61,10 +61,7 @@ impl UserData for ParamScan {
                             if !stop_scan {
                                 let target_param = target_param.clone();
                                 let caller = target_func
-                                    .call_async::<_, mlua::Value>((
-                                        target_param,
-                                        target_table,
-                                    ))
+                                    .call_async::<_, mlua::Value>((target_param, target_table))
                                     .await
                                     .unwrap();
                                 let is_nil = { caller == mlua::Nil };
@@ -100,43 +97,48 @@ impl UserData for ParamScan {
 
 impl UserData for LuaThreader {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-            methods.add_async_method(
-                "iter_scan",
-                |_, this, (prime_iter_data, second_iter_table, target_func, workers): (
-                    Vec<mlua::Value>,
-                    Vec<mlua::Value>,
-                    mlua::Function,
-                    usize,
-                )| async move {
-                    let target_func = Arc::new(target_func);
+        methods.add_async_method(
+            "iter_scan",
+            |_,
+             this,
+             (prime_iter_data, second_iter_table, target_func, workers): (
+                Vec<mlua::Value>,
+                Vec<mlua::Value>,
+                mlua::Function,
+                usize,
+            )| async move {
+                let target_func = Arc::new(target_func);
 
-                    stream::iter(prime_iter_data)
-                        .for_each_concurrent(workers, move |target_data| {
-                            let target_func = Arc::clone(&target_func);
-                            let second_iter_table = second_iter_table.clone();
-                            let stop_scan: bool = *block_on(this.stop.lock());
-                            async move {
-                                stream::iter(second_iter_table)
-                                    .for_each_concurrent(workers, move |data| {
-                                        let target_func = Arc::clone(&target_func);
-                                        let target_data = target_data.clone();
+                stream::iter(prime_iter_data)
+                    .for_each_concurrent(workers, move |target_data| {
+                        let target_func = Arc::clone(&target_func);
+                        let second_iter_table = second_iter_table.clone();
+                        let stop_scan: bool = *block_on(this.stop.lock());
+                        async move {
+                            stream::iter(second_iter_table)
+                                .for_each_concurrent(workers, move |data| {
+                                    let target_func = Arc::clone(&target_func);
+                                    let target_data = target_data.clone();
 
-                                        async move {
-                                            if stop_scan {
-                                                // Ignore
-                                            } else {
-                                                target_func.call_async::<_, mlua::Value>((target_data,data)).await.unwrap();
-                                            }
+                                    async move {
+                                        if stop_scan {
+                                            // Ignore
+                                        } else {
+                                            target_func
+                                                .call_async::<_, mlua::Value>((target_data, data))
+                                                .await
+                                                .unwrap();
                                         }
-                                    })
-                                    .await;
-                            }
-                        })
-                        .await;
+                                    }
+                                })
+                                .await;
+                        }
+                    })
+                    .await;
 
-                    Ok(())
-                },
-            );
+                Ok(())
+            },
+        );
 
         methods.add_async_method("run_scan", |_, this, (iter_data, target_func,workers): (Vec<mlua::Value>, mlua::Function, usize)| async move {
             let target_func = Arc::new(target_func);

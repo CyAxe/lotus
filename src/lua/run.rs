@@ -5,6 +5,7 @@ use crate::{
     lua::{
         model::{LuaOptions, LuaRunTime},
         network::http::Sender,
+        network::selenium_driver::selenium_lua::Selenium,
         output::report::AllReports,
     },
     RequestOpts, ScanTypes,
@@ -140,6 +141,15 @@ impl LuaLoader {
 
         // call main function
         let main_func = lua.globals().get::<_, mlua::Function>("main");
+        let support_selenium = lua
+            .globals()
+            .get::<_, bool>("ENABLE_SELENIUM")
+            .unwrap_or(false);
+        if support_selenium {
+            log::debug!("Set Selenium");
+            lua.globals().set("browser", Selenium::default().await).unwrap();
+            log::debug!("Done");
+        }
         if main_func.is_err() {
             let msg = format!("The script in directory [{}] does not contain a main function.\n\nThe main function is required to execute the script. Please make sure that the script contains a main function and try again.", lua_opts.script_dir);
             log::error!("{}", msg);
