@@ -13,6 +13,7 @@
 // and limitations under the License.
 
 use std::collections::HashMap;
+use std::path::Path;
 use url::Url;
 mod url_lua;
 
@@ -95,8 +96,25 @@ impl HttpMessage {
 
     pub fn urljoin(&self, path: &str) -> String {
         if let Some(url) = &self.url {
-            return url.join(path).unwrap().as_str().to_string();
+            let base_url = Url::parse(url.as_str()).unwrap();
+            let path = Path::new(path);
+
+            let joined_path = if path.has_root() {
+                // If the path has a root (e.g., starts with "/"), use it directly
+                path.to_str().unwrap().to_owned()
+            } else {
+                // Otherwise, combine the base URL's path with the provided path
+                let mut base_path = base_url.path().to_owned();
+                base_path.push('/');
+                base_path.push_str(path.to_str().unwrap());
+                base_path
+            };
+
+            let mut joined_url = base_url;
+            joined_url.set_path(&joined_path);
+            joined_url.to_string()
+        } else {
+            String::new()
         }
-        String::new()
     }
 }
