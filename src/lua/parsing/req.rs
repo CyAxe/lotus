@@ -14,9 +14,10 @@ pub fn show_response<'lua>(
         headers_str
     };
     let body = &res.body;
-    let status = res.status;
+    let version = res.version;
+    let reason = res.reason;
     Ok(Cow::from(format!(
-        r#"HTTP/1.1 {status}{headers_str}
+        r#"{version} {reason}{headers_str}
 
 
 {body}

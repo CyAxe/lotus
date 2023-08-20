@@ -16,7 +16,7 @@ use crate::BAR;
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue},
     multipart::{Form, Part},
-    redirect, Client, Method, Proxy,
+    redirect, Client, Method, Proxy
 };
 use std::collections::HashMap;
 mod http_lua_api;
@@ -36,6 +36,8 @@ lazy_static! {
 
 #[derive(Debug, FromToLua, TypeName)]
 pub struct HttpResponse {
+    pub reason: String,
+    pub version: String,
     pub is_redirect: bool,
     pub url: String,
     pub status: i32,
@@ -211,8 +213,10 @@ impl Sender {
                     })
                     .collect::<HashMap<String, String>>();
 
+                let version = resp.version();
                 let url = resp.url().to_string();
-                let status = resp.status().as_u16() as i32;
+                let status = resp.status();
+                let status_code = status.as_u16() as i32;
                 let is_redirect = resp.status().is_redirection();
                 let body = resp
                     .bytes()
@@ -220,9 +224,11 @@ impl Sender {
                     .map(|b| String::from_utf8_lossy(&b).to_string());
                 match body {
                     Ok(body) => Ok(HttpResponse {
+                        reason: status.to_string(),
+                        version: format!("{:#?}",version),
                         is_redirect,
                         url,
-                        status,
+                        status: status_code,
                         body,
                         headers: resp_headers,
                     }),
