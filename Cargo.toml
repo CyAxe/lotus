@@ -10,7 +10,7 @@ authors = ["Khaled Nassar <knassar702@gmail.com>"]
 readme = "README.md"
 
 [features]
-# default = ["lua54"]
+#default = ["lua54"]
 lua54 = ["tealr/mlua_lua54"]
 lua53 = ["tealr/mlua_lua53"]
 lua52 = ["tealr/mlua_lua52"]
