@@ -10,7 +10,7 @@ authors = ["Khaled Nassar <knassar702@gmail.com>"]
 readme = "README.md"
 
 [features]
-#default = ["lua54"]
+default = ["lua53"]
 lua54 = ["tealr/mlua_lua54"]
 lua53 = ["tealr/mlua_lua53"]
 lua52 = ["tealr/mlua_lua52"]
@@ -27,7 +27,7 @@ path = "src/main.rs"
 
 # LUA
 mlua = { version = "0.8" , features=["serialize"]}
-tealr = {version="0.9.0-alpha4", features=["mlua", "mlua_async"]} 
+tealr = { git = "https://github.com/lenscas/tealr",tag="v0.9.0-alpha4" , features=["mlua", "mlua_async"]} 
 
 # Threading
 futures = "0.3.24"
@@ -54,6 +54,7 @@ glob = "0.3.0"
 
 # Encoding
 base64 = "0.13.1"
+url-escape = "0.1.1"
 
 # HTTP & URLS
 serde_json = "1.0.85"
