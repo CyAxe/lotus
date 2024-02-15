@@ -1,4 +1,5 @@
 use crate::lua::encode::base64::{base64_decode, base64_encode};
+use crate::lua::encode::url::{urlencode,urldecode};
 use crate::lua::model::LuaRunTime;
 
 pub trait EncodeEXT {
@@ -21,5 +22,18 @@ impl EncodeEXT for LuaRunTime<'_> {
                 self.lua.create_function(base64_decode).unwrap(),
             )
             .unwrap();
+        self.lua
+            .globals()
+            .set(
+                "urlencode",
+                self.lua.create_function(urlencode).unwrap(),
+            ).unwrap();
+        self.lua
+            .globals()
+            .set(
+                "urldecode",
+                self.lua.create_function(urldecode).unwrap(),
+            ).unwrap();
+
     }
 }
