@@ -556,6 +556,17 @@ base64encode("hello") -- aGVsbG8=
 base64decode("aGVsbG8=") -- hello
 ```
 
+- URL encoding
+```lua
+urlencode("Hello World") -- Hello%20World
+urldecode("Hello%20World") -- Hello World
+```
+
+- HTML encoding
+```lua
+htmlencode("<script>alert()</script>") -- &lt;script&gt;alert()&lt;/script&gt;
+htmldecode("&lt;script&gt;alert()&lt;/script&gt;") -- <script>alert()</script>
+```
 
 
 ### FAQ
