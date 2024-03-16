@@ -34,11 +34,14 @@ use std::sync::Arc;
 use crate::lua::threads::runner::{LAST_CUSTOM_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID};
 
 impl Lotus {
-    /// Run The Lua Script with real target
-    /// * `target_data` - Vector with target urls
-    /// * `request_option` - RequestOpts contains some http request options like (proxy , timeout)
-    /// * `scan_type` - scan type if its host or url scanning
-    /// * `exit_after` - exit after how many of errors
+    /// Run the Lua script with real target.
+    ///
+    /// * `target_data` - Vector with target urls.
+    /// * `loaded_scripts` - Loaded Lua scripts.
+    /// * `request_option` - RequestOpts contains some HTTP request options like (proxy, timeout).
+    /// * `scan_type` - Scan type if it's host or URL scanning.
+    /// * `exit_after` - Exit after how many errors.
+    /// * `fuzz_workers` - Number of fuzz workers.
     pub async fn start(
         &self,
         target_data: Vec<serde_json::Value>,
@@ -51,6 +54,7 @@ impl Lotus {
         if target_data.is_empty() {
             return;
         }
+
         let resume_value: usize;
         let loaded_scripts = match scan_type {
             ScanTypes::FULL_HTTP => {
@@ -74,17 +78,20 @@ impl Lotus {
                 valid_scripts(loaded_scripts, 4)
             }
         };
+
         let lotus_obj = Arc::new(LuaLoader::new(request_option.clone(), self.output.clone()));
         let scan_type = Arc::new(scan_type);
+
         iter_futures(
             scan_type.clone(),
             target_data,
             |script_data| async move {
                 let lotus_loader = Arc::clone(&lotus_obj);
                 let scan_type = Arc::clone(&scan_type);
+
                 iter_futures(
                     scan_type.clone(),
-                    loaded_scripts,
+                    loaded_scripts.clone(),
                     |(script_code, script_name)| async move {
                         let lua_opts = LuaOptions {
                             target_url: Some(&script_data),
@@ -94,6 +101,7 @@ impl Lotus {
                             script_dir: &script_name,
                             env_vars: self.env_vars.clone(),
                         };
+
                         if *self.stop_after.lock().unwrap() == exit_after {
                             // No script will be executed
                         } else {
