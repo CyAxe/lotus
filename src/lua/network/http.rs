@@ -16,7 +16,7 @@ use crate::BAR;
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue},
     multipart::{Form, Part},
-    redirect, Client, Method, Proxy
+    redirect, Client, Method, Proxy,
 };
 use std::collections::HashMap;
 mod http_lua_api;
@@ -225,7 +225,7 @@ impl Sender {
                 match body {
                     Ok(body) => Ok(HttpResponse {
                         reason: status.to_string(),
-                        version: format!("{:#?}",version),
+                        version: format!("{:#?}", version),
                         is_redirect,
                         url,
                         status: status_code,

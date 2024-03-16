@@ -28,15 +28,17 @@ macro_rules! set_global_value {
 
 macro_rules! set_http_sender {
     ($lua:expr, $request:expr) => {
-        $lua.globals().set(
-            "http",
-            Sender::init(
-                $request.headers.clone(),
-                $request.proxy.clone(),
-                $request.timeout,
-                $request.redirects,
-            ),
-        ).unwrap();
+        $lua.globals()
+            .set(
+                "http",
+                Sender::init(
+                    $request.headers.clone(),
+                    $request.proxy.clone(),
+                    $request.timeout,
+                    $request.redirects,
+                ),
+            )
+            .unwrap();
     };
 }
 
@@ -58,7 +60,12 @@ impl LuaLoader {
         lua_eng.add_printfunc();
         lua_eng.add_matchingfunc();
         lua_eng.add_threadsfunc();
-        set_global_value!(lua, "ERR_STRING", lua.create_function(|_, error: mlua::Error| Ok(error.to_string())).unwrap());
+        set_global_value!(
+            lua,
+            "ERR_STRING",
+            lua.create_function(|_, error: mlua::Error| Ok(error.to_string()))
+                .unwrap()
+        );
         set_http_sender!(lua, self.request);
     }
 
@@ -83,15 +90,24 @@ impl LuaLoader {
 
         match lua_opts.target_type {
             ScanTypes::FULL_HTTP => {
-                let request_value: FullRequest = serde_json::from_value(lua_opts.target_url.unwrap().clone()).unwrap();
+                let request_value: FullRequest =
+                    serde_json::from_value(lua_opts.target_url.unwrap().clone()).unwrap();
                 self.set_lua(None, Some(request_value), &lua);
             }
             ScanTypes::HOSTS => {
                 self.set_lua(None, None, &lua);
-                set_global_value!(lua, "INPUT_DATA", lua_opts.target_url.unwrap().as_str().unwrap().to_string());
+                set_global_value!(
+                    lua,
+                    "INPUT_DATA",
+                    lua_opts.target_url.unwrap().as_str().unwrap().to_string()
+                );
             }
             ScanTypes::URLS | ScanTypes::PATHS => {
-                self.set_lua(Some(&lua_opts.target_url.unwrap().as_str().unwrap().to_string()), None, &lua);
+                self.set_lua(
+                    Some(&lua_opts.target_url.unwrap().as_str().unwrap().to_string()),
+                    None,
+                    &lua,
+                );
             }
             ScanTypes::CUSTOM => {
                 let serde_value = serde_json::to_value(lua_opts.target_url).unwrap();
@@ -130,7 +146,10 @@ impl LuaLoader {
         }
 
         log::debug!("Calling the main function: {}", script_dir);
-        let run_scan = main_func.unwrap().call_async::<_, mlua::Value>(mlua::Value::Nil).await;
+        let run_scan = main_func
+            .unwrap()
+            .call_async::<_, mlua::Value>(mlua::Value::Nil)
+            .await;
 
         BAR.lock().unwrap().inc(1);
 

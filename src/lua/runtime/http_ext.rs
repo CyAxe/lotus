@@ -40,44 +40,38 @@ impl HTTPEXT for LuaRunTime<'_> {
             self.lua.globals().set("full_req", full_httpmsg).unwrap();
         }
 
-        create_and_set_global_function!(
-            self.lua,
-            "make_headers",
-            |_, headers_txt: String| {
-                let mut result = HashMap::new();
-                for line in headers_txt.lines() {
-                    if let Some((name, value)) = line.split_once(':') {
-                        result.insert(name.trim().to_string(), value.trim().to_string());
-                    }
-                }
-                Ok(result)
-            }
-        );
-
-        create_and_set_global_function!(
-            self.lua,
-            "pathjoin",
-            |_, (current_path, new_path): (String, String)| {
-                let the_path = std::path::Path::new(&current_path).join(new_path);
-                Ok(the_path.to_str().unwrap().to_string())
-            }
-        );
-
-        create_and_set_global_function!(
-            self.lua,
-            "readfile",
-            |_ctx, file_path: String| {
-                if Path::new(&file_path).exists() {
-                    let file_content = filename_to_string(&file_path)?;
-                    Ok(file_content)
-                } else {
-                    Err(CliErrors::ReadingError.to_lua_err())
+        create_and_set_global_function!(self.lua, "make_headers", |_, headers_txt: String| {
+            let mut result = HashMap::new();
+            for line in headers_txt.lines() {
+                if let Some((name, value)) = line.split_once(':') {
+                    result.insert(name.trim().to_string(), value.trim().to_string());
                 }
             }
-        );
+            Ok(result)
+        });
+
+        create_and_set_global_function!(self.lua, "pathjoin", |_,
+                                                               (current_path, new_path): (
+            String,
+            String
+        )| {
+            let the_path = std::path::Path::new(&current_path).join(new_path);
+            Ok(the_path.to_str().unwrap().to_string())
+        });
+
+        create_and_set_global_function!(self.lua, "readfile", |_ctx, file_path: String| {
+            if Path::new(&file_path).exists() {
+                let file_content = filename_to_string(&file_path)?;
+                Ok(file_content)
+            } else {
+                Err(CliErrors::ReadingError.to_lua_err())
+            }
+        });
 
         let http_message = if let Some(url) = target_url {
-            HttpMessage { url: Some(Url::parse(url).unwrap()) }
+            HttpMessage {
+                url: Some(Url::parse(url).unwrap()),
+            }
         } else {
             HttpMessage { url: None }
         };
@@ -86,7 +80,9 @@ impl HTTPEXT for LuaRunTime<'_> {
         set_global_function!(
             self.lua,
             "Reports",
-            AllReports { reports: Vec::new() }
+            AllReports {
+                reports: Vec::new()
+            }
         );
     }
 }

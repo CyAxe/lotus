@@ -16,7 +16,6 @@ macro_rules! set_global_function {
     };
 }
 
-
 pub trait UtilsEXT {
     fn add_threadsfunc(&self);
     fn add_matchingfunc(&self);
@@ -32,7 +31,13 @@ impl UtilsEXT for LuaRunTime<'_> {
                 .create_function(|c_lua, new_path: String| {
                     let script_path = c_lua.globals().get::<_, String>("SCRIPT_PATH").unwrap();
                     let the_path = Path::new(&script_path);
-                    Ok(the_path.parent().unwrap().join(new_path).to_str().unwrap().to_string())
+                    Ok(the_path
+                        .parent()
+                        .unwrap()
+                        .join(new_path)
+                        .to_str()
+                        .unwrap()
+                        .to_string())
                 })
                 .unwrap()
         );
@@ -86,9 +91,11 @@ impl UtilsEXT for LuaRunTime<'_> {
                 set_global_function!(
                     self.lua,
                     $name,
-                    self.lua.create_function(|_, (str_one, str_two): (String, String)| {
-                        Ok(str_one.$method(&str_two))
-                    }).unwrap()
+                    self.lua
+                        .create_function(|_, (str_one, str_two): (String, String)| {
+                            Ok(str_one.$method(&str_two))
+                        })
+                        .unwrap()
                 );
             }};
         }

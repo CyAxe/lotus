@@ -1,6 +1,6 @@
 use crate::lua::encode::base64::{base64_decode, base64_encode};
-use crate::lua::encode::url::{urlencode,urldecode};
-use crate::lua::encode::html::{htmlencode,htmldecode};
+use crate::lua::encode::html::{htmldecode, htmlencode};
+use crate::lua::encode::url::{urldecode, urlencode};
 use crate::lua::model::LuaRunTime;
 
 pub trait EncodeEXT {
@@ -25,27 +25,19 @@ impl EncodeEXT for LuaRunTime<'_> {
             .unwrap();
         self.lua
             .globals()
-            .set(
-                "urlencode",
-                self.lua.create_function(urlencode).unwrap(),
-            ).unwrap();
+            .set("urlencode", self.lua.create_function(urlencode).unwrap())
+            .unwrap();
         self.lua
             .globals()
-            .set(
-                "urldecode",
-                self.lua.create_function(urldecode).unwrap(),
-            ).unwrap();
+            .set("urldecode", self.lua.create_function(urldecode).unwrap())
+            .unwrap();
         self.lua
             .globals()
-            .set(
-                "htmlencode",
-                self.lua.create_function(htmlencode).unwrap(),
-            ).unwrap();
+            .set("htmlencode", self.lua.create_function(htmlencode).unwrap())
+            .unwrap();
         self.lua
             .globals()
-            .set(
-                "htmldecode",
-                self.lua.create_function(htmldecode).unwrap(),
-            ).unwrap();
+            .set("htmldecode", self.lua.create_function(htmldecode).unwrap())
+            .unwrap();
     }
 }
