@@ -160,7 +160,7 @@ impl Sender {
                 );
                 std::thread::sleep(Duration::from_secs(sleep_time));
                 *req_sent = 1;
-                BAR.lock().unwrap().println("Continuing...");
+                {BAR.lock().unwrap().println("Continuing...")};
                 log::debug!("Resetting req_sent value to 1");
             } else {
                 *req_sent += 1;
@@ -198,7 +198,7 @@ impl Sender {
                 let verbose_mode = *VERBOSE_MODE.lock().await;
                 if verbose_mode {
                     let msg = format!("Sent HTTP request: {}", &url);
-                    BAR.lock().unwrap().println(&msg);
+                    {BAR.lock().unwrap().println(&msg)};
                     log::debug!("{}", msg);
                 }
 

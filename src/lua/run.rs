@@ -119,17 +119,19 @@ impl LuaLoader {
         let run_code = lua.load(lua_opts.script_code).exec_async().await;
 
         if let Err(e) = run_code {
-            let bar = BAR.lock().unwrap();
             let error_msg = format!("An error occurred while running the script:\n\n{}\n\nPlease check the script code and try again.", e);
-            bar.inc(1);
-            bar.println(error_msg);
+            {
+                let bar = BAR.lock().unwrap();
+                bar.inc(1);
+                bar.println(error_msg);
+            };
             return Err(e);
         }
 
         if let Err(e) = self.execute_main_function(&lua, &lua_opts.script_dir).await {
             let msg = format!("[{}] Script Error: {:?}", lua_opts.script_dir, e);
             log::error!("{}", msg);
-            BAR.lock().unwrap().println(msg);
+            {BAR.lock().unwrap().println(msg)};
         }
 
         Ok(())
@@ -141,7 +143,7 @@ impl LuaLoader {
         if main_func.is_err() {
             let msg = format!("The script in directory [{}] does not contain a main function.\n\nThe main function is required to execute the script. Please make sure that the script contains a main function and try again.", script_dir);
             log::error!("{}", msg);
-            BAR.lock().unwrap().println(msg);
+            {BAR.lock().unwrap().println(msg)};
             return Ok(());
         }
 
@@ -151,12 +153,12 @@ impl LuaLoader {
             .call_async::<_, mlua::Value>(mlua::Value::Nil)
             .await;
 
-        BAR.lock().unwrap().inc(1);
+        {BAR.lock().unwrap().inc(1)};
 
         if let Err(e) = run_scan {
             let msg = format!("[{}] Script Error: {:?}", script_dir, e);
             log::error!("{}", msg);
-            BAR.lock().unwrap().println(msg);
+            {BAR.lock().unwrap().println(msg)};
         } else {
             self.process_script_report(lua, script_dir).await;
         }

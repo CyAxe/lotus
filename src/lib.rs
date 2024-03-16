@@ -102,17 +102,19 @@ impl Lotus {
                             env_vars: self.env_vars.clone(),
                         };
 
-                        if *self.stop_after.lock().unwrap() == exit_after {
-                            // No script will be executed
+                        let stop_after: i32 = {*self.stop_after.lock().unwrap()};
+                        if stop_after == exit_after{
+                           // No script will be executed
                         } else {
                             log::debug!("Starting script execution: {} on {}", script_name, script_data);
                             match lotus_loader.run_scan(lua_opts).await {
                                 Ok(_) => (),
                                 Err(err) => {
                                     log::error!("An error occurred while executing the script: {}", err.to_lua_err().to_string());
-                                    let mut stop_after = self.stop_after.lock().unwrap();
-                                    log::debug!("The current number of errors encountered while executing scripts is: {}", *stop_after);
-                                    *stop_after += 1;
+                                    {
+                                        let mut stop_after = self.stop_after.lock().unwrap(); log::debug!("The current number of errors encountered while executing scripts is: {}", *stop_after);
+                                        *stop_after += 1;
+                                    }
                                 }
                             }
                         }
