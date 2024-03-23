@@ -113,7 +113,7 @@ impl Sender {
         }
 
         builder = builder.http1_title_case_headers();
-        builder = builder.no_trust_dns();
+        builder = builder.no_hickory_dns();
         builder = builder.danger_accept_invalid_certs(true);
 
         if http1_only {
