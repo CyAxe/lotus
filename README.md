@@ -1,73 +1,74 @@
-<p align="center">
-<p align="center">
 
-<img src="https://raw.githubusercontent.com/BugBlocker/lotus/master/logo/logo.png" width="370px" >
-<!-- img src="https://user-images.githubusercontent.com/45688522/222831284-09899d3b-322b-4215-ba99-8294d4bf8a9b.png" width="170px" -->
+<p align="center">
+<img src="https://raw.githubusercontent.com/BugBlocker/lotus/master/logo/lotus_logo.png" width="370px" alt="Lotus Logo">
 </p>
-Lotus is an automation system for Dynamic Application Security Testing (DAST) that simplifies web security scripting by providing a Lua API with numerous functions that can be used to automate web security processes in just a few lines of code
 
-Our aim is to make security scripting more efficient by providing libraries and functions to ensure that no critical security features are missed in most security scripting cases.
+# Lotus: Dynamic Application Security Testing (DAST) Automation System
 
-### Contents
-- [Why Lotus](#why-lotus)
-- [What lotus scripts can do](#what-lotus-scripts-can-do)
-- [Installation](#rocket-installation)
+**Lotus** is an advanced automation system for Dynamic Application Security Testing (DAST). It simplifies web security scripting by offering a powerful Lua API that automates security processes in just a few lines of code. With Lotus, web security testing becomes more efficient, ensuring no critical security steps are missed.
+
+Our mission is to streamline the security testing workflow, providing robust libraries and functions to automate web security processes with speed and precision.
+
+## Table of Contents
+- [Why Choose Lotus?](#why-choose-lotus)
+- [Features of Lotus Scripts](#features-of-lotus-scripts)
+- [Installation Guide](#rocket-installation-guide)
 - [Documentation](#book-documentation)
 
-### Why Lotus?
-- Powerful Lua API
+## Why Choose Lotus?
 
-    Lotus provides a comprehensive Lua API with numerous functions that can be used to automate web security processes. This makes scripting more efficient and allows for automation of complex security testing scenarios with ease.
+### 1. Comprehensive Lua API
+Lotus delivers a powerful Lua API packed with numerous functions designed to automate complex web security testing scenarios. With Lotus, automating security tasks becomes efficient, allowing you to focus on addressing vulnerabilities.
 
-- Enhanced Performance
+### 2. Optimized for Performance
+Lotus is engineered for speed and accuracy, delivering top-tier performance in web security testing. This ensures faster vulnerability identification without the need for manual intervention.
 
-    Lotus is designed with performance in mind, providing unparalleled speed and accuracy in automating web security testing. This allows you to focus on identifying and fixing security vulnerabilities rather than wasting time on manual testing.
+### 3. Flexible and Customizable
+Lotus offers unmatched flexibility with its customizable reporting, HTTP request handling, and input validation. Its API includes functions for regex matching and data validation, enabling precise detection of vulnerabilities.
 
-- Flexibility
+### 4. Active and Ongoing Development
+As an open-source project, Lotus is actively maintained and regularly updated. You can trust in continuous support and improvements to meet the evolving demands of web security testing.
 
-    Lotus offers a highly flexible API that allows for easy customization of reporting and HTTP requests, as well as input handling. Furthermore, it provides a variety of functions for matching and validating data, which can help you to identify vulnerabilities with greater accuracy and effectiveness.
+### 5. Quick and Easy Installation
+Installing Lotus is a simple process, whether you choose to compile from source or download pre-built binaries. Full documentation is provided to guide you through installation and usage.
 
-- Active Development
+### 6. Community Collaboration
+We encourage community contributions! Share feedback, report issues, or suggest improvements through our [GitHub Issues](https://github.com/BugBlocker/lotus/issues) page, or connect with the community on our [Discord server](https://discord.gg/nBYDPTzjSq).
 
-    Lotus is an open-source project that is actively maintained, This means that you can rely on ongoing support and updates to ensure that Lotus remains an effective tool for web security testing.
+## Features of Lotus Scripts
 
-- Easy Installation
+Lotus scripts provide a variety of powerful capabilities for web security testing, including:
 
-    Installing Lotus is quick and easy, and can be done using the source code or binary file suitable for your operating system. Additionally, Lotus provides comprehensive documentation to help you get started with using the tool.
+- **Regex Matching:** Advanced regex API with full support for all regex options.
+- **String Matching:** Simple and efficient string matching functions.
+- **Multi-Threading:** Two threading managers for optimal scanning, including race condition detection and fast parameter scanning.
+- **URL Parsing:** Extract parameters and set payloads for URL parsing with ease.
+- **HTML Parsing/Searching:** CSS selector functions and pattern generation for HTML analysis.
+- **OS Utilities:** Access various OS utilities like file reading, logging, path management, and thread sleeping.
+- **HTTP Requests:** Send HTTP requests with all methods and custom headers, including multipart requests.
+- **Encoding/Decoding:** Built-in functions for encoding and decoding formats such as base64 and URL encoding.
 
-- Collaboration
+Additionally, with Lua libraries available on LuaRocks, you can further extend Lotus's capabilities for your security testing needs.
 
-    Lotus encourages collaboration and welcomes contributions from the community. If you encounter any issues or have suggestions for improving Lotus, you can reach out to the development team via Github repository issues page or join the [Discord server](https://discord.gg/nBYDPTzjSq).
+## :rocket: Installation Guide
 
+Follow these steps to install Lotus from the source code:
 
-### What Lotus scripts can do
-- Regex Matching: Lotus provides a regex API with all options available for regex matching.
-- Easy String Matching: Lotus has simple and efficient string matching functions.
-- Multi-Threading: Lotus has two threading managers, one with normal threading and the other with callbacks and functions that can scan things like race conditions or scan parameters faster.
-- URL Parsing: Lotus allows you to extract parameters and set payloads for URL parsing.
-- HTML Parsing/Searching: Lotus has CSS selector search functions and can generate CSS selectors patterns.
-- OS Utilities: Lotus provides various OS utilities like file reading, logging, path joining, and sleep functions for the current thread.
-- HTTP Requests: Lotus can send HTTP requests with all available options like multipart, all methods, and custom headers.
-- Encode/Decode: Lotus provides functions for encoding and decoding base64, url, and more.
-
-And with our Lua libraries on LuaRocks, you can do even more. 
-
-
-## :rocket: Installation
-You can install Lotus from the source code by running the following commands:
 ```bash
 $ apt install libssl-dev pkg-config gcc git lua53 liblua5.3-0 liblua5.3-dev -y
 $ cargo install --git=https://github.com/BugBlocker/lotus/
 ```
 
-Before running the command, ensure that you have installed the openssl-dev package. If you encounter any challenges while compiling, please open an issue on our Github repository for assistance. Alternatively, you can download the binary file from [Github Release page](https://github.com/BugBlocker/lotus/releases) suitable for your operating system and run it directly.
-You will then need to download the lua scripts from our [Github Repository](https://github.com/BugBlocker/lotus-scripts) as quick start 
-we provide you a lot of examples and scripts for diffrent cases
-after downloading the report you will have to run the following command
-```
+Ensure you have the `openssl-dev` package installed before running the commands. If you experience any issues during compilation, please open a ticket in our [GitHub repository](https://github.com/BugBlocker/lotus/issues) for assistance.
+
+Alternatively, you can download the appropriate binary from the [GitHub Release page](https://github.com/BugBlocker/lotus/releases) and run it directly on your system.
+
+To get started with example scripts, download the Lua scripts from our [GitHub Repository](https://github.com/BugBlocker/lotus-scripts). After downloading, you can run a test scan using the following command:
+
+```bash
 $ echo http://testphp.vulnweb.com/listproducts.php?cat=1 | lotus scan lotus-scripts/active -o test_out.json -v
 ```
 
+## :book: Documentation
 
-### :book: Documentation
-You can find the documentation in the `docs/*.md` directory of the repository. However, if you prefer a more user-friendly and accessible version, you can visit our web version of the documentation at https://lotus.knas.me.
+Detailed documentation is available in the `docs/*.md` folder of this repository. For a more accessible version, please visit our [online documentation](https://lotus.knas.me).
