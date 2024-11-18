@@ -27,7 +27,6 @@ path = "src/main.rs"
 
 # LUA
 mlua = { version = "0.8" , features=["serialize"]}
-
 tealr = {version="0.9.0-alpha4", features=["mlua", "mlua_async"]} 
 tealr_derive="=0.9.0-alpha4"
 
@@ -39,32 +38,20 @@ lazy_static = "1.4.0"
 # LOGGING & Console
 log = "0.4.17"
 structopt = "0.3.20"
-fern = "0.6.1"
-humantime = "2.1.0"
-chrono = "0.4.22"
-console = "0.15.1"
 atty = "0.2.14"
 indicatif = "0.17.0"
 thiserror = "1.0"
 
 # REGEX AND MATCHES
-regex = "1.7.3"
 scraper = "0.13.0"
 
-# Dirs
-glob = "0.3.0"
-
-# Encoding
-base64 = "0.13.1"
-url-escape = "0.1.1"
-html-escape = "0.2.13"
 
 # HTTP & URLS
 serde_json = "1.0.85"
 serde_urlencoded = "0.7.1"
 serde = { version = "1.0.144", features = ["derive"] }
-multipart = "0.18.0"
-reqwest = { version = "0.11.12", features = ["multipart"] }
+
+slinger = { version = "0.1.2", features = ["serde", "cookie", "charset", "tls", "gzip"] }
 url = "2.2.2"
 
 [profile.release]
