@@ -1,6 +1,5 @@
 use chrono::Local;
-use colored::*;
-use log::{info, warn, error, Record, Level, Metadata};
+use log::{Record, Level, Metadata};
 use std::sync::Once;
 use indicatif::ProgressBar;
 
