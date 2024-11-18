@@ -53,6 +53,10 @@ serde = { version = "1.0.144", features = ["derive"] }
 
 slinger = { version = "0.1.2", features = ["serde", "cookie", "charset", "tls", "gzip"] }
 url = "2.2.2"
+regex = "1.11.1"
+console = "0.15.8"
+chrono = "0.4.38"
+colored = "2.1.0"
 
 [profile.release]
 opt-level = "z"  # Optimize for size.
