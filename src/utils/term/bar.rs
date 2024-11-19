@@ -1,9 +1,6 @@
-use console::{Emoji};
 use indicatif::{ProgressBar, ProgressStyle};
 use std::sync::Mutex;
 
-static SPARKLE: Emoji<'_, '_> = Emoji("✨", "");
-static FIRE: Emoji<'_, '_> = Emoji("🔥", "");
 
 lazy_static::lazy_static! {
     pub static ref GLOBAL_PROGRESS_BAR: Mutex<Option<ProgressBar>> = Mutex::new(None);

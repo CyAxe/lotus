@@ -13,5 +13,7 @@
 // and limitations under the License.
 //
 pub mod utils;
+pub mod lua;
+pub mod scope;
 
 pub fn lib(){}

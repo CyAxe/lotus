@@ -6,6 +6,7 @@ use utils::term::{
 use utils::net::requester;
 use std::thread;
 use std::time::Duration;
+use lotus::lua::engine;
 
 
 #[tokio::main]
@@ -20,11 +21,10 @@ async fn main() {
 
     if let Some(ref pb) = *GLOBAL_PROGRESS_BAR.lock().unwrap() {
         for i in 0..=100 {
-            let res = req.get("http://google.com",Some(requester::RequestOptions::default())).await.unwrap();
-            log::info!("Sent {}", res.status_code().as_str());
             pb.set_message(format!("Processing item {}", i));
+            engine::tester();
             pb.inc(1);
-            thread::sleep(Duration::from_millis(50));
+            //thread::sleep(Duration::from_millis(50));
         }
         pb.finish_with_message("Process completed successfully.");
     }
