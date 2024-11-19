@@ -1,8 +1,9 @@
-mod cli;
-use cli::term::{
+mod utils;
+use utils::term::{
     logger::init_logger,
     bar::{ProgressManager, GLOBAL_PROGRESS_BAR}
 };
+use utils::net::requester;
 use std::thread;
 use std::time::Duration;
 

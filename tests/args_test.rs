@@ -1,7 +1,7 @@
 
 #[cfg(test)]
 mod tests {
-    pub use lotus::cli::args::{parse_timeout, parse_proxy, Cli};
+    pub use lotus::utils::args::{parse_timeout, parse_proxy, Cli};
     use structopt::StructOpt;
     use std::path::PathBuf;
 
