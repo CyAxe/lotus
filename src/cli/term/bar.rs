@@ -1,7 +1,16 @@
+use console::{Emoji};
 use indicatif::{ProgressBar, ProgressStyle};
+use std::sync::Mutex;
+
+static SPARKLE: Emoji<'_, '_> = Emoji("✨", "");
+static FIRE: Emoji<'_, '_> = Emoji("🔥", "");
+
+lazy_static::lazy_static! {
+    pub static ref GLOBAL_PROGRESS_BAR: Mutex<Option<ProgressBar>> = Mutex::new(None);
+}
 
 pub struct ProgressManager {
-    progress_bar: ProgressBar,
+    pub progress_bar: ProgressBar,
 }
 
 impl ProgressManager {
@@ -14,6 +23,7 @@ impl ProgressManager {
                 .progress_chars("#>-"),
         );
         pb.set_message(message.into());
+        *GLOBAL_PROGRESS_BAR.lock().unwrap() = Some(pb.clone());
         ProgressManager { progress_bar: pb }
     }
 

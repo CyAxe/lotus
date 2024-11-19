@@ -1,9 +1,11 @@
 use chrono::Local;
-use log::{Record, Level, Metadata};
-use std::sync::Once;
+use colored::*;
+use log::{info, warn, error, Record, Level, Metadata};
+use std::sync::{Once, Mutex};
 use indicatif::ProgressBar;
 
 static INIT: Once = Once::new();
+static GLOBAL_PROGRESS_BAR: Mutex<Option<ProgressBar>> = Mutex::new(None);
 
 pub struct RichLogger;
 
@@ -15,23 +17,29 @@ impl log::Log for RichLogger {
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             let time = Local::now().format("%Y-%m-%d %H:%M:%S");
-            let message = match record.level() {
-                Level::Info => format!("{} {}", time.to_string(), record.args().to_string()),
-                Level::Warn => format!("{} {}", time.to_string(), record.args().to_string()),
-                Level::Error => format!("{} {}", time.to_string(), record.args().to_string()),
-                _ => format!("{} {}", time.to_string(), record.args().to_string())
+            let log_level = match record.level() {
+                Level::Info => "INFO".bright_green(),
+                Level::Warn => "WARN".bright_yellow(),
+                Level::Error => "ERROR".bright_red(),
+                _ => "LOG".normal(),
             };
+            let formatted_message = format!("[{}] [{}] {}", time.to_string().bright_blue(), log_level, record.args());
 
-            let progress_bar = ProgressBar::new_spinner();
-            progress_bar.println(message);
+            let mut progress_bar = GLOBAL_PROGRESS_BAR.lock().unwrap();
+            if let Some(ref pb) = *progress_bar {
+                pb.println(formatted_message);
+            } else {
+                println!("{}", formatted_message);
+            }
         }
     }
 
     fn flush(&self) {}
 }
 
-pub fn init_logger() {
+pub fn init_logger(progress_bar: ProgressBar) {
     INIT.call_once(|| {
+        *GLOBAL_PROGRESS_BAR.lock().unwrap() = Some(progress_bar);
         log::set_logger(&RichLogger).unwrap();
         log::set_max_level(log::LevelFilter::Info);
     });
@@ -57,4 +65,3 @@ macro_rules! log_error {
         log::error!($($arg)*);
     })
 }
-
