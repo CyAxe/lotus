@@ -7,8 +7,11 @@ use utils::net::requester;
 use std::thread;
 use std::time::Duration;
 
-fn main() {
+
+#[tokio::main]
+async fn main() {
     let progress_manager = ProgressManager::new(100, "Initializing...");
+    let req = requester::Requester::new(requester::RequestOptions::default()).unwrap();
     init_logger(progress_manager.progress_bar);
 
     log_info!("Starting the process...");
@@ -17,6 +20,8 @@ fn main() {
 
     if let Some(ref pb) = *GLOBAL_PROGRESS_BAR.lock().unwrap() {
         for i in 0..=100 {
+            let res = req.get("http://google.com",Some(requester::RequestOptions::default())).await.unwrap();
+            log::info!("Sent {}", res.status_code().as_str());
             pb.set_message(format!("Processing item {}", i));
             pb.inc(1);
             thread::sleep(Duration::from_millis(50));
