@@ -14,10 +14,10 @@
 
 pub mod cli;
 pub mod lua;
+pub mod utils;
 mod model;
 
 use cli::{
-    bar::{show_msg, MessageLevel, BAR},
     errors::CliErrors,
     input::load_scripts::valid_scripts,
 };

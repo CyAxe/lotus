@@ -1,13 +1,13 @@
 use crate::cli::args::Opts;
 use crate::cli::input::parse_requests::FullRequest;
 use crate::cli::input::{get_stdin_input, get_target_hosts, get_target_paths};
-use crate::cli::logger::init_log;
 use crate::lua::parsing::files::filename_to_string;
-use crate::{show_msg, Lotus, MessageLevel, RequestOpts};
+use crate::{Lotus, RequestOpts};
 use serde_json::Value;
 use std::sync::{Arc, Mutex};
 use structopt::StructOpt;
 use url::Url;
+
 #[path = "input_handler.rs"]
 mod input_handler;
 use input_handler::custom_input_lua;
@@ -48,7 +48,6 @@ pub fn args_scan() -> ScanArgs {
     ) = match Opts::from_args() {
         Opts::SCAN(url_opts) => {
             // setup logger
-            init_log(url_opts.log).unwrap();
             let req_opts = RequestOpts {
                 headers: url_opts.headers,
                 proxy: url_opts.proxy,
@@ -66,7 +65,7 @@ pub fn args_scan() -> ScanArgs {
             let input_data = if let Some(urls_file) = url_opts.urls {
                 let read_file = filename_to_string(urls_file.to_str().unwrap());
                 if let Err(..) = read_file {
-                    show_msg("Cannot Read the urls file", MessageLevel::Error);
+                    log::error!("Cannot Read the urls file");
                     std::process::exit(1);
                 }
                 read_file
@@ -78,7 +77,7 @@ pub fn args_scan() -> ScanArgs {
                 match get_stdin_input() {
                     Ok(input_data) => input_data,
                     Err(..) => {
-                        show_msg("No input in Stdin", MessageLevel::Error);
+                        log::error!("No input in Stdin");
                         std::process::exit(1);
                     }
                 }
@@ -86,9 +85,8 @@ pub fn args_scan() -> ScanArgs {
             let input_handler = if let Some(custom_input) = url_opts.input_handler {
                 let lua_code = filename_to_string(custom_input.to_str().unwrap());
                 if let Err(err) = lua_code {
-                    show_msg(
-                        &format!("Unable to read custom input lua script: {}", err),
-                        MessageLevel::Error,
+                    log::error!(
+                        "{}",&format!("Unable to read custom input lua script: {}", err),
                     );
                     vec![]
                 } else {
@@ -96,7 +94,7 @@ pub fn args_scan() -> ScanArgs {
                     if let Ok(lua_output) = lua_output {
                         lua_output
                     } else {
-                        show_msg(&format!("{}", lua_output.unwrap_err()), MessageLevel::Error);
+                        log::error!("{}",&format!("{}", lua_output.unwrap_err()));
                         vec![]
                     }
                 }
@@ -122,12 +120,12 @@ pub fn args_scan() -> ScanArgs {
                             parsed_request
                         }
                         Err(err) => {
-                            show_msg(
+                            log::error!(
+                                "{}",
                                 &format!(
                                     "Not Valid JSON Data for Http Request parser: {}",
                                     err.to_string()
                                 ),
-                                MessageLevel::Error,
                             );
                             std::process::exit(0);
                         }
@@ -137,9 +135,9 @@ pub fn args_scan() -> ScanArgs {
                         paths = match get_target_paths(urls.clone()) {
                             Ok(paths) => paths,
                             Err(err) => {
-                                show_msg(
+                                log::info!(
+                                    "{}",
                                     &format!("Failed to get target paths: {}", err),
-                                    MessageLevel::Error,
                                 );
                                 vec![]
                             }
@@ -159,9 +157,9 @@ pub fn args_scan() -> ScanArgs {
                     paths = match get_target_paths(urls.clone()) {
                         Ok(paths) => paths,
                         Err(err) => {
-                            show_msg(
+                            log::error!(
+                                "{}",
                                 &format!("Failed to get target paths: {}", err),
-                                MessageLevel::Error,
                             );
                             vec![]
                         }

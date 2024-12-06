@@ -1,7 +1,6 @@
 use crate::cli::input::parse_requests::FullRequest;
 use crate::lua::runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT};
 use crate::{
-    cli::bar::BAR,
     lua::{
         model::{LuaOptions, LuaRunTime},
         network::http::Sender,
@@ -9,6 +8,7 @@ use crate::{
     },
     RequestOpts, ScanTypes,
 };
+use crate::utils::bar::GLOBAL_PROGRESS_BAR;
 use mlua::{Lua, LuaSerdeExt};
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -121,9 +121,9 @@ impl LuaLoader {
         if let Err(e) = run_code {
             let error_msg = format!("An error occurred while running the script:\n\n{}\n\nPlease check the script code and try again.", e);
             {
-                let bar = BAR.lock().unwrap();
+                let bar = GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap();
                 bar.inc(1);
-                bar.println(error_msg);
+                log::error!("{}",error_msg);
             };
             return Err(e);
         }
@@ -131,7 +131,6 @@ impl LuaLoader {
         if let Err(e) = self.execute_main_function(&lua, &lua_opts.script_dir).await {
             let msg = format!("[{}] Script Error: {:?}", lua_opts.script_dir, e);
             log::error!("{}", msg);
-            {BAR.lock().unwrap().println(msg)};
         }
 
         Ok(())
@@ -143,7 +142,6 @@ impl LuaLoader {
         if main_func.is_err() {
             let msg = format!("The script in directory [{}] does not contain a main function.\n\nThe main function is required to execute the script. Please make sure that the script contains a main function and try again.", script_dir);
             log::error!("{}", msg);
-            {BAR.lock().unwrap().println(msg)};
             return Ok(());
         }
 
@@ -153,12 +151,11 @@ impl LuaLoader {
             .call_async::<_, mlua::Value>(mlua::Value::Nil)
             .await;
 
-        {BAR.lock().unwrap().inc(1)};
+        {GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().inc(1)};
 
         if let Err(e) = run_scan {
             let msg = format!("[{}] Script Error: {:?}", script_dir, e);
             log::error!("{}", msg);
-            {BAR.lock().unwrap().println(msg)};
         } else {
             self.process_script_report(lua, script_dir).await;
         }

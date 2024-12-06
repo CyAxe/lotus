@@ -12,18 +12,16 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
+use indicatif::ProgressBar;
 use lotus::{
     cli::{
         args::Opts,
-        bar::{create_progress, show_msg, MessageLevel, BAR},
         input::load_scripts::get_scripts,
         startup::{new::new_args, scan::scan::args_scan},
-    },
-    lua::{
+    }, lua::{
         network::http::{REQUESTS_LIMIT, SLEEP_TIME, VERBOSE_MODE},
         threads::runner,
-    },
-    ScanTypes,
+    }, utils::{bar::GLOBAL_PROGRESS_BAR, logger::init_logger}, ScanTypes
 };
 use structopt::StructOpt;
 
@@ -43,42 +41,42 @@ async fn run_scan() -> Result<(), std::io::Error> {
     let opts = args_scan();
     let scripts = get_scripts(opts.lotus_obj.script_path.clone());
     let fuzz_workers = opts.fuzz_workers;
-    show_msg(
+    log::info!(
+        "{}",
         &format!("Number of URLs: {}", opts.target_data.urls.len()),
-        MessageLevel::Info,
     );
 
-    show_msg(
+    log::info!(
+        "{}",
         &format!("Number of hosts: {}", opts.target_data.hosts.len()),
-        MessageLevel::Info,
     );
 
-    show_msg(
+    log::info!(
+        "{}",
         &format!(
             "Number of HTTP MSGS: {}",
             opts.target_data.parse_requests.len()
         ),
-        MessageLevel::Info,
     );
-    show_msg(
+    log::info!(
+        "{}",
         &format!("Number of paths: {}", opts.target_data.paths.len()),
-        MessageLevel::Info,
     );
 
-    show_msg(
+    log::info!(
+        "{}",
         &format!(
             "Number of custom entries: {}",
             opts.target_data.custom.len()
         ),
-        MessageLevel::Info,
     );
     // Open two threads for URL/HOST scanning
-    create_progress(
+    init_logger(ProgressBar::new(
         (opts.target_data.hosts.len()
             + opts.target_data.paths.len()
             + opts.target_data.custom.len()
             + opts.target_data.urls.len() * scripts.len()) as u64,
-    );
+    ));
     {
         *SLEEP_TIME.lock().await = opts.delay;
         *REQUESTS_LIMIT.lock().await = opts.requests_limit;
@@ -127,7 +125,7 @@ async fn run_scan() -> Result<(), std::io::Error> {
         ),
     ];
     runner::scan_futures(scan_futures, 4, None).await;
-    BAR.lock().unwrap().finish();
+    GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().finish();
     Ok(())
 }
 

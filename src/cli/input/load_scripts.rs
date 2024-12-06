@@ -3,7 +3,7 @@ use crate::lua::{
     model::LuaRunTime,
     runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT},
 };
-use crate::{filename_to_string, show_msg, CliErrors, MessageLevel};
+use crate::{filename_to_string, CliErrors};
 use glob::glob;
 use log::error;
 use mlua::{ExternalResult, Lua};
@@ -21,9 +21,9 @@ pub fn get_scripts(script_path: PathBuf) -> Vec<(String, String)> {
         }
         let loaded_scripts = load_scripts(&file_path);
         if loaded_scripts.is_err() {
-            show_msg(
+            log::error!(
+                "{}",
                 &format!("Loading scripts error: {}", loaded_scripts.unwrap_err()),
-                MessageLevel::Error,
             );
             std::process::exit(1);
         }
@@ -114,20 +114,19 @@ pub fn valid_scripts(
                 script_path,
                 code.to_lua_err().unwrap_err()
             );
-            show_msg(log_msg, MessageLevel::Error);
-            log::error!("{}", log_msg);
+            log::error!("{}",log_msg);
         } else {
             log::debug!("LOADING STATUS {:?}", code);
             let global = lua_eng.lua.globals();
             let scan_type = global.get::<_, usize>("SCAN_TYPE".to_string());
             if let Err(..) = scan_type {
-                show_msg(
+                log::error!(
+                    "{}",
                     &format!(
                         "Unvalid Script Type {}: {}",
                         script_path,
                         scan_type.unwrap_err()
                     ),
-                    MessageLevel::Error,
                 );
             } else if scan_type.clone().unwrap() == number_scantype {
                 used_scripts.push((script_code.into(), script_path.into()));

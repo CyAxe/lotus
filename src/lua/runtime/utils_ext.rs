@@ -1,11 +1,9 @@
-use crate::{
-    lua::{
+use crate::lua::{
         model::LuaRunTime,
         parsing::text::ResponseMatcher,
         threads::{LuaThreader, ParamScan},
-    },
-    BAR,
-};
+    };
+use crate::utils::bar::GLOBAL_PROGRESS_BAR;
 use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -65,7 +63,7 @@ impl UtilsEXT for LuaRunTime<'_> {
             "println",
             self.lua
                 .create_function(move |_, msg: String| {
-                    BAR.lock().unwrap().println(msg);
+                    GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().println(msg);
                     Ok(())
                 })
                 .unwrap()
