@@ -10,7 +10,6 @@ use tokio::signal::ctrl_c;
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
-use crate::cli::bar::{show_msg, MessageLevel};
 use crate::ScanTypes;
 
 lazy_static! {
@@ -25,7 +24,7 @@ pub async fn pause_channel() {
     tokio::spawn(async move {
         ctrl_c().await.unwrap();
         if let Err(err) = generate_resume().await {
-            show_msg(&err.to_string(), MessageLevel::Error)
+            log::error!("{}",&err.to_string());
         }
         std::process::exit(130)
     });

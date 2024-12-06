@@ -12,7 +12,7 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use crate::BAR;
+use crate::utils::bar::GLOBAL_PROGRESS_BAR;
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue},
     multipart::{Form, Part},
@@ -150,7 +150,7 @@ impl Sender {
             let mut req_sent = REQUESTS_SENT.lock().await;
             if *req_sent >= req_limit {
                 let sleep_time = *SLEEP_TIME.lock().await;
-                BAR.lock().unwrap().println(format!(
+                GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().println(format!(
                     "The rate limit for requests has been reached. Sleeping for {} seconds...",
                     sleep_time
                 ));
@@ -160,7 +160,7 @@ impl Sender {
                 );
                 std::thread::sleep(Duration::from_secs(sleep_time));
                 *req_sent = 1;
-                {BAR.lock().unwrap().println("Continuing...")};
+                {GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().println("Continuing...")};
                 log::debug!("Resetting req_sent value to 1");
             } else {
                 *req_sent += 1;
@@ -198,7 +198,7 @@ impl Sender {
                 let verbose_mode = *VERBOSE_MODE.lock().await;
                 if verbose_mode {
                     let msg = format!("Sent HTTP request: {}", &url);
-                    {BAR.lock().unwrap().println(&msg)};
+                    {GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().println(&msg)};
                     log::debug!("{}", msg);
                 }
 
