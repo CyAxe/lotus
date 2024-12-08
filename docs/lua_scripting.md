@@ -123,15 +123,10 @@ This combination provides exceptional speed and reliability, empowering develope
 
 ---
 
-## ❓ FAQ
+❓ FAQ
 
-**1. How can I add more functionality?**
-Install libraries from [luarocks.org](https://luarocks.org/) or request features on [GitHub](https://github.com).
+1. How can I add more functionality?
+Install libraries from luarocks.org or request features on GitHub.
 
-**2. Is Lotus free for commercial use?**
-Yes, but changes to core code must be shared under GPLv2. For special licensing, you can email me at `knassar702@gmail.com`.
-
----
-
-Feel free to enhance your scripts, experiment with features, and share your feedback! 🚀
-
+2. Is Lotus free for commercial use?
+Yes, Lotus is licensed under the Apache License 2.0, allowing free use, modification, and distribution, including for commercial purposes. Contributions and attributions are welcomed! For inquiries, you can email me at knassar702@gmail.com.
