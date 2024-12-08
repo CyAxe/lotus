@@ -118,121 +118,122 @@ fn get_env_vars(env_vars_json: &str) -> Result<Value, serde_json::Error> {
 
 #[derive(Debug, StructOpt)]
 pub struct UrlsOpts {
-    /// Maximum number of allowed HTTP redirects.
-    #[structopt(short, long, default_value = "10", help = "Number of allowed HTTP redirects")]
+    /// The maximum number of HTTP redirects allowed during scanning.
+    #[structopt(short, long, default_value = "10", help = "Set the maximum number of HTTP redirects")]
     pub redirects: u32,
 
-    /// Number of workers for fuzzing processes.
-    #[structopt(long = "fuzz-workers", default_value = "15", help = "Number of fuzzing workers")]
+    /// Number of concurrent fuzzing workers to use.
+    #[structopt(long = "fuzz-workers", default_value = "15", help = "Specify the number of fuzzing workers")]
     pub fuzz_workers: usize,
 
-    /// Scan content types to handle.
+    /// Types of content to scan, specified as a comma-separated list.
     #[structopt(
         short,
         long = "content-type",
         default_value = "url,body,headers",
-        parse(try_from_str = parse_scan_content_type)
+        parse(try_from_str = parse_scan_content_type),
+        help = "Set content types for scanning (e.g., url, body, headers)"
     )]
     pub _content_type: (),
 
-    /// Number of concurrent workers.
-    #[structopt(short = "w", long = "workers", default_value = "10", help = "Number of workers")]
+    /// Number of worker threads for concurrent processing.
+    #[structopt(short = "w", long = "workers", default_value = "10", help = "Set the number of worker threads")]
     pub workers: usize,
 
-    /// Enable verbose mode to show request details.
-    #[structopt(short = "v", long = "verbose", help = "Enable verbose mode")]
+    /// Enable verbose mode to display detailed request information.
+    #[structopt(short = "v", long = "verbose", help = "Enable detailed output for debugging")]
     pub verbose: bool,
 
-    /// Number of scripts to execute concurrently for each URL.
+    /// Maximum number of scripts to execute concurrently per URL.
     #[structopt(
         short = "sw",
         long = "scripts-worker",
         default_value = "10",
-        help = "Number of concurrent scripts per URL"
+        help = "Specify the number of concurrent scripts per URL"
     )]
     pub scripts_workers: usize,
 
-    /// Connection timeout in seconds.
-    #[structopt(short = "t", long = "timeout", default_value = "10", help = "Connection timeout")]
+    /// Timeout for connections, specified in seconds.
+    #[structopt(short = "t", long = "timeout", default_value = "10", help = "Set the connection timeout in seconds")]
     pub timeout: u64,
 
-    /// Path to the script directory.
-    #[structopt(parse(from_os_str), help = "Path to the script directory")]
+    /// Path to the directory containing scan scripts.
+    #[structopt(parse(from_os_str), help = "Specify the directory containing scan scripts")]
     pub script_path: PathBuf,
 
-    /// Output file for the results; defaults to stdout if not specified.
+    /// Output file for storing scan results; defaults to stdout if not specified.
     #[structopt(
         short = "o",
         long = "output",
         parse(from_os_str),
-        help = "Output JSON file for results"
+        help = "Specify a file to save scan results in JSON format"
     )]
     pub output: Option<PathBuf>,
 
-    /// Proxy server to use for all connections.
-    #[structopt(short = "p", long = "proxy", help = "HTTP proxy server")]
+    /// Proxy server to route all HTTP connections through.
+    #[structopt(short = "p", long = "proxy", help = "Set an HTTP proxy server for connections")]
     pub proxy: Option<String>,
 
-    /// Limit for the number of requests.
-    #[structopt(long = "requests-limit", default_value = "2000", help = "Request limit")]
+    /// Limit the total number of requests sent during the scan.
+    #[structopt(long = "requests-limit", default_value = "2000", help = "Set a limit for the total number of requests")]
     pub requests_limit: i32,
 
-    /// Delay between requests in seconds.
-    #[structopt(long = "delay", default_value = "5", help = "Delay between requests")]
+    /// Delay between consecutive requests, specified in seconds.
+    #[structopt(long = "delay", default_value = "5", help = "Set a delay between each request in seconds")]
     pub delay: u64,
 
-    /// Path to the log file for debugging.
-    #[structopt(long = "log", help = "Path to save logs for debugging")]
+    /// File to log detailed debugging information.
+    #[structopt(long = "log", help = "Specify a log file for debugging information")]
     pub log: Option<PathBuf>,
 
-    /// Path to the file containing URLs to scan.
+    /// Path to a file containing a list of URLs to scan.
     #[structopt(
         long = "urls",
         parse(from_os_str),
-        help = "File containing URLs to scan"
+        help = "Provide a file with a list of URLs to scan"
     )]
     pub urls: Option<PathBuf>,
 
-    /// Custom headers as a JSON string.
+    /// Custom HTTP headers in JSON format.
     #[structopt(
         long = "headers",
         parse(try_from_str = parse_headers),
         required = false,
         default_value = "{}",
-        help = "Custom HTTP headers in JSON format"
+        help = "Set custom HTTP headers in JSON format"
     )]
     pub headers: HeaderMap,
 
-    /// Exit after a specified number of script errors.
+    /// Exit the scan after encountering a specified number of errors.
     #[structopt(
         long = "exit-after-errors",
         default_value = "2000",
-        help = "Exit after X number of script errors"
+        help = "Stop the scan after a specified number of errors"
     )]
     pub exit_after: i32,
 
-    /// Global environment variables for scripts.
+    /// Global environment variables for the scan scripts in JSON format.
     #[structopt(
         long = "env-vars",
         parse(try_from_str = get_env_vars),
         default_value = "{}",
-        help = "Global environment variables for scripts in JSON format"
+        help = "Define global environment variables for scripts in JSON format"
     )]
     pub env_vars: Value,
 
-    /// Custom input handler script.
+    /// Custom Lua script for handling input.
     #[structopt(
         long = "input-handler",
         parse(from_os_str),
-        help = "Custom input handler script"
+        help = "Specify a custom Lua script to handle input processing"
     )]
     pub input_handler: Option<PathBuf>,
 
-    /// Resume scan using a configuration file from the previous run.
+    /// Resume the scan using a previously generated configuration file.
     #[structopt(
         long = "resume",
         parse(try_from_str = read_resume_file),
-        help = "Resume scan using a resume configuration file"
+        help = "Resume the scan using a configuration file from a previous run"
     )]
     _resume: Option<()>,
 }
