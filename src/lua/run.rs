@@ -1,5 +1,6 @@
 use crate::cli::input::parse_requests::FullRequest;
 use crate::lua::runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT};
+use crate::utils::bar::GLOBAL_PROGRESS_BAR;
 use crate::{
     lua::{
         model::{LuaOptions, LuaRunTime},
@@ -8,7 +9,6 @@ use crate::{
     },
     RequestOpts, ScanTypes,
 };
-use crate::utils::bar::GLOBAL_PROGRESS_BAR;
 use mlua::{Lua, LuaSerdeExt};
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -123,7 +123,7 @@ impl LuaLoader {
             {
                 let bar = GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap();
                 bar.inc(1);
-                log::error!("{}",error_msg);
+                log::error!("{}", error_msg);
             };
             return Err(e);
         }
@@ -151,7 +151,9 @@ impl LuaLoader {
             .call_async::<_, mlua::Value>(mlua::Value::Nil)
             .await;
 
-        {GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().inc(1)};
+        {
+            GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().inc(1)
+        };
 
         if let Err(e) = run_scan {
             let msg = format!("[{}] Script Error: {:?}", script_dir, e);

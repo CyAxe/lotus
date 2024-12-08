@@ -14,13 +14,10 @@
 
 pub mod cli;
 pub mod lua;
-pub mod utils;
 mod model;
+pub mod utils;
 
-use cli::{
-    errors::CliErrors,
-    input::load_scripts::valid_scripts,
-};
+use cli::{errors::CliErrors, input::load_scripts::valid_scripts};
 use lua::{
     model::LuaOptions,
     parsing::files::filename_to_string,

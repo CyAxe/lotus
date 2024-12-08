@@ -12,16 +12,21 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use indicatif::ProgressBar;
 use lotus::{
     cli::{
         args::Opts,
         input::load_scripts::get_scripts,
         startup::{new::new_args, scan::scan::args_scan},
-    }, lua::{
+    },
+    lua::{
         network::http::{REQUESTS_LIMIT, SLEEP_TIME, VERBOSE_MODE},
         threads::runner,
-    }, utils::{bar::GLOBAL_PROGRESS_BAR, logger::init_logger}, ScanTypes
+    },
+    utils::{
+        bar::{ProgressManager, GLOBAL_PROGRESS_BAR},
+        logger::init_logger,
+    },
+    ScanTypes,
 };
 use structopt::StructOpt;
 
@@ -71,12 +76,14 @@ async fn run_scan() -> Result<(), std::io::Error> {
         ),
     );
     // Open two threads for URL/HOST scanning
-    init_logger(ProgressBar::new(
+    let prog = ProgressManager::new(
         (opts.target_data.hosts.len()
             + opts.target_data.paths.len()
             + opts.target_data.custom.len()
             + opts.target_data.urls.len() * scripts.len()) as u64,
-    ));
+        "Started ..",
+    );
+    init_logger(prog.progress_bar);
     {
         *SLEEP_TIME.lock().await = opts.delay;
         *REQUESTS_LIMIT.lock().await = opts.requests_limit;
@@ -125,7 +132,12 @@ async fn run_scan() -> Result<(), std::io::Error> {
         ),
     ];
     runner::scan_futures(scan_futures, 4, None).await;
-    GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().finish();
+    GLOBAL_PROGRESS_BAR
+        .lock()
+        .unwrap()
+        .clone()
+        .unwrap()
+        .finish();
     Ok(())
 }
 

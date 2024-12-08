@@ -24,7 +24,7 @@ pub async fn pause_channel() {
     tokio::spawn(async move {
         ctrl_c().await.unwrap();
         if let Err(err) = generate_resume().await {
-            log::error!("{}",&err.to_string());
+            log::error!("{}", &err.to_string());
         }
         std::process::exit(130)
     });

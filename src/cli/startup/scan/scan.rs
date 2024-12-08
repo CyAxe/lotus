@@ -86,7 +86,8 @@ pub fn args_scan() -> ScanArgs {
                 let lua_code = filename_to_string(custom_input.to_str().unwrap());
                 if let Err(err) = lua_code {
                     log::error!(
-                        "{}",&format!("Unable to read custom input lua script: {}", err),
+                        "{}",
+                        &format!("Unable to read custom input lua script: {}", err),
                     );
                     vec![]
                 } else {
@@ -94,7 +95,7 @@ pub fn args_scan() -> ScanArgs {
                     if let Ok(lua_output) = lua_output {
                         lua_output
                     } else {
-                        log::error!("{}",&format!("{}", lua_output.unwrap_err()));
+                        log::error!("{}", &format!("{}", lua_output.unwrap_err()));
                         vec![]
                     }
                 }
@@ -135,10 +136,7 @@ pub fn args_scan() -> ScanArgs {
                         paths = match get_target_paths(urls.clone()) {
                             Ok(paths) => paths,
                             Err(err) => {
-                                log::info!(
-                                    "{}",
-                                    &format!("Failed to get target paths: {}", err),
-                                );
+                                log::info!("{}", &format!("Failed to get target paths: {}", err),);
                                 vec![]
                             }
                         };
@@ -157,10 +155,7 @@ pub fn args_scan() -> ScanArgs {
                     paths = match get_target_paths(urls.clone()) {
                         Ok(paths) => paths,
                         Err(err) => {
-                            log::error!(
-                                "{}",
-                                &format!("Failed to get target paths: {}", err),
-                            );
+                            log::error!("{}", &format!("Failed to get target paths: {}", err),);
                             vec![]
                         }
                     };

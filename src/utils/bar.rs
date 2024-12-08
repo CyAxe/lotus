@@ -19,7 +19,6 @@
 use indicatif::{ProgressBar, ProgressStyle};
 use std::sync::Mutex;
 
-
 lazy_static::lazy_static! {
     pub static ref GLOBAL_PROGRESS_BAR: Mutex<Option<ProgressBar>> = Mutex::new(None);
 }

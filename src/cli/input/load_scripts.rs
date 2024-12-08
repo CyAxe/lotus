@@ -114,7 +114,7 @@ pub fn valid_scripts(
                 script_path,
                 code.to_lua_err().unwrap_err()
             );
-            log::error!("{}",log_msg);
+            log::error!("{}", log_msg);
         } else {
             log::debug!("LOADING STATUS {:?}", code);
             let global = lua_eng.lua.globals();

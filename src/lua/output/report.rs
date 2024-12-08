@@ -84,7 +84,12 @@ impl UserData for AllReports {
         methods.add_method_mut("add", |c_lua, this, the_report: mlua::Value| {
             let the_report = c_lua.from_value(the_report).unwrap();
             {
-                GLOBAL_PROGRESS_BAR.lock().unwrap().clone().unwrap().println(format_report(&the_report));
+                GLOBAL_PROGRESS_BAR
+                    .lock()
+                    .unwrap()
+                    .clone()
+                    .unwrap()
+                    .println(format_report(&the_report));
             };
             this.reports.push(the_report);
             Ok(())

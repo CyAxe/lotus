@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
+use crate::utils::bar::GLOBAL_PROGRESS_BAR;
 use chrono::Local;
 use colored::*;
-use log::{Record, Level, Metadata};
-use std::sync::Once;
 use indicatif::ProgressBar;
-use crate::utils::bar::GLOBAL_PROGRESS_BAR;
+use log::{Level, Metadata, Record};
+use std::sync::Once;
 
 static INIT: Once = Once::new();
 
@@ -41,7 +41,12 @@ impl log::Log for RichLogger {
                 Level::Error => "ERROR".bright_red(),
                 _ => "LOG".normal(),
             };
-            let formatted_message = format!("[{}] [{}] {}", time.to_string().bright_blue(), log_level, record.args());
+            let formatted_message = format!(
+                "[{}] [{}] {}",
+                time.to_string().bright_blue(),
+                log_level,
+                record.args()
+            );
 
             let progress_bar = GLOBAL_PROGRESS_BAR.lock().unwrap();
             if let Some(ref pb) = *progress_bar {

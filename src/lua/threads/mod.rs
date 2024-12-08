@@ -87,7 +87,8 @@ impl UserData for ParamScan {
                                             .unwrap();
                                     }
                                 }
-                            }.await;
+                            }
+                            .await;
                         }
                     })
                     .buffer_unordered(workers)
