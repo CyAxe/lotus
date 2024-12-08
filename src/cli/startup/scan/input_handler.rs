@@ -27,7 +27,7 @@ pub fn custom_input_lua(
     // Register custom utility functions for the Lua runtime.
     lua_env.add_printfunc();
     lua_env.add_matchingfunc();
-    lua_env.add_httpfuncs(None, None);
+    let _ = lua_env.add_httpfuncs(None, None);
 
     // Load and execute the provided Lua code to define the `parse_input` function.
     log::debug!("Loading Input handler lua code");

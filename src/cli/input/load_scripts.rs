@@ -79,7 +79,7 @@ pub fn valid_scripts(
     let lua_eng = LuaRunTime {
         lua: unsafe { &Lua::unsafe_new_with(mlua::StdLib::ALL_SAFE, mlua::LuaOptions::new()) },
     };
-    lua_eng.add_encode_function();
+    let _ = lua_eng.add_encode_function();
     lua_eng.add_printfunc();
     lua_eng.add_matchingfunc();
     lua_eng.add_threadsfunc();
