@@ -36,6 +36,5 @@ local function scan_cve(target_path)
 end
 
 function main() 
-    log_info("FFF")
     scan_cve("web_shell_cmd.gch")
 end
