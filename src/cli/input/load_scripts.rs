@@ -84,21 +84,21 @@ pub fn valid_scripts(
     lua_eng.add_matchingfunc();
     lua_eng.add_threadsfunc();
     if test_target_host.is_some() {
-        lua_eng.add_httpfuncs(None, None);
+        let _ = lua_eng.add_httpfuncs(None, None);
         lua_eng
             .lua
             .globals()
             .set("INPUT_DATA", "example.com")
             .unwrap();
     } else if test_http_msg.is_some() {
-        lua_eng.add_httpfuncs(None, test_http_msg)
+        let _ = lua_eng.add_httpfuncs(None, test_http_msg);
     } else {
         lua_eng
             .lua
             .globals()
             .set("INPUT_DATA", Vec::<&str>::new())
             .unwrap();
-        lua_eng.add_httpfuncs(test_target_url, None);
+        let _ = lua_eng.add_httpfuncs(test_target_url, None);
     }
     let mut used_scripts: Vec<(String, String)> = Vec::new();
     scripts.iter().for_each(|(script_code, script_path)| {

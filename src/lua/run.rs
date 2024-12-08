@@ -1,5 +1,5 @@
 use crate::cli::input::parse_requests::FullRequest;
-use crate::lua::runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT};
+use crate::lua::runtime::{encode_ext::EncodeEXT, utils_ext::UtilsEXT};
 use crate::utils::bar::GLOBAL_PROGRESS_BAR;
 use crate::{
     lua::{
@@ -55,6 +55,7 @@ impl LuaLoader {
 
     fn set_lua(&self, target_url: Option<&str>, fullhttp_msg: Option<FullRequest>, lua: &Lua) {
         let lua_eng = LuaRunTime { lua };
+        use crate::lua::runtime::http_ext::HTTPEXT;
         lua_eng.add_httpfuncs(target_url, fullhttp_msg);
         lua_eng.add_encode_function();
         lua_eng.add_printfunc();
