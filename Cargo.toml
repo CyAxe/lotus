@@ -5,7 +5,7 @@ edition = "2021"
 license = "GPLv2"
 keywords = ["security", "automation", "bugbounty"]
 categories = ["command-line-utilities"]
-description = "Fast Web Security Scanner written in Rust based on Lua Scripts"
+description = "A high-performance web security scanner built with Rust, powered by LuaJIT scripting for unmatched flexibility and speed."
 authors = ["Khaled Nassar <knassar702@gmail.com>"]
 readme = "README.md"
 

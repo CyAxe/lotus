@@ -141,7 +141,7 @@ impl UtilsEXT for LuaRunTime<'_> {
     fn add_matchingfunc(&self) {
         set_nested_function!(
             self.lua.globals(),
-            "Matcher",
+            "matcher",
             ResponseMatcher {
                 ignore_whitespace: false,
                 case_insensitive: false,
