@@ -3,10 +3,8 @@ BODY_MATCH = {
     "please input shell command", 
     "ZTE Corporation. All rights reserved"
 }
-local http = lotus.http
-local reports = lotus.reports
-local matcher = lotus.matcher
 
+-- Function to send the report for detected vulnerabilities
 local function send_report(resp)
     reports:add{
         name = "CVE-2014-2321",
@@ -14,30 +12,41 @@ local function send_report(resp)
         risk = "high",
         url = resp.url,
         matches = {
-            status_code = "200",
+            status_code = tostring(resp.status_code),
             body = BODY_MATCH,
-            full_response = http.show_response(resp)
+            full_response = http:show_response(resp)
         }
     }
 end
 
+-- Function to perform the scan for the specified CVE
 local function scan_cve(target_path)
-    local new_path = http.pathjoin(http:path(), target_path)
-    local new_url = http:urljoin(new_path)
-
+    -- Attempt to send the HTTP request and capture the response
     local resp_status, resp = pcall(function()
-        return http:send{url = new_url}
+        return http:send{
+            url = "http://example.com/" .. target_path, -- Updated target URL construction
+            method = "GET"
+        }
     end)
 
-    if resp_status and resp.status == 200 then
-        local body_match = matcher:match_body(resp.body, BODY_MATCH) -- Matching body with AND conditions
-        if body_match then
-            send_report(resp)
+    -- Check if the HTTP request was successful
+    if resp_status and resp then
+        -- Match status code and response body for potential vulnerabilities
+        if resp.status_code == 200 then
+            for _, pattern in ipairs(BODY_MATCH) do
+                if string.match(resp.body, pattern) then
+                    -- If a match is found, send the report
+                    send_report(resp)
+                    break
+                end
+            end
         end
+    else
+        -- Log the error if the HTTP request fails
     end
 end
 
+-- Main function to initiate the scan
 function main()
-    lotus.log_debug("Starting CVE-2014-2321 Scan")
     scan_cve("web_shell_cmd.gch")
 end

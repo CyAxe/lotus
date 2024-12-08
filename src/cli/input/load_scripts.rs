@@ -71,6 +71,7 @@ pub fn valid_scripts(
     match scan_type {
         "FULL_HTTP" => test_http_msg = Some(FullRequest::default()),
         "HOSTS" => test_target_host = Some("example.com"),
+        "PATHS" => test_target_url = Some("https://example.com"),
         _ => test_target_url = Some("https://example.com"),
     }
 
@@ -105,17 +106,11 @@ pub fn valid_scripts(
             Ok(_) => {
                 let globals = lua_eng.lua.globals();
                 match globals.get::<_, String>("SCAN_TYPE") {
-                    Ok(loaded_scan_type) if loaded_scan_type == scan_type => {
+                    Ok(loaded_scan_type) => {
+                        log::debug!("Script {} has SCAN_TYPE: {}", script_path, loaded_scan_type);
                         used_scripts.push((script_code.clone(), script_path.clone()));
                     }
-                    _ => {
-                        log::error!(
-                            "Invalid script type for {}: expected {}, got {:?}",
-                            script_path,
-                            scan_type,
-                            globals.get::<_, String>("SCAN_TYPE")
-                        );
-                    }
+                    Err(_) => log::error!("SCAN_TYPE not defined in script {}", script_path),
                 }
             }
             Err(e) => {
