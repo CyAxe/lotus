@@ -1,12 +1,13 @@
-# Lotus Lua API Documentation
+# 🌟 Lotus Lua API Documentation
 
-Welcome to **Lotus Lua**, a powerful scripting platform for web security automation! This guide introduces you to key features and shows how to write awesome Lua scripts with the latest updates.
+Welcome to **Lotus Lua**, a powerful scripting platform for web security automation! This guide introduces you to key features and demonstrates how to write exceptional Lua scripts with the latest updates. Built on the blazing-fast combination of **LuaJIT** and **Rust**, Lotus ensures unmatched speed and efficiency for your scripting needs.
 
-## Quick Start
+## 🚀 Quick Start
 
-### Example Script
+### 📝 Example Script
+
 ```lua
-SCAN_TYPE = 2 -- Target a full URL with parameters
+SCAN_TYPE = "URLS" -- Target a specific type of scan using its name
 
 function main()
     println("Hello, Lotus!")
@@ -16,17 +17,19 @@ end
 ```
 
 Run your script with:
+
 ```bash
 echo "http://example.com" | lotus scan my_script.lua
 ```
 
 ---
 
-## Key Features
+## 🔑 Key Features
 
+### 🌐 HTTP Requests (`lotus.http:send`)
 
-### HTTP Requests (`http:send`)
-Send HTTP requests directly:
+Effortlessly send HTTP requests:
+
 - **GET Request**:
   ```lua
   local resp = lotus.http:send{url = "https://example.com"}
@@ -35,16 +38,18 @@ Send HTTP requests directly:
 - **POST Request**:
   ```lua
   local resp = lotus.http:send{
-    method = "POST",
-    url = "http://example.com/api",
-    body = '{"key":"value"}',
-    headers = {["Content-Type"] = "application/json"}
+      method = "POST",
+      url = "http://example.com/api",
+      body = '{"key":"value"}',
+      headers = {["Content-Type"] = "application/json"}
   }
   println(resp.status)
   ```
 
-### Encoding Utilities (`lotus.encode`)
-Encode and decode data with ease:
+### ✍️ Encoding Utilities (`lotus.encode`)
+
+Simplify data encoding and decoding:
+
 - **Base64**:
   ```lua
   local encoded = lotus.encode.base64encode("hello")
@@ -59,8 +64,10 @@ Encode and decode data with ease:
   println(lotus.encode.urldecode(safe)) -- "Hello Lua"
   ```
 
-### Logging (`log_*`)
-Make your debugging cool and professional:
+### 🛠️ Logging (`log_*`)
+
+Streamline debugging with professional logs:
+
 ```lua
 log_info("Scan started.")
 log_debug("Debugging mode.")
@@ -70,14 +77,16 @@ log_error("Critical error occurred.")
 
 ---
 
-## Advanced Features
+## ⚡ Advanced Features
 
-### Parameter Fuzzing
+### 🔍 Parameter Fuzzing
+
 Automate parameter scanning with `ParamScan`:
+
 ```lua
 function scan(param_name, payload)
     local new_url = HttpMessage:param_set(param_name, payload)
-    return http:send{url = new_url}
+    return lotus.http:send{url = new_url}
 end
 
 function callback(data)
@@ -90,8 +99,10 @@ ParamScan:start_scan()
 ParamScan:add_scan("param_name", {"payload1", "payload2"}, scan, callback, 5)
 ```
 
-### Report Your Findings
-Log findings with the `Reports` utility:
+### 📊 Report Your Findings
+
+Efficiently log findings with the `Reports` utility:
+
 ```lua
 Reports:add({
     url = "http://example.com",
@@ -101,10 +112,26 @@ Reports:add({
 
 ---
 
-## FAQ
+## 🌟 Why Choose Lotus?
+
+Lotus stands out by combining:
+
+- **⚡ LuaJIT**: A Just-In-Time Compiler for Lua, ensuring high-performance scripting.
+- **🦀 Rust**: A modern, safe, and fast systems programming language that powers the backend, delivering stability and speed.
+
+This combination provides exceptional speed and reliability, empowering developers to build powerful automation scripts with ease.
+
+---
+
+## ❓ FAQ
 
 **1. How can I add more functionality?**
 Install libraries from [luarocks.org](https://luarocks.org/) or request features on [GitHub](https://github.com).
 
 **2. Is Lotus free for commercial use?**
 Yes, but changes to core code must be shared under GPLv2. For special licensing, you can email me at `knassar702@gmail.com`.
+
+---
+
+Feel free to enhance your scripts, experiment with features, and share your feedback! 🚀
+
