@@ -48,5 +48,6 @@ end
 
 -- Main function to initiate the scan
 function main()
+    lotus.log_info("GGASg")
     scan_cve("web_shell_cmd.gch")
 end
