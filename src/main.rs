@@ -12,11 +12,16 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
+// The `starter` module contains the core functionality required to initiate a scan.
 mod starter;
+
 use starter::run_scan;
 
+// Main entry point of the Lotus Project.
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
+    // Call the `run_scan` function to execute the main scanning logic.
     run_scan().await.unwrap();
+
     Ok(())
 }

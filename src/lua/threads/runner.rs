@@ -1,3 +1,6 @@
+// This file is part of Lotus Project, a web security scanner written in Rust based on Lua scripts.
+// Handles asynchronous task execution and provides utilities for managing scan progress.
+
 use futures::executor::block_on;
 use futures::stream::{self, StreamExt};
 use futures::Future;
@@ -13,6 +16,7 @@ use tokio::sync::RwLock;
 use crate::ScanTypes;
 
 lazy_static! {
+    // Shared mutable counters for tracking scan progress across different scan types.
     pub static ref LAST_HTTP_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
     pub static ref LAST_URL_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
     pub static ref LAST_HOST_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
@@ -20,16 +24,19 @@ lazy_static! {
     pub static ref LAST_CUSTOM_SCAN_ID: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
 }
 
+// Spawns a thread to handle application termination via CTRL+C.
+// Generates a resume file upon termination to save scan progress.
 pub async fn pause_channel() {
     tokio::spawn(async move {
         ctrl_c().await.unwrap();
         if let Err(err) = generate_resume().await {
-            log::error!("{}", &err.to_string());
+            log::error!("Error generating resume file: {}", err);
         }
         std::process::exit(130)
     });
 }
 
+// Writes the current scan progress to a resume configuration file.
 async fn generate_resume() -> Result<(), std::io::Error> {
     let mut file = OpenOptions::new()
         .write(true)
@@ -42,15 +49,21 @@ async fn generate_resume() -> Result<(), std::io::Error> {
     let path_scan_id = LAST_PATH_SCAN_ID.lock().await;
     let custom_scan_id = LAST_CUSTOM_SCAN_ID.lock().await;
 
-    file.write_all(format!("HTTP_SCAN_ID={}\n", *http_scan_id).as_bytes())?;
-    file.write_all(format!("URL_SCAN_ID={}\n", *url_scan_id).as_bytes())?;
-    file.write_all(format!("HOST_SCAN_ID={}\n", *host_scan_id).as_bytes())?;
-    file.write_all(format!("PATH_SCAN_ID={}\n", *path_scan_id).as_bytes())?;
-    file.write_all(format!("CUSTOM_SCAN_ID={}\n", *custom_scan_id).as_bytes())?;
+    file.write_all(format!("HTTP_SCAN_ID={}
+", *http_scan_id).as_bytes())?;
+    file.write_all(format!("URL_SCAN_ID={}
+", *url_scan_id).as_bytes())?;
+    file.write_all(format!("HOST_SCAN_ID={}
+", *host_scan_id).as_bytes())?;
+    file.write_all(format!("PATH_SCAN_ID={}
+", *path_scan_id).as_bytes())?;
+    file.write_all(format!("CUSTOM_SCAN_ID={}
+", *custom_scan_id).as_bytes())?;
 
     Ok(())
 }
 
+// Updates the scan progress ID for the specified scan type.
 async fn update_index_id(scan_type: Arc<ScanTypes>, index_id: usize) {
     match *scan_type {
         ScanTypes::FULL_HTTP => *LAST_HTTP_SCAN_ID.lock().await = index_id,
@@ -61,10 +74,8 @@ async fn update_index_id(scan_type: Arc<ScanTypes>, index_id: usize) {
     }
 }
 
-// Asynchronous function to iterate over futures concurrently
-// Takes a vector, a function and a number of workers as arguments
-// The function must return a future with no output
-// The vector must implement cloning
+// Iterates over a list of items and applies a processing function concurrently.
+// Supports progress tracking and optional index updates.
 pub async fn iter_futures<F, T, Fut>(
     scan_type: Arc<ScanTypes>,
     target_iter: Vec<T>,
@@ -91,49 +102,35 @@ pub async fn iter_futures<F, T, Fut>(
         .await;
 }
 
-// This function takes a vector of futures, the number of worker threads to use, and an optional callback function
-// It runs each future concurrently using the worker threads, and executes the callback function if provided
-// The function exits once all futures have completed and the callback function has been executed (if provided)
+// Executes a list of asynchronous tasks with a configurable number of workers.
+// Optionally runs a callback function after each task completion.
 pub async fn scan_futures<T: Future<Output = ()>>(
     scan_futures: Vec<T>,
     workers: usize,
     call_back: Option<fn()>,
 ) {
-    // Create an unbounded MPSC (multiple producer, single consumer) channel
-    // The producer sends futures to be executed and the consumer executes them concurrently
     let (mut sink, futures_stream) = mpsc::unbounded();
-
-    // Create a read-write lock for the number of futures
-    // This allows multiple threads to read the value while only one thread can write to it at a time
     let num_futures = RwLock::new(scan_futures.len());
 
-    // Send all futures to the sink
-    // This adds them to the stream of futures to be executed
     sink.send_all(&mut stream::iter(scan_futures.into_iter().map(Ok)))
         .await
         .unwrap();
 
     let sink_lock = RwLock::new(sink);
 
-    // Execute each future concurrently using the specified number of worker threads
-    // When a future completes, the callback function is executed (if provided)
-    // Once all futures have completed, the sink is closed to exit the loop
     futures_stream
         .for_each_concurrent(workers, |fut| async {
             fut.await;
 
-            // Decrement the number of futures and execute the callback function (if provided)
             let mut num_futures = num_futures.write().await;
             if let Some(..) = call_back {
-                log::debug!("Running the Callback function for TASK {}", *num_futures);
+                log::debug!("Running callback for task {}", *num_futures);
                 call_back.unwrap()();
-                log::debug!("The Callback has been finished for TASK {}", *num_futures);
             }
             *num_futures -= 1;
 
-            // If all futures have completed, close the sink to exit the loop
             if *num_futures == 0 {
-                log::debug!("Running");
+                log::debug!("All tasks completed. Closing stream.");
                 sink_lock.write().await.close().await.unwrap();
             }
         })

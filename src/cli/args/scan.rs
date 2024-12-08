@@ -13,34 +13,27 @@ use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+/// Parses the scan content type from a comma-separated string.
+/// Updates a global SCAN_CONTENT_TYPE list based on valid input types.
 fn parse_scan_content_type(input_content: &str) -> Result<(), CliErrors> {
     let mut is_error = false;
-    // Removing The Default Option
+    // Clear previous scan types.
     block_on(async { SCAN_CONTENT_TYPE.lock().await.clear() });
 
-    input_content.split(",").for_each(|the_scan_type| {
-        if the_scan_type == "url" {
-            block_on(async { SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::Url) });
-        } else if the_scan_type == "body" {
-            block_on(async { SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::Body) });
-        } else if the_scan_type == "json" {
-            block_on(async {
-                SCAN_CONTENT_TYPE
-                    .lock()
-                    .await
-                    .push(InjectionLocation::BodyJson)
-            });
-        } else if the_scan_type == "headers" {
-            block_on(async {
-                SCAN_CONTENT_TYPE
-                    .lock()
-                    .await
-                    .push(InjectionLocation::Headers)
-            });
-        } else {
-            is_error = true;
+    input_content.split(',').for_each(|the_scan_type| {
+        match the_scan_type {
+            "url" => block_on(async { SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::Url) }),
+            "body" => block_on(async { SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::Body) }),
+            "json" => block_on(async {
+                SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::BodyJson)
+            }),
+            "headers" => block_on(async {
+                SCAN_CONTENT_TYPE.lock().await.push(InjectionLocation::Headers)
+            }),
+            _ => is_error = true,
         }
     });
+
     if is_error {
         Err(CliErrors::UnsupportedScanType)
     } else {
@@ -48,6 +41,7 @@ fn parse_scan_content_type(input_content: &str) -> Result<(), CliErrors> {
     }
 }
 
+/// Reads a resume configuration file and updates scan IDs accordingly.
 fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
@@ -87,12 +81,14 @@ fn read_resume_file(file_path: &str) -> Result<(), std::io::Error> {
     Ok(())
 }
 
+/// Parses custom HTTP headers from a JSON string.
+/// Returns a HeaderMap populated with default and user-defined headers.
 fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
     let parsed_json = serde_json::from_str::<HashMap<String, String>>(raw_headers);
-
-    if let Err(..) = parsed_json {
+    if parsed_json.is_err() {
         return Err(parsed_json.unwrap_err());
     }
+
     let mut user_headers = HeaderMap::new();
     user_headers.insert(
         HeaderName::from_bytes("User-agent".as_bytes()).unwrap(),
@@ -102,17 +98,19 @@ fn parse_headers(raw_headers: &str) -> Result<HeaderMap, serde_json::Error> {
         )
         .unwrap(),
     );
-    parsed_json
-        .unwrap()
-        .iter()
-        .for_each(|(headername, headervalue)| {
-            user_headers.insert(
-                HeaderName::from_bytes(headername.as_bytes()).unwrap(),
-                HeaderValue::from_bytes(headervalue.as_bytes()).unwrap(),
-            );
-        });
+
+    parsed_json.unwrap().iter().for_each(|(headername, headervalue)| {
+        user_headers.insert(
+            HeaderName::from_bytes(headername.as_bytes()).unwrap(),
+            HeaderValue::from_bytes(headervalue.as_bytes()).unwrap(),
+        );
+    });
+
     Ok(user_headers)
 }
+
+/// Parses environment variables from a JSON string.
+/// Returns the parsed variables as a serde_json Value.
 fn get_env_vars(env_vars_json: &str) -> Result<Value, serde_json::Error> {
     let parsed_vars = serde_json::from_str(env_vars_json)?;
     Ok(parsed_vars)
@@ -120,118 +118,121 @@ fn get_env_vars(env_vars_json: &str) -> Result<Value, serde_json::Error> {
 
 #[derive(Debug, StructOpt)]
 pub struct UrlsOpts {
-    // redirects limit
-    #[structopt(
-        short,
-        long,
-        default_value = "10",
-        help = "Number of allowed http redirects"
-    )]
+    /// Maximum number of allowed HTTP redirects.
+    #[structopt(short, long, default_value = "10", help = "Number of allowed HTTP redirects")]
     pub redirects: u32,
-    #[structopt(
-        long = "fuzz-workers",
-        default_value = "15",
-        help = "The number of workers who will be involved in the fuzzing process"
-    )]
+
+    /// Number of workers for fuzzing processes.
+    #[structopt(long = "fuzz-workers", default_value = "15", help = "Number of fuzzing workers")]
     pub fuzz_workers: usize,
 
+    /// Scan content types to handle.
     #[structopt(
         short,
         long = "content-type",
         default_value = "url,body,headers",
         parse(try_from_str = parse_scan_content_type)
-        )]
+    )]
     pub _content_type: (),
 
-    // threads
-    #[structopt(
-        short = "w",
-        long = "workers",
-        default_value = "10",
-        help = "Number of workers"
-    )]
+    /// Number of concurrent workers.
+    #[structopt(short = "w", long = "workers", default_value = "10", help = "Number of workers")]
     pub workers: usize,
-    #[structopt(
-        short = "v",
-        long = "verbose",
-        help = "verbose mode (show sending requests)"
-    )]
+
+    /// Enable verbose mode to show request details.
+    #[structopt(short = "v", long = "verbose", help = "Enable verbose mode")]
     pub verbose: bool,
 
+    /// Number of scripts to execute concurrently for each URL.
     #[structopt(
         short = "sw",
         long = "scripts-worker",
         default_value = "10",
-        help = "How many scripts to run at the same time for one url"
+        help = "Number of concurrent scripts per URL"
     )]
     pub scripts_workers: usize,
 
-    // timeout
-    #[structopt(
-        short = "t",
-        long = "timeout",
-        default_value = "10",
-        help = "Connection timeout"
-    )]
+    /// Connection timeout in seconds.
+    #[structopt(short = "t", long = "timeout", default_value = "10", help = "Connection timeout")]
     pub timeout: u64,
 
-    /// Input file
-    #[structopt(parse(from_os_str), help = "Scripts path")]
+    /// Path to the script directory.
+    #[structopt(parse(from_os_str), help = "Path to the script directory")]
     pub script_path: PathBuf,
 
-    /// Output file, stdout if not present
+    /// Output file for the results; defaults to stdout if not specified.
     #[structopt(
         short = "o",
         long = "output",
         parse(from_os_str),
-        help = "output json file"
+        help = "Output JSON file for results"
     )]
     pub output: Option<PathBuf>,
 
-    #[structopt(
-        short = "p",
-        long = "proxy",
-        help = "Set http proxy for all connections"
-    )]
+    /// Proxy server to use for all connections.
+    #[structopt(short = "p", long = "proxy", help = "HTTP proxy server")]
     pub proxy: Option<String>,
-    #[structopt(
-        long = "requests-limit",
-        help = "requests limit",
-        default_value = "2000"
-    )]
+
+    /// Limit for the number of requests.
+    #[structopt(long = "requests-limit", default_value = "2000", help = "Request limit")]
     pub requests_limit: i32,
-    #[structopt(long = "delay", help = "sleeping dalay", default_value = "5")]
+
+    /// Delay between requests in seconds.
+    #[structopt(long = "delay", default_value = "5", help = "Delay between requests")]
     pub delay: u64,
 
-    #[structopt(long = "log", help = "Saving Lotus Logs for debugging")]
+    /// Path to the log file for debugging.
+    #[structopt(long = "log", help = "Path to save logs for debugging")]
     pub log: Option<PathBuf>,
+
+    /// Path to the file containing URLs to scan.
     #[structopt(
         long = "urls",
-        help = "Reading urls from text file",
-        parse(from_os_str)
+        parse(from_os_str),
+        help = "File containing URLs to scan"
     )]
     pub urls: Option<PathBuf>,
 
-    #[structopt(long = "headers", parse(try_from_str = parse_headers), required = false, default_value = "{}", help = "Default Headers (eg: '{\"X-API\":\"123\"}')")]
+    /// Custom headers as a JSON string.
+    #[structopt(
+        long = "headers",
+        parse(try_from_str = parse_headers),
+        required = false,
+        default_value = "{}",
+        help = "Custom HTTP headers in JSON format"
+    )]
     pub headers: HeaderMap,
+
+    /// Exit after a specified number of script errors.
     #[structopt(
         long = "exit-after-errors",
         default_value = "2000",
         help = "Exit after X number of script errors"
     )]
     pub exit_after: i32,
-    #[structopt(long = "env-vars",parse(try_from_str = get_env_vars),default_value="{}",help = "Set Global Vars for scripts")]
+
+    /// Global environment variables for scripts.
+    #[structopt(
+        long = "env-vars",
+        parse(try_from_str = get_env_vars),
+        default_value = "{}",
+        help = "Global environment variables for scripts in JSON format"
+    )]
     pub env_vars: Value,
+
+    /// Custom input handler script.
     #[structopt(
         long = "input-handler",
         parse(from_os_str),
-        help = "Create custom input for your scripts"
+        help = "Custom input handler script"
     )]
     pub input_handler: Option<PathBuf>,
+
+    /// Resume scan using a configuration file from the previous run.
     #[structopt(
         long = "resume",
         parse(try_from_str = read_resume_file),
-        help = "Resume the scan with resume.cfg where your scans progress stopped in the last run"
+        help = "Resume scan using a resume configuration file"
     )]
     _resume: Option<()>,
 }
