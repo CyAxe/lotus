@@ -12,20 +12,11 @@
 // either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
 
-use lotus::cli::{
-        args::Opts,
-        startup::new::new_args,
-    };
-use structopt::StructOpt;
 mod starter;
 use starter::run_scan;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    if let Opts::NEW(new_opts) = Opts::from_args() {
-        new_args(new_opts.scan_type, new_opts.file_name);
-        std::process::exit(0);
-    }
     run_scan().await.unwrap();
     Ok(())
 }
