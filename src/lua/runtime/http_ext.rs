@@ -40,10 +40,10 @@ impl HTTPEXT for LuaRunTime<'_> {
     fn add_httpfuncs(&self, target_url: Option<&str>, full_httpmsg: Option<FullRequest>) -> Result<()> {
         let lotus_table = create_lotus_http_tables(&self.lua)?;
 
-        let show_response_fn = self.lua.create_function(show_response)?;
-        set_nested_function!(lotus_table, "show_response", show_response_fn);
+        let http_fn = self.lua.create_function(show_response)?;
+        set_nested_function!(lotus_table, "http", http_fn);
 
-        let make_headers_fn = self.lua.create_function(|_, headers_txt: String| {
+        let headers_fn = self.lua.create_function(|_, headers_txt: String| {
             let mut result = HashMap::new();
             for line in headers_txt.lines() {
                 if let Some((name, value)) = line.split_once(':') {
@@ -52,15 +52,15 @@ impl HTTPEXT for LuaRunTime<'_> {
             }
             Ok(result)
         })?;
-        set_nested_function!(lotus_table, "make_headers", make_headers_fn);
+        set_nested_function!(lotus_table, "headers", headers_fn);
 
-        let pathjoin_fn = self.lua.create_function(|_, (current_path, new_path): (String, String)| {
+        let paths_fn = self.lua.create_function(|_, (current_path, new_path): (String, String)| {
             let the_path = std::path::Path::new(&current_path).join(new_path);
             Ok(the_path.to_str().unwrap().to_string())
         })?;
-        set_nested_function!(lotus_table, "pathjoin", pathjoin_fn);
+        set_nested_function!(lotus_table, "paths", paths_fn);
 
-        let readfile_fn = self.lua.create_function(|_, file_path: String| {
+        let file_fn = self.lua.create_function(|_, file_path: String| {
             if Path::new(&file_path).exists() {
                 let file_content = filename_to_string(&file_path)?;
                 Ok(file_content)
@@ -68,33 +68,33 @@ impl HTTPEXT for LuaRunTime<'_> {
                 Err(CliErrors::ReadingError.to_lua_err())
             }
         })?;
-        set_nested_function!(lotus_table, "readfile", readfile_fn);
+        set_nested_function!(lotus_table, "file", file_fn);
 
         if let Some(full_httpmsg) = full_httpmsg {
-            lotus_table.set("full_req", full_httpmsg)?;
+            lotus_table.set("request", full_httpmsg)?;
         }
 
-        let http_message = if let Some(url) = target_url {
+        let message_fn = if let Some(url) = target_url {
             HttpMessage {
                 url: Some(Url::parse(url).unwrap()),
             }
         } else {
             HttpMessage { url: None }
         };
-        set_nested_function!(lotus_table, "http", http_message);
+        set_nested_function!(lotus_table, "message", message_fn);
 
-        let reports = AllReports {
+        let reports_fn = AllReports {
             reports: Vec::new(),
         };
-        set_nested_function!(lotus_table, "Reports", reports);
+        set_nested_function!(lotus_table, "reports", reports_fn);
 
-        let error_string_fn = self.lua.create_function(|_, error: mlua::Error| Ok(error.to_string()))?;
-        set_nested_function!(lotus_table, "ERR_STRING", error_string_fn);
+        let error_fn = self.lua.create_function(|_, error: mlua::Error| Ok(error.to_string()))?;
+        set_nested_function!(lotus_table, "error", error_fn);
 
-        let custom_fn = self.lua.create_function(|_, input: String| {
-            Ok(format!("Custom function received: {}", input))
+        let action_fn = self.lua.create_function(|_, input: String| {
+            Ok(format!("Action received: {}", input))
         })?;
-        set_nested_function!(lotus_table, "custom_function", custom_fn);
+        set_nested_function!(lotus_table, "action", action_fn);
 
         Ok(())
     }
