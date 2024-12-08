@@ -6,26 +6,26 @@ use tealr::{mlu::FromToLua, TypeName};
 
 #[derive(Clone)]
 pub struct Sender {
-    pub headers: HeaderMap, // HTTP headers to include in requests.
-    pub proxy: Option<String>, // Optional proxy setting for requests.
-    pub timeout: u64, // Request timeout in seconds.
-    pub redirects: u32, // Maximum number of allowed redirects.
-    pub merge_headers: bool, // Whether to merge custom headers with default headers.
-    pub http_options: HttpVersion, // HTTP version options.
+    pub headers: HeaderMap,
+    pub proxy: Option<String>,
+    pub timeout: u64,
+    pub redirects: u32,
+    pub merge_headers: bool,
+    pub http_options: HttpVersion,
 }
 
 #[derive(Clone)]
 pub struct HttpVersion {
-    pub http2_only: bool, // Flag to force HTTP/2 only.
-    pub http1_only: bool, // Flag to force HTTP/1.1 only.
+    pub http2_only: bool,
+    pub http1_only: bool,
 }
 
 #[derive(TypeName, FromToLua)]
 pub struct MultiPart {
-    pub content: String, // Content of the multipart segment.
-    pub filename: Option<String>, // Optional filename for the content.
-    pub content_type: Option<String>, // Optional MIME type of the content.
-    pub headers: Option<HashMap<String, String>>, // Additional headers for the multipart segment.
+    pub content: String,
+    pub filename: Option<String>,
+    pub content_type: Option<String>,
+    pub headers: Option<HashMap<String, String>>,
 }
 
 impl Default for HttpVersion {
@@ -36,11 +36,9 @@ impl Default for HttpVersion {
         }
     }
 }
-
-// Implements additional methods for the `Sender` struct to enhance functionality.
+/// Adding OOP for http sender class
 impl UserData for Sender {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        // Sets the proxy for the sender.
         methods.add_method_mut("set_proxy", |_, this, the_proxy: mlua::Value| {
             match the_proxy {
                 mlua::Value::String(new_proxy) => {
@@ -52,26 +50,19 @@ impl UserData for Sender {
             };
             Ok(())
         });
-
-        // Updates the timeout value.
         methods.add_method_mut("set_timeout", |_, this, timeout: u64| {
             this.timeout = timeout;
             Ok(())
         });
 
-        // Toggles header merging behavior.
         methods.add_method_mut("merge_headers", |_, this, merge_headers: bool| {
             this.merge_headers = merge_headers;
             Ok(())
         });
-
-        // Sets the maximum number of redirects.
         methods.add_method_mut("set_redirects", |_, this, redirects: u32| {
             this.redirects = redirects;
             Ok(())
         });
-
-        // Asynchronously sends an HTTP request based on provided options.
         methods.add_async_method("send", |_, this, request_option: mlua::Table| async move {
             let url = request_option.get::<_, String>("url");
             if url.is_err() {
@@ -114,7 +105,8 @@ impl UserData for Sender {
                 .ok()
                 .flatten()
                 .unwrap_or(this.redirects);
-            let headers = match request_option.get::<_, Option<HashMap<String, String>>>("headers") {
+            let headers = match request_option.get::<_, Option<HashMap<String, String>>>("headers")
+            {
                 Ok(Some(headers)) => {
                     let mut current_headers = HeaderMap::new();
                     headers.iter().for_each(|(name, value)| {

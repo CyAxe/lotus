@@ -20,7 +20,7 @@ pub struct RequestOpts {
 /// Scanning type For `SCAN_TYPE` in lua scripts
 #[derive(Debug, Clone, Copy)]
 pub enum ScanTypes {
-    /// FULL_HTTP Scanning
+    #[allow(non_camel_case_types)]
     FULL_HTTP,
     /// HOSTS Scanning under ID number 1
     HOSTS,
@@ -28,21 +28,8 @@ pub enum ScanTypes {
     URLS,
     /// PATHS Scanning under ID number 3
     PATHS,
-    /// CUSTOM Scanning under ID number 4
+    /// CUSTOM Scannig under ID number 4
     CUSTOM,
-}
-
-impl ScanTypes {
-    /// Converts the enum variant into its string representation.
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            ScanTypes::FULL_HTTP => "FULL_HTTP",
-            ScanTypes::HOSTS => "HOSTS",
-            ScanTypes::URLS => "URLS",
-            ScanTypes::PATHS => "PATHS",
-            ScanTypes::CUSTOM => "CUSTOM",
-        }
-    }
 }
 
 pub struct Lotus {

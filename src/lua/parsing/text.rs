@@ -29,7 +29,6 @@ pub struct ResponseMatcher {
 }
 
 impl ResponseMatcher {
-    /// Checks if the given regex pattern matches the response.
     pub fn is_match(&self, pattern: String, resp: String) -> Result<bool, CliErrors> {
         match RegexBuilder::new(&pattern)
             .multi_line(self.multi_line)
@@ -41,13 +40,15 @@ impl ResponseMatcher {
         {
             Ok(re) => Ok(re.is_match(&resp)),
             Err(err) => {
-                log::error!("Regex error: {}", err);
+                log::error!(
+                    "An error occurred while processing the regular expression pattern: {}",
+                    err.to_string()
+                );
                 Err(CliErrors::RegexPatternError)
             }
         }
     }
 
-    /// Extracts all matches of the given regex pattern from the response.
     pub fn extract_data(
         &self,
         regex_pattern: &str,
@@ -61,15 +62,22 @@ impl ResponseMatcher {
             .dot_matches_new_line(self.dot_matches_new_line)
             .build()
         {
-            Ok(re) => Ok(re.find_iter(response).map(|m| m.as_str().to_owned()).collect()),
+            Ok(re) => {
+                let match_iter = re
+                    .find_iter(response)
+                    .map(|m| m.as_str().to_owned())
+                    .collect();
+                Ok(match_iter)
+            }
             Err(err) => {
-                log::error!("Regex error: {}", err);
+                log::error!(
+                    "An error occurred while processing the regular expression pattern: {}",
+                    err.to_string()
+                );
                 Err(CliErrors::RegexPatternError)
             }
         }
     }
-
-    /// Replaces the first two matches of the regex pattern in the response with the replacement string.
     pub fn replace_txt(
         &self,
         regex_pattern: &str,
@@ -84,15 +92,19 @@ impl ResponseMatcher {
             .dot_matches_new_line(self.dot_matches_new_line)
             .build()
         {
-            Ok(re) => Ok(re.replacen(response, 2, replacement).to_string()),
+            Ok(re) => {
+                let replace_output = re.replacen(response, 2, replacement).to_string();
+                Ok(replace_output)
+            }
             Err(err) => {
-                log::error!("Regex error: {}", err);
+                log::error!(
+                    "An error occurred while processing the regular expression pattern: {}",
+                    err.to_string()
+                );
                 Err(CliErrors::RegexPatternError)
             }
         }
     }
-
-    /// Verifies if all provided patterns exist in the response body.
     pub fn match_and_body(
         &self,
         body: &str,
@@ -111,13 +123,13 @@ impl ResponseMatcher {
                         .dot_matches_new_line(self.dot_matches_new_line)
                         .build()
                     {
-                        Ok(re) => {
-                            if re.is_match(body) {
+                        Ok(re_pattern) => {
+                            if re_pattern.is_match(body) {
                                 counter += 1;
                             }
                         }
                         Err(err) => {
-                            log::error!("Regex error: {}", err);
+                            log::error!("An error occurred while processing the regular expression pattern: {}",err.to_string());
                             return Err(CliErrors::RegexPatternError);
                         }
                     }
@@ -132,7 +144,6 @@ impl ResponseMatcher {
         Ok(counter == text.len())
     }
 
-    /// Matches patterns against the response body and returns matched patterns.
     pub fn match_once_body(
         &self,
         body: String,
@@ -157,7 +168,7 @@ impl ResponseMatcher {
                             }
                         }
                         Err(err) => {
-                            log::error!("Regex error: {}", err);
+                            log::error!("An error occurred while processing the regular expression pattern: {}",err.to_string());
                             return Err(CliErrors::RegexPatternError);
                         }
                     }
@@ -175,35 +186,74 @@ impl ResponseMatcher {
 
 impl UserData for ResponseMatcher {
     fn add_methods<'lua, M: mlua::UserDataMethods<'lua, Self>>(methods: &mut M) {
-        methods.add_method("is_match", |_, this, (regex_pattern, response): (String, String)| {
-            this.is_match(regex_pattern, response).map_err(|e| e.to_lua_err())
-        });
-
-        methods.add_method("match_body", |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
-            this.match_and_body(&response, text_list, is_regex).map_err(|e| e.to_lua_err())
-        });
-
-        methods.add_method("match_body_once", |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
-            this.match_once_body(response, text_list, is_regex).map_err(|e| e.to_lua_err())
-        });
-
-        methods.add_method("replace", |_, this, (response, regex_pattern, replacement): (String, String, String)| {
-            this.replace_txt(&regex_pattern, &replacement, &response).map_err(|e| e.to_lua_err())
-        });
-
-        methods.add_method("extract", |_, this, (regex_pattern, response): (String, String)| {
-            this.extract_data(&regex_pattern, &response).map_err(|e| e.to_lua_err())
-        });
-
+        methods.add_method(
+            "is_match",
+            |_, this, (regex_pattern, response): (String, String)| {
+                let is_match = this.is_match(regex_pattern, response);
+                match is_match {
+                    Ok(matched) => Ok(matched),
+                    Err(err) => Err(err.to_lua_err()),
+                }
+            },
+        );
+        methods.add_method(
+            "match_body",
+            |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
+                let body_match = this.match_and_body(&response, text_list, is_regex);
+                match body_match {
+                    Ok(matched) => Ok(matched),
+                    Err(err) => Err(err.to_lua_err()),
+                }
+            },
+        );
+        methods.add_method(
+            "match_body_once",
+            |_, this, (response, text_list, is_regex): (String, Vec<String>, Option<bool>)| {
+                let is_match = this.match_once_body(response, text_list, is_regex);
+                match is_match {
+                    Ok(matched) => Ok(matched),
+                    Err(err) => Err(err.to_lua_err()),
+                }
+            },
+        );
+        methods.add_method(
+            "replace",
+            |_, this, (response, regex_pattern, replacement): (String, String, String)| {
+                let replace_output = this.replace_txt(&regex_pattern, &replacement, &response);
+                match replace_output {
+                    Ok(replaced) => Ok(replaced),
+                    Err(err) => Err(err.to_lua_err()),
+                }
+            },
+        );
+        methods.add_method(
+            "extract",
+            |_, this, (regex_pattern, response): (String, String)| {
+                let extract_data = this.extract_data(&regex_pattern, &response);
+                match extract_data {
+                    Ok(data) => Ok(data),
+                    Err(err) => Err(err.to_lua_err()),
+                }
+            },
+        );
         methods.add_method_mut("options", |_, this, opts: mlua::Table| {
-            *this = ResponseMatcher {
-                multi_line: opts.get("multi_line").unwrap_or(this.multi_line),
-                case_insensitive: opts.get("case_insensitive").unwrap_or(this.case_insensitive),
-                ignore_whitespace: opts.get("ignore_whitespace").unwrap_or(this.ignore_whitespace),
-                unicode: opts.get("unicode").unwrap_or(this.unicode),
-                octal: opts.get("octal").unwrap_or(this.octal),
-                dot_matches_new_line: opts.get("dot_matches_new_line").unwrap_or(this.dot_matches_new_line),
+            let response_matcher = ResponseMatcher {
+                multi_line: opts.get::<_, bool>("multi_line").unwrap_or(this.multi_line),
+                case_insensitive: opts
+                    .get::<_, bool>("case_insensitive")
+                    .unwrap_or(this.case_insensitive),
+                ignore_whitespace: opts
+                    .get::<_, bool>("ignore_whitespace")
+                    .unwrap_or(this.ignore_whitespace),
+                unicode: opts.get::<_, bool>("unicode").unwrap_or(this.unicode),
+                octal: opts.get::<_, bool>("octal").unwrap_or(this.octal),
+                dot_matches_new_line: opts
+                    .get::<_, bool>("dot_matches_new_line")
+                    .unwrap_or(this.dot_matches_new_line),
             };
+
+            *this = response_matcher;
+
             Ok(())
         });
     }
