@@ -1,5 +1,5 @@
 /*
- * This file is part of Lotus Project, an Web Security Scanner written in Rust based on Lua Scripts
+ * This file is part of Lotus Project, a Web Security Scanner written in Rust based on Lua Scripts
  * For details, please see https://github.com/rusty-sec/lotus/
  *
  * Copyright (c) 2022 - Khaled Nassar
@@ -7,7 +7,6 @@
  * Please note that this file was originally released under the
  * GNU General Public License as published by the Free Software Foundation;
  * either version 2 of the License, or (at your option) any later version.
- *
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,18 +22,20 @@ use indicatif::ProgressBar;
 use log::{Level, Metadata, Record};
 use std::sync::Once;
 
+// Ensures logger initialization happens only once during the application lifecycle.
 static INIT: Once = Once::new();
 
 pub struct RichLogger;
 
 impl log::Log for RichLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
+        // Only log messages with a level of Info or lower.
         metadata.level() <= Level::Info
     }
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            let time = Local::now().format("%Y-%m-%d %H:%M:%S");
+            let time = Local::now().format("%Y-%m-%d %H:%M:%S"); // Timestamp for log messages.
             let log_level = match record.level() {
                 Level::Info => "INFO".bright_green(),
                 Level::Warn => "WARN".bright_yellow(),
@@ -48,6 +49,7 @@ impl log::Log for RichLogger {
                 record.args()
             );
 
+            // Print log messages to the progress bar if it exists, otherwise to the console.
             let progress_bar = GLOBAL_PROGRESS_BAR.lock().unwrap();
             if let Some(ref pb) = *progress_bar {
                 pb.println(formatted_message);
@@ -60,6 +62,8 @@ impl log::Log for RichLogger {
     fn flush(&self) {}
 }
 
+/// Initializes the custom logger with a shared progress bar.
+/// Ensures logging integrates seamlessly with progress tracking.
 pub fn init_logger(progress_bar: ProgressBar) {
     INIT.call_once(|| {
         *GLOBAL_PROGRESS_BAR.lock().unwrap() = Some(progress_bar);
@@ -68,6 +72,7 @@ pub fn init_logger(progress_bar: ProgressBar) {
     });
 }
 
+// Macro for logging informational messages with a consistent format.
 #[macro_export]
 macro_rules! log_info {
     ($($arg:tt)*) => ({
@@ -75,6 +80,7 @@ macro_rules! log_info {
     })
 }
 
+// Macro for logging warning messages with a consistent format.
 #[macro_export]
 macro_rules! log_warn {
     ($($arg:tt)*) => ({
@@ -82,6 +88,7 @@ macro_rules! log_warn {
     })
 }
 
+// Macro for logging error messages with a consistent format.
 #[macro_export]
 macro_rules! log_error {
     ($($arg:tt)*) => ({

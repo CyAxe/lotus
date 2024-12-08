@@ -1,5 +1,5 @@
 use crate::cli::input::parse_requests::FullRequest;
-use crate::lua::runtime::{encode_ext::EncodeEXT, http_ext::HTTPEXT, utils_ext::UtilsEXT};
+use crate::lua::runtime::{encode_ext::EncodeEXT, utils_ext::UtilsEXT};
 use crate::utils::bar::GLOBAL_PROGRESS_BAR;
 use crate::{
     lua::{
@@ -42,9 +42,6 @@ macro_rules! set_http_sender {
     };
 }
 
-/// Start Lotus by adding the ProgressBar and http request options
-/// * `request` - Request Options
-/// * `output_dir` - output file
 impl LuaLoader {
     pub fn new(request: RequestOpts, output_dir: Option<PathBuf>) -> LuaLoader {
         Self {
@@ -55,11 +52,37 @@ impl LuaLoader {
 
     fn set_lua(&self, target_url: Option<&str>, fullhttp_msg: Option<FullRequest>, lua: &Lua) {
         let lua_eng = LuaRunTime { lua };
-        lua_eng.add_httpfuncs(target_url, fullhttp_msg);
-        lua_eng.add_encode_function();
+        use crate::lua::runtime::http_ext::HTTPEXT;
+        let _ = lua_eng.add_httpfuncs(target_url, fullhttp_msg);
+        let _ = lua_eng.add_encode_function();
         lua_eng.add_printfunc();
         lua_eng.add_matchingfunc();
         lua_eng.add_threadsfunc();
+        
+        set_global_value!(
+            lua,
+            "log",
+            lua.create_table().unwrap() // Adding a table for logging functions
+        );
+
+        let log_table = lua.globals().get::<_, mlua::Table>("log").unwrap();
+        log_table.set("debug", lua.create_function(|_, msg: String| {
+            log::debug!("{}", msg);
+            Ok(())
+        }).unwrap()).unwrap();
+        log_table.set("info", lua.create_function(|_, msg: String| {
+            log::info!("{}", msg);
+            Ok(())
+        }).unwrap()).unwrap();
+        log_table.set("warn", lua.create_function(|_, msg: String| {
+            log::warn!("{}", msg);
+            Ok(())
+        }).unwrap()).unwrap();
+        log_table.set("error", lua.create_function(|_, msg: String| {
+            log::error!("{}", msg);
+            Ok(())
+        }).unwrap()).unwrap();
+
         set_global_value!(
             lua,
             "ERR_STRING",
@@ -166,7 +189,8 @@ impl LuaLoader {
     }
 
     async fn process_script_report(&self, lua: &Lua, script_dir: &str) {
-        let script_report = lua.globals().get::<_, AllReports>("Reports").unwrap();
+        return ;
+        let script_report = lua.globals().get::<_, AllReports>("lotus.reports").unwrap();
 
         if !script_report.reports.is_empty() {
             let results = serde_json::to_string(&script_report.reports).unwrap();

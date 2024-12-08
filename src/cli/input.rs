@@ -2,9 +2,13 @@ use crate::filename_to_string;
 use crate::CliErrors;
 use std::{io, io::Read, path::PathBuf};
 use url::Url;
+
 pub mod load_scripts;
 pub mod parse_requests;
 
+/// Extracts unique target hosts from a list of URLs.
+///
+/// Ensures no duplicate or empty hosts are included.
 pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     let mut hosts = Vec::new();
     urls.iter().for_each(|x| {
@@ -19,13 +23,12 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
                     let host = if let Some(host) = parsed_url.host() {
                         host
                     } else {
-                        url::Host::Domain("") // Empty Host Name
+                        url::Host::Domain("") // Default to empty domain
                     };
                     host.to_string()
                 }
             };
-            // Check for Empty & Dups Hosts
-            if !hosts.contains(&host) && host.is_empty() {
+            if !hosts.contains(&host) && !host.is_empty() {
                 hosts.push(host);
             }
         }
@@ -35,6 +38,9 @@ pub fn get_target_hosts(urls: Vec<String>) -> Vec<String> {
     hosts
 }
 
+/// Extracts unique target paths from a list of URLs.
+///
+/// Logs errors for invalid URLs and joins base URLs with their paths.
 pub fn get_target_paths(urls: Vec<String>) -> Result<Vec<String>, String> {
     let mut paths: Vec<String> = Vec::new();
     for url_str in urls {
@@ -64,6 +70,9 @@ pub fn get_target_paths(urls: Vec<String>) -> Result<Vec<String>, String> {
     Ok(paths)
 }
 
+/// Reads input from stdin and returns it as a vector of strings.
+///
+/// Returns an error if stdin is empty or unavailable.
 pub fn get_stdin_input() -> Result<Vec<String>, CliErrors> {
     if atty::is(atty::Stream::Stdin) {
         Err(CliErrors::EmptyStdin)
@@ -72,11 +81,13 @@ pub fn get_stdin_input() -> Result<Vec<String>, CliErrors> {
         let mut input_string = String::new();
         stdin.lock().read_to_string(&mut input_string).unwrap();
         let input_lines: Vec<String> = input_string.lines().map(|s| s.to_string()).collect();
-        // input_lines.sort();
-        //input_lines.dedup();
         Ok(input_lines)
     }
 }
+
+/// Retrieves target URLs from a file or stdin.
+///
+/// Deduplicates and sorts the URLs if reading from stdin.
 pub fn get_target_urls(url_file: Option<PathBuf>) -> Result<Vec<String>, CliErrors> {
     if url_file.is_some() {
         let urls = filename_to_string(url_file.unwrap().to_str().unwrap());
