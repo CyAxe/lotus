@@ -177,6 +177,9 @@ pub fn args_scan() -> ScanArgs {
                 url_opts.verbose,
             )
         }
+        _ => {
+            std::process::exit(1);
+        }
     };
 
     log::debug!("HOSTS: {}", hosts.len());

@@ -1,474 +1,589 @@
+## Lotus Scripting Documentation
 
-## Overview
+- [Starting 101](#Starting-Point)
+- [Url Parsing](#url-parsing)
+- [Change the global request options](#Change the global request options)
+- [Fuzzing](#fuzzing)
+- [Logging](#logging)
+- [Modules](#modules)
+- [String matching](#Text-Matching)
+- [Reporting](#reporting)
+- [Error Handling](#Handle-Connection-Errors)
+- [Custom input handler](#input-handler)
+- [FAQ](#faq)
 
-Your Rust application integrates Lua scripting capabilities using the `mlua` crate. To enhance Lua's functionality, you've extended the Lua runtime with various utility functions, including logging, string matching, threading, and encoding/decoding operations. These utilities are encapsulated within the `UtilsEXT` and `EncodeEXT` traits and are accessible in Lua under the `lotus` table.
+### Starting Point
+Make the main() function globally accessible, and try the Lotus utilities to write a great script but make sure to set your Script type first
+but first you've to define which scanning type you will do with your script,
 
----
 
-## Table of Contents
+| SCAN ID | INPUT TYPE                                | Example                                           | Access It           |
+| ---     | ---                                       | ---                                               | ---                 |
+| 1       | HOSTS                                     | `testphp.vulnweb.com`                             | `INPUT_DATA`        |
+| 2       | FULL URL Including Parameters             | `http://testphp.vulnweb.com/artists.php?artist=1` | `HttpMessage:url()` |
+| 3       | Passing URL Paths only without Parameters | `http://testphp.vulnweb.com/artists.php?artist=1` | `HttpMessage:url()` |
+| 4       | Custom input handler                      | it can be anything but for example `123.1.2.3.5`  | `INPUT_DATA`        |
 
-1. [UtilsEXT Trait](#utilsext-trait)
-   - [add_printfunc](#add_printfunc)
-     - [`lotus.log_info(msg)`](#lotuslog_infomsg)
-     - [`lotus.log_warn(msg)`](#lotuslog_warnmsg)
-     - [`lotus.log_debug(msg)`](#lotuslog_debugmsg)
-     - [`lotus.log_error(msg)`](#lotuslog_errormsg)
-     - [`lotus.join_script_dir(new_path)`](#lotusjoin_script_dirnew_path)
-     - [`lotus.println(msg)`](#lotusprintlnmsg)
-   - [add_matchingfunc](#add_matchingfunc)
-     - [`lotus.matcher`](#lotusmatcher)
-     - [`lotus.str_startswith(str_one, str_two)`](#lotusstr_startswithstr_one-str_two)
-     - [`lotus.str_contains(str_one, str_two)`](#lotusstr_containsstr_one-str_two)
-     - [`lotus.str_endswith(str_one, str_two)`](#lotusstr_endswithstr_one-str_two)
-   - [add_threadsfunc](#add_threadsfunc)
-     - [`lotus.ParamScan`](#lotusparamscan)
-     - [`lotus.LuaThreader`](#lotusluathreader)
-     - [`lotus.thread_log(msg)`](#lotusthread_logmsg)
-2. [EncodeEXT Trait](#encodeext-trait)
-   - [add_encode_funcs](#add_encode_funcs)
-     - [`lotus.encode.base64encode(input)`](#lotusencodebase64encodeinput)
-     - [`lotus.encode.base64decode(input)`](#lotusencodebase64decodeinput)
-     - [`lotus.encode.urlencode(input)`](#lotusencodeurlencodeinput)
-     - [`lotus.encode.urldecode(input)`](#lotusencodeurldecodeinput)
-     - [`lotus.encode.htmlencode(input)`](#lotusencodehtmlencodeinput)
-     - [`lotus.encode.htmldecode(input)`](#lotusencodehtmldecodeinput)
-3. [Usage Examples](#usage-examples)
-   - [Logging Example](#logging-example)
-   - [String Matching Example](#string-matching-example)
-   - [Threading Example](#threading-example)
-   - [Encoding/Decoding Example](#encodingdecoding-example)
 
----
+```lua 
+-- hacking_script.lua
 
-## UtilsEXT Trait
+SCAN_TYPE = 2 -- Give me a full url with parameters
 
-The `UtilsEXT` trait provides utility functions for logging, string matching, and threading. These functions are integrated into Lua under the `lotus` table, allowing Lua scripts to perform various operations seamlessly.
+function main() 
+    println("Hello World :D")
+end
+```
+and then call it
 
-### `add_printfunc`
-
-**Purpose:** Adds logging and printing functions to the Lua runtime.
-
-#### `lotus.log_info(msg)`
-
-**Description:** Logs an informational message.
-
-**Parameters:**
-- `msg` (`String`): The message to log.
-
-**Usage:**
-```lua
-lotus.log_info("This is an informational message.")
+```bash
+$ echo "http://target.com" | lotus scan hacking_script.lua 
+Hello World :D
 ```
 
-#### `lotus.log_warn(msg)`
+> at the moment, lotus 0.5-beta is only sending http requests via one http library that means you cannot send a requests by using Socket or DNS, we're planning to add this in the upcoming version
 
-**Description:** Logs a warning message.
+### URL Parsing
+* [Changing the URL Query](#changing-the-url-query)
+* [Sending HTTP Requests](#http-requests)
+* [Chaning the Default Connection options](#change-the-request)
+* [Handling Connection Errors](#handle-connection-errors)
 
-**Parameters:**
-- `msg` (`String`): The warning message to log.
-
-**Usage:**
+#### Changing the URL Query
+It is possible to use the HttpMessage Lua Class to get your target URL, with this class you are able to perform the following:
+- Get the target URL
 ```lua
-lotus.log_warn("This is a warning message.")
+-- echo "http://target.com/?is_admin=true" | lotus scan script.lua 
+local target_url = HttpMessage:url()
+-- http://target.com/?is_admin=true
 ```
 
-#### `lotus.log_debug(msg)`
-
-**Description:** Logs a debug message.
-
-**Parameters:**
-- `msg` (`String`): The debug message to log.
-
-**Usage:**
+- Getting all parameters in String
 ```lua
-lotus.log_debug("Debugging application flow.")
+-- echo "http://target.com/?is_admin=true&year=2023" | lotus scan script.lua
+local params = HttpMessage:param_str()
+-- "is_admin=true&year=2023"
+```
+- Get iterator with all url query
+```lua
+-- echo "http://target.com/?is_admin=true&year=2023" | lotus scan script.lua 
+local iter_params = HttpMessage:param_list()
+
+for param_name, param_value in ipairs(iter_params) do 
+    -- param_name: is_admin
+    -- param_value: true
+end
+```
+- Changing the value of custom Parameter
+```lua
+-- URL = https://target.com/users?name=Mike&age=20
+local new_url = HttpMessage:param_set("age","23")
+-- https://target.com/users?name=Mikehacker&age=2023
 ```
 
-#### `lotus.log_error(msg)`
-
-**Description:** Logs an error message.
-
-**Parameters:**
-- `msg` (`String`): The error message to log.
-
-**Usage:**
+- Changing the value of all parameters
 ```lua
-lotus.log_error("An error has occurred.")
-```
-
-#### `lotus.join_script_dir(new_path)`
-
-**Description:** Joins a new path segment to the directory of the current script.
-
-**Parameters:**
-- `new_path` (`String`): The new path segment to append.
-
-**Returns:**
-- `String`: The combined path.
-
-**Usage:**
-```lua
-local full_path = lotus.join_script_dir("subfolder/script.lua")
-println("Full Path: " .. full_path)
-```
-
-#### `lotus.println(msg)`
-
-**Description:** Prints a message using the global progress bar.
-
-**Parameters:**
-- `msg` (`String`): The message to print.
-
-**Usage:**
-```lua
-lotus.println("Operation completed successfully.")
-```
-
-### `add_matchingfunc`
-
-**Purpose:** Adds string matching utilities to the Lua runtime.
-
-#### `lotus.matcher`
-
-**Description:** A `ResponseMatcher` object configured with specific matching rules.
-
-**Usage:**
-```lua
-if lotus.matcher:contains("Hello, World!", "World") then
-    lotus.log_info("Match found!")
+-- URL = https://target.com/users?name=Mike&age=20
+local new_params = HttpMessage:param_set_all("<h1>",true) -- true = remove the parameter value
+for param_name,param_value in ipairs(new_params) do 
+    -- param_name: name
+    -- param_value: <h1>
+    -- continue ..
 end
 ```
 
-#### `lotus.str_startswith(str_one, str_two)`
-
-**Description:** Checks if `str_one` starts with `str_two`.
-
-**Parameters:**
-- `str_one` (`String`): The string to check.
-- `str_two` (`String`): The prefix string.
-
-**Returns:**
-- `Boolean`: `true` if `str_one` starts with `str_two`, else `false`.
-
-**Usage:**
+- Join URL Path for root path
 ```lua
-local result = lotus.str_startswith("Hello, World!", "Hello")
-if result then
-    lotus.log_info("String starts with 'Hello'")
+make sure to make the global variable SCAN_TYPE value to 3 to make lotus pass the full path instead of parameters to avoid dups inputs
+-- URL = https://target.com/users?name=Mike&age=20
+local new_url = HttpMessage:urljoin("/admin/login?login=true")
+-- URL = https://target.com/admin/login?login=true
+Join URL Path for current path
+-- make sure that your path doesn't starts with /
+local new_url = pathjoin(HttpMessage:path(),"admin/login.php")
+-- http://target.com/index.php/admin.login.php
+```
+
+### HTTP Requests
+Your lua script must call the HTTP lua class whose methods are assigned to the rust HTTP module in order to send HTTP requests
+Send any method that you wish with a body and headers, but make sure that the headers are in Lua tables rather than strings
+Sending normal GET request
+Using the 'http:send()' function will permit you to send an HTTP request directly, but make sure you add the URL first since this field is required by the function, Keep in mind that `http:send` takes the connection options from the user options. If you need to change the connection options for your script, you can visit [#change the request](#change-the-request).
+
+```lua
+local resp = http:send{ url = "https://google.com" }
+by adding this line you will call the https://google.com with GET method you will recive table with the response body/headers/url
+
+local resp = http:send{ url = "https://google.com"}
+println(resp.body) -- use println function to print message above the progress bar
+for header_name,header_value in ipairs(resp.headers) do 
+    println(string.format("%s: %s",header_name, header_value))
+end
+```
+- Sending POST Requests
+```lua
+local headers = {}
+headers["X-API"] = "RANDOM_DATA"
+headers["Content-Type"] = "application/json"
+local resp = http:send{ method = "POST", url = "http://target.com/api/users", body = '{"user_id":1}', headers = headers }
+```
+
+- Sending multipart
+```lua
+multipart = {} -- {param_name: content}
+param_content = {}
+param_content["content"] = "khaled" // parameter body [required]
+param_content["content_type"] = "text/html" // parameter content-type [optional]
+param_content["filename"] = "name.html" // filename [optional]
+multipart["name"] = param_content
+local resp = http:send{method="POST",url="http://google.com",multipart = multipart, timeout=10, headers=headers})
+```
+- Merge Headers (remove default headers if its has the same name of your headers)
+
+```lua
+http:merge_headers(true)
+
+local headers = {}
+headers["User-agent"] = "<img src=x onerror=alert()>"
+local resp = http:send{url="http://google.com", headers=headers}
+```
+
+- Change redirects limit
+```lua
+http:send{url="http://google.com",redirects=5}
+```
+
+### Change the global request options
+
+You can change the default http connection options of your script
+- Connection timeout
+```lua
+http:set_timeout(10) -- 10 secs
+```
+- limits of redirects
+```lua
+http:set_redirects(1) -- no redirects
+http:set_redirects(2) -- only one redirect
+```
+- Custom Proxy
+```lua
+http:set_proxy("http://localhost:8080")
+```
+keep in mind this will only works in your script not in all scripts, so every time you call http:send function, the options that you changed will be called
+
+
+### Input Handing
+To handle input, create a new Lua script with a `parse_input` function. This function should take an input string and parse it according to your specific logic, then return a Lua table as output.
+
+Here is an example implementation of the parse_input function:
+
+like this
+```lua
+function parse_input(input)
+    local output = {}
+    output["hacker"] = 1,
+    output["admin"] = 2,
+    return output
 end
 ```
 
-#### `lotus.str_contains(str_one, str_two)`
 
-**Description:** Checks if `str_one` contains `str_two`.
+Here is an example implementation of the parse_input function:
 
-**Parameters:**
-- `str_one` (`String`): The string to search within.
-- `str_two` (`String`): The substring to search for.
-
-**Returns:**
-- `Boolean`: `true` if `str_one` contains `str_two`, else `false`.
-
-**Usage:**
 ```lua
-if lotus.str_contains("Hello, World!", "World") then
-    lotus.log_info("String contains 'World'")
+SCAN_TYPE = 4
+
+
+function main()
+    println(INPUT_DATA) -- LuaTable[hacker = 1]
+end
+```
+Note that the main function in this example simply prints out the value of the hacker key in the parsed input table, but you can modify this function to suit your specific needs.
+
+
+```bash
+$ echo "hello" | lotus scan script.lua --input-handler input.lua 
+```
+### Handle Connection Errors
+When using the "http:send" function, you might encounter a connections error because of the target response, so to ensure your script is not panicked, call the function within the protect function in the Lua language. This statement only returns a boolean value indicating whether the function has errors or not. For more information about pcall, please see the following link.
+```lua
+local func_status, resp = pcall(function () 
+        return http:send("GET","http://0.0.0.0") -- request the localhost
+        end)
+if func_status == true then 
+    -- True means no errors
+    println("MAN WAKE UP I CAN ACCESS YOUR LOCAL NETWORK")
+end
+```
+Also you can tell lotus about the error by adding a logging lines for it
+```lua
+if func_status == true then 
+    -- True means no errors
+    println("MAN WAKE UP I CAN ACCESS YOUR LOCAL NETWORK")
+else 
+    log_error(string.format("Connection Error: %s",func_status))
 end
 ```
 
-#### `lotus.str_endswith(str_one, str_two)`
-
-**Description:** Checks if `str_one` ends with `str_two`.
-
-**Parameters:**
-- `str_one` (`String`): The string to check.
-- `str_two` (`String`): The suffix string.
-
-**Returns:**
-- `Boolean`: `true` if `str_one` ends with `str_two`, else `false`.
-
-**Usage:**
+#### what if you want to check for custom error message ?
+For example, if you have a Time-based Blind SQL Scanner, the only way to
+determine whether a parameter is vulnerable is to set your Connection Timeout
+to a value lower than the value for the SQL SLEEP Function Therefore, you must
+verify whether the error was caused by a connection timeout or not
+This can be accomplished by adding this function to your LUA script, and then sending the pcall error output to the function along with the error string message
 ```lua
-if lotus.str_endswith("Hello, World!", "World!") then
-    lotus.log_info("String ends with 'World!'")
+function error_contains(error_obj, error_msg)
+    -- ERR_STRING => Converting Error message from error type to string
+    return str_contains(ERR_STRING(error_obj),error_msg)
+end
+
+
+function main() 
+    local status, resp = pcall(function () 
+        return http:send("GET","http://timeouthost")
+    end)
+    if status ~= true then 
+        local timeout_err = error_contains(resp,"caused by: runtime error: timeout_error")
+        if timeout_err == true then 
+            println("TIMEOUT ERROR")
+        end
+    end
+end
+```
+#### Connection ERROR Table
+
+| Error        | Lua Code             |
+| ---          | ----                 |
+| Timeout      | `timeout_error`      |
+| Connection   | `connection_error`   |
+| Request Body | `request_body_error` |
+| Decode       | `decode_error`       |
+| External     | `external_error`     |
+
+
+
+
+
+
+
+### Text Matching
+while writing your own script, you need to ensure that you have been matched the right text to avoid False Postive
+lotus gives you many easy ways for text matching/procssing
+
+- match with regex
+```lua
+SCAN_TYPE = 2
+function main()
+	local resp = http:send("GET","http://testphp.vulnweb.com/artists.php?artist=1")
+	local body = resp.body
+	local searched = html_search(body,"h2[id=\"pageName\"]")
+	println(searched)
+	-- <h2 id="pageName">artist: r4w8173</h2>
+end
+```
+generating CSS Selector Pattern for XSS Payloads
+you can use this for the XSS CVES, to ensure that the payload is render in the page or not
+```lua
+XSS_PAYLOAD = "<img src=x onerror=alert(1)>"
+function main()
+	local search_pattern = generate_css_selector(XSS_PAYLOAD)
+	println(search_pattern)
+	-- img[onerror="alert(1)"][src="x"]
+end
+```
+- match with Regex
+```lua
+function main()
+	local matched = is_match("\\d\\d\\d","123")
+	println(string.format("MATCHED: %s",matched))
+	-- MATCHED: true
+end
+```
+- check if the string includes data
+```lua
+str_contains("I use lua","use") -- true
+```
+- check if the string startswith
+```lua
+str_startswith("I use lua","I use") -- true
+```
+- text matching with and / or conditions
+```lua
+SCAN_TYPE = 2
+
+function main()
+	local match_one = {"test","Mike"}
+	local match_all = {"Mike","true"}
+	local BODY = '{"name":"Mike","is_admin":true}'
+	-- match body with `or` conditions
+	-- it means the function will returns true if one of the elements in the list matched with the body
+	ResponseMatcher:match_body_once(BODY,match_one) -- true
+	-- match body with `and` conditions
+	-- it means the function will returns true if all of the elements in the list matched with the body
+	ResponseMatcher:match_body(BODY,match_all) -- true
 end
 ```
 
-### `add_threadsfunc`
 
-**Purpose:** Adds threading and concurrency-related utilities to the Lua runtime.
 
-#### `lotus.ParamScan`
+## Reporting
 
-**Description:** A `ParamScan` object for handling thread parameters.
+Lotus is giving you one simple way to report/save the output of your script, every time you run a script lotus would expect a list of findings in your report, it means you can include many finidings in the same report and the script as well so first you've to set the report information and after that call a global Lua Class called Reports
 
-**Usage:**
+`Reports:add` accepts any value so feel free to add whatever you want in the report
+
 ```lua
--- Example usage of ParamScan
-if lotus.ParamScan.finds.lock().unwrap() then
-    lotus.log_info("Parameter scan found a match.")
+local match = {}
+match["123"]
+match["456"]
+Reports:add{
+    url = "http://target.com",
+    match = match
+}
+```
+after that you will find the results in CLI and the json output (-o json)
+
+
+
+### Logging
+| Log Level | Lua Function |
+| ---       | --           |
+| INFO      | `log_info`   |
+| DEBUG     | `log_debug`  |
+| WARN      | `log_warn`   |
+| ERROR     | `log_error`  |
+
+
+```lua
+local main()
+    log_debug("Hello MOM :D")
 end
 ```
 
-#### `lotus.LuaThreader`
 
-**Description:** A `LuaThreader` object for managing threads.
+```bash
+$ echo "http://target.com"| lotus urls main.lua -o out.json --log log.txt
+$ cat log.txt
+[2023-02-28][14:40:09][lotus::cli::bar][INFO] URLS: 1
+[2023-02-28][14:40:09][lotus::lua::parsing::files][DEBUG] READING "main.lua"
+[2023-02-28][14:40:09][lotus][DEBUG] Running PATH scan 0
+[2023-02-28][14:40:09][lotus::lua::parsing::files][DEBUG] READING "main.lua"
+[2023-02-28][14:40:09][lotus][DEBUG] Running URL scan 1
+[2023-02-28][14:40:09][lotus][DEBUG] Running main.lua script on http://target.com
+[2023-02-28][14:40:09][lotus::lua::loader][DEBUG] Hello MOM :D
+```
 
-**Usage:**
+
+
+### Modules
+While we strive to provide as many functions as possible, there may be cases where you require additional libraries for specific purposes. To address this, we have released packages on luarocks.org written in Rust for improved memory safety.
+
+To use these packages, it is important to first install Rust from here. Once Rust is installed, you can search for packages released by the knas user on luarocks.org. Additionally, you can use any Lua modules written in different languages such as C.
+
+### Fuzzing
+
+lotus is focusing to make the fuzzing or multi-threading process easy and simple by providing two class to help in common fuzzing cases
+
+
+the first one is  for parameter scanning that doesn't means this the can be used for Param Scanner this but the idea is this class has been created for that reason
+
+##### ParamScan
+this class takes one string with List, for the target parameter to scan and the payloads list, after that the ParamScan class will send the target parameter with every item in the payloads list to the target function
+> target function is just lua function you create to so simple thing like sending http requests and return the response  
+
+after sending it to the target function it will take the output of this function and then send it to the callback function
+
+> Callback function is list the target function but for parsing 
+
+
+in you callback function parse the target function output and see if this able is valid to save it in the report or not 
+
+> FUZZ_WORKERS is lua varaible the value of --fuzz-workers option
 ```lua
--- Example usage of LuaThreader
-local threader = lotus.LuaThreader
--- Implement thread management logic as needed
-```
+SCAN_TYPE = 2
 
-#### `lotus.thread_log(msg)`
-
-**Description:** Logs messages in a thread-safe manner.
-
-**Parameters:**
-- `msg` (`String`): The message to log.
-
-**Usage:**
-```lua
-lotus.thread_log("Thread-safe operation in progress.")
-```
-
----
-
-## EncodeEXT Trait
-
-The `EncodeEXT` trait provides encoding and decoding functions, enabling Lua scripts to perform various data transformations. These functions are accessible under the `lotus.encode` table.
-
-### `add_encode_funcs`
-
-**Purpose:** Adds encoding and decoding functions to the Lua runtime.
-
-#### `lotus.encode.base64encode(input)`
-
-**Description:** Encodes a string into Base64.
-
-**Parameters:**
-- `input` (`String`): The string to encode.
-
-**Returns:**
-- `String`: The Base64-encoded string.
-
-**Usage:**
-```lua
-local encoded = lotus.encode.base64encode("Hello, World!")
-println("Base64 Encoded: " .. encoded)
-```
-
-#### `lotus.encode.base64decode(input)`
-
-**Description:** Decodes a Base64-encoded string.
-
-**Parameters:**
-- `input` (`String`): The Base64 string to decode.
-
-**Returns:**
-- `String`: The decoded string.
-
-**Usage:**
-```lua
-local decoded = lotus.encode.base64decode(encoded)
-println("Base64 Decoded: " .. decoded)
-```
-
-#### `lotus.encode.urlencode(input)`
-
-**Description:** Encodes a string for safe inclusion in a URL.
-
-**Parameters:**
-- `input` (`String`): The string to encode.
-
-**Returns:**
-- `String`: The URL-encoded string.
-
-**Usage:**
-```lua
-local url_encoded = lotus.encode.urlencode("https://example.com/?key=value")
-println("URL Encoded: " .. url_encoded)
-```
-
-#### `lotus.encode.urldecode(input)`
-
-**Description:** Decodes a URL-encoded string.
-
-**Parameters:**
-- `input` (`String`): The URL-encoded string to decode.
-
-**Returns:**
-- `String`: The decoded string.
-
-**Usage:**
-```lua
-local url_decoded = lotus.encode.urldecode(url_encoded)
-println("URL Decoded: " .. url_decoded)
-```
-
-#### `lotus.encode.htmlencode(input)`
-
-**Description:** Escapes HTML special characters in a string.
-
-**Parameters:**
-- `input` (`String`): The string to escape.
-
-**Returns:**
-- `String`: The HTML-escaped string.
-
-**Usage:**
-```lua
-local html_encoded = lotus.encode.htmlencode("<div>Example</div>")
-println("HTML Encoded: " .. html_encoded)
-```
-
-#### `lotus.encode.htmldecode(input)`
-
-**Description:** Unescapes HTML special characters in a string.
-
-**Parameters:**
-- `input` (`String`): The HTML-escaped string to unescape.
-
-**Returns:**
-- `String`: The unescaped string.
-
-**Usage:**
-```lua
-local html_decoded = lotus.encode.htmldecode(html_encoded)
-println("HTML Decoded: " .. html_decoded)
-```
-
----
-
-## Usage Examples
-
-Below are comprehensive examples demonstrating how to utilize the integrated utility and encoding functions within Lua scripts.
-
-### Logging Example
-
-```lua
--- Logging various levels of messages
-lotus.log_info("Application started successfully.")
-lotus.log_debug("Debugging initialization parameters.")
-lotus.log_warn("Low disk space detected.")
-lotus.log_error("Failed to connect to the database.")
-```
-
-**Expected Output:**
-```
-[INFO] Application started successfully.
-[DEBUG] Debugging initialization parameters.
-[WARN] Low disk space detected.
-[ERROR] Failed to connect to the database.
-```
-
-### String Matching Example
-
-```lua
--- Using string matching utilities
-local text = "The quick brown fox jumps over the lazy dog."
-
-if lotus.str_startswith(text, "The quick") then
-    lotus.log_info("The text starts with 'The quick'.")
+local function send_report(url,parameter,payload,matching_error)
+    Reports:add {
+        name = "Template Injection",
+        link = "https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection",
+        risk = "high",
+        url = url,
+        match = matching_error,
+        param = parameter
+    }
 end
 
-if lotus.str_contains(text, "brown fox") then
-    lotus.log_info("The text contains 'brown fox'.")
+SSTI_PAYLOADS = {
+    "lot{{2*2}}us",
+    "lot<%= 2*2 %>us"
+}
+
+function scan_ssti(param_name,payload)
+    local new_url = HttpMessage:setParam(param_name,payload)
+    local resp_status,resp = pcall(function ()
+        return http:send("GET",new_url) -- Sending a http request to the new url with GET Method
+    end)
+        if resp_status == true then
+            local out = {}
+            local body = resp.body -- Get the response body as string
+            out["body"] = body
+            out["url"] = resp.url
+            out["param_name"] = param_name
+            out["payload"] = payload
+            return out
+        end
 end
 
-if lotus.str_endswith(text, "lazy dog.") then
-    lotus.log_info("The text ends with 'lazy dog.'.")
+function ssti_callback(data)
+    if data == nil then
+        return -- avoid nil cases
+    end
+    url = data["url"]
+    body = data["body"]
+    payload = data["payload"]
+    param_name = data["param_name"]
+    local match_status, match = pcall(function () 
+        -- Matching with the response and the targeted regex
+        -- we're using pcall here to avoid regex errors (and panic the code)
+        return str_contains(body, "lot4us")
+    end)
+    if match_status == true then
+        if match == true then
+            send_report(url,param_name,payload,"lot4us")
+            Reports:addVulnReport(VulnReport)
+        end
+    end
+end
+
+function main()
+    for _,param in ipairs(HttpMessage:Params()) do
+        ParamScan:start_scan()
+        ParamScan:add_scan(param,SSTI_PAYLOADS, scan_ssti,ssti_callback, FUZZ_WORKERS)
+    end
 end
 ```
 
-**Expected Output:**
-```
-[INFO] The text starts with 'The quick'.
-[INFO] The text contains 'brown fox'.
-[INFO] The text ends with 'lazy dog.'.
-```
+Basically, we are doing a for loop on all url parameters in the code above and
+then creating a scanning thread with the target parameter, the SSTI_PAYLOAD
+List, scan_ssti as the target function and ssti_callback as the callback
+function, and FUZZ_WORKERS is a lua variable that gets its value from the
+`--fuzz-workers` parameter (you can replace it with real number of you want) 
 
-### Threading Example
+As part of the ssti_scan function, we change the parameter value to the SSTI
+payload, and then send an HTTP request to it, and return a list with the
+following components: body, url, payload, parameter name. 
+
+ParamScan will then take the output of this function and pass it to the function callback
+(ssti_callback). in the call callback function first lines it checks if the
+function parameter value is nil (Null) or not because doing any match You may
+set this option to prevent ParamScan from sending Nil to the call_back
+functions
 
 ```lua
--- Using threading utilities
--- Initialize LuaThreader
-local threader = lotus.LuaThreader
+ParamScan:accept_nil(false) -- Dont pass any nil values
+ParamScan:is_accept_nil() -- check if ParamScan is passing nil values or not
+```
+If you are scanning parameters, you do not need to call any of these functions since the default option is not to pass any null values to them
+From anywhere in your script, you may call the ParamScan:stop_scan() function to stop the scanner and clear all futures
+You can disable this option by using the ParamScan:start_scan() function
+and if you want to check first if ParamScan is stopped or not you can use ParamScan:is_stop()
 
--- Start a thread (hypothetical usage)
--- This is a placeholder; actual threading logic depends on LuaThreader implementation
--- For demonstration purposes, we'll just log a message
-lotus.thread_log("Thread-safe operation initiated.")
+#### LuaThreader
+this a simple class to do multi-threading, it only takes iterator and function to run 
+```lua
+SCAN_TYPE = 2
 
--- Using ParamScan
-if lotus.ParamScan.finds.lock().unwrap() then
-    lotus.log_info("Parameter scan detected a match.")
-else
-    lotus.log_info("Parameter scan did not find a match.")
+PAYLOADS = {
+    "hello",
+    'world'
+}
+function SCANNER(data)
+    -- DO YOUR SCANNING LOGIC
+end
+
+function main()
+    LuaThreader:run_scan(PAYLOADS,SCANNER,10) -- 10 = Number of workers
+    -- LuaThreader:stop_scan() = stop the scan and dont accept any new futures
+    -- LuaThreader:is_stop() = Check if LuaThreader is stopped or not
 end
 ```
+The LuaThreader class will open two threads in this example, one for the hello word and one for the world word
+It is really as simple as that 
 
-**Expected Output:**
-```
-[INFO] Thread-safe operation initiated.
-[INFO] Parameter scan detected a match.
-```
 
-### Encoding/Decoding Example
 
+### Reading Files
+
+- Reading files
 ```lua
--- Encoding and decoding examples
+local status, file = pcall(function()
+    return readfile("/etc/passwd") 
+end)
+if status == true then 
+    println(file)
+end
+```
+- Path Join
+```lua
+pathjoin("/etc/","passwd") -- /etc/passwd
+```
+- Path Join in the script directory 
+```lua
+-- script dir /home/docker/scripts/main.lua
+join_script_dir("payloads/sqli.txt")
+-- /home/docker/scripts/payloads/sqli.txt
+```
+- Convert files to iterators by new lines
+```lua
+local status, lines = pcall(function()
+    return readfile("/etc/passwd") 
+end)
+if status == true then 
+    for word in line:gmatch("%w+") do 
+        --
+    end 
+end
+```
+you can see the offical Lua IO Library for more informations  
 
--- Base64
-local original = "Hello, World!"
-local base64_encoded = lotus.encode.base64encode(original)
-local base64_decoded = lotus.encode.base64decode(base64_encoded)
-println("Base64 Encoded: " .. base64_encoded)
-println("Base64 Decoded: " .. base64_decoded)
 
--- URL
-local url = "https://example.com/?search=Lua+Integration"
-local url_encoded = lotus.encode.urlencode(url)
-local url_decoded = lotus.encode.urldecode(url_encoded)
-println("URL Encoded: " .. url_encoded)
-println("URL Decoded: " .. url_decoded)
 
--- HTML
-local html = "<script>alert('XSS');</script>"
-local html_encoded = lotus.encode.htmlencode(html)
-local html_decoded = lotus.encode.htmldecode(html_encoded)
-println("HTML Encoded: " .. html_encoded)
-println("HTML Decoded: " .. html_decoded)
+### Encoding 
+
+- Base64
+```lua
+base64encode("hello") -- aGVsbG8=
+base64decode("aGVsbG8=") -- hello
 ```
 
-**Expected Output:**
-```
-Base64 Encoded: SGVsbG8sIFdvcmxkIQ==
-Base64 Decoded: Hello, World!
-URL Encoded: https%3A%2F%2Fexample.com%2F%3Fsearch%3DLua+Integration
-URL Decoded: https://example.com/?search=Lua+Integration
-HTML Encoded: &lt;script&gt;alert(&#x27;XSS&#x27;);&lt;/script&gt;
-HTML Decoded: <script>alert('XSS');</script>
+- URL encoding
+```lua
+urlencode("Hello World") -- Hello%20World
+urldecode("Hello%20World") -- Hello World
 ```
 
----
+- HTML encoding
+```lua
+htmlencode("<script>alert()</script>") -- &lt;script&gt;alert()&lt;/script&gt;
+htmldecode("&lt;script&gt;alert()&lt;/script&gt;") -- <script>alert()</script>
+```
 
-## Summary
 
-This documentation provides a detailed overview of the utility and encoding functions integrated into your Lua runtime via the `UtilsEXT` and `EncodeEXT` traits. By leveraging these functions, Lua scripts can perform advanced operations such as logging, string matching, threading, and data encoding/decoding with ease and efficiency.
+### FAQ
 
-**Key Highlights:**
+##### Comercial Use 
+Thank you first for using lotus commercially
+However, you should keep in mind that the Lotus Project is licensed under the GPLv2 license, which allows commercial use of the project, however it requires you to open a PR or inform the Lotus Project Team if you made any changes to the core code
+Lotus is doing this because we want to ensure that everyone has access to all of its features
+It does not mean that your lua scripts should be shared with others. We actually use BSD licenses for lua scripts, which allow you to hide your scripts according to your preferences
 
-- **Logging Utilities:** Simplify logging at various levels (`info`, `warn`, `debug`, `error`) directly from Lua scripts.
-- **String Matching:** Enhance string processing with functions to check prefixes, suffixes, and substring containment.
-- **Threading Support:** Manage threading operations and ensure thread-safe logging.
-- **Encoding/Decoding:** Facilitate data transformation with Base64, URL, and HTML encoding and decoding functions.
+Would you like to discuss with the team the possibility of releasing Lotus in other license for you?
+just send an email to knassar702@gmail.com
+Feel free to send the same email if you need assistance with how to use Lotus effectively for your business
+It would be great if you could join a meeting with the Lotus team and discuss this in more detail:)
 
-**Best Practices:**
 
-- **Error Handling:** Always handle potential errors, especially when dealing with decoding functions that may receive invalid inputs.
-- **Thread Safety:** Utilize thread-safe logging functions (`thread_log`) when performing operations in multi-threaded contexts.
-- **Path Management:** Use `join_script_dir` to dynamically construct file paths relative to your Lua scripts, enhancing portability and flexibility.
 
-By following this documentation, you can effectively utilize the integrated functions to build robust and maintainable Lua scripts within your Rust application.
+##### I can't find the function that I need
+you can download any library from https://luarocks.org/ and then import it in your script 
+Or open an issue on our Github repository for the functionality you are missing

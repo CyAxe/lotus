@@ -31,14 +31,14 @@ use std::sync::Arc;
 use crate::lua::threads::runner::{LAST_CUSTOM_SCAN_ID, LAST_PATH_SCAN_ID, LAST_URL_SCAN_ID};
 
 impl Lotus {
-    /// Orchestrates the execution of Lua scripts on provided target data.
+    /// Run the Lua script with real target.
     ///
-    /// * `target_data` - A collection of targets for scanning, represented as JSON values.
-    /// * `loaded_scripts` - Lua scripts loaded into memory for execution.
-    /// * `request_option` - Configuration for HTTP requests (e.g., proxy, timeout).
-    /// * `scan_type` - Type of scan to perform (e.g., FULL_HTTP, HOSTS, URLS).
-    /// * `exit_after` - Maximum allowable errors before aborting.
-    /// * `fuzz_workers` - Number of concurrent workers for fuzzing tasks.
+    /// * `target_data` - Vector with target urls.
+    /// * `loaded_scripts` - Loaded Lua scripts.
+    /// * `request_option` - RequestOpts contains some HTTP request options like (proxy, timeout).
+    /// * `scan_type` - Scan type if it's host or URL scanning.
+    /// * `exit_after` - Exit after how many errors.
+    /// * `fuzz_workers` - Number of fuzz workers.
     pub async fn start(
         &self,
         target_data: Vec<serde_json::Value>,
@@ -48,41 +48,37 @@ impl Lotus {
         exit_after: i32,
         fuzz_workers: usize,
     ) {
-        // Return immediately if there is no target data to process.
         if target_data.is_empty() {
             return;
         }
 
-        // Determine the resume point and validate scripts based on the scan type.
         let resume_value: usize;
         let loaded_scripts = match scan_type {
             ScanTypes::FULL_HTTP => {
                 resume_value = *LAST_HTTP_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, "FULL_HTTP")
+                valid_scripts(loaded_scripts, 0)
             }
             ScanTypes::HOSTS => {
                 resume_value = *LAST_HOST_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, "HOSTS")
+                valid_scripts(loaded_scripts, 1)
             }
             ScanTypes::URLS => {
                 resume_value = *LAST_URL_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, "URLS")
+                valid_scripts(loaded_scripts, 2)
             }
             ScanTypes::PATHS => {
                 resume_value = *LAST_PATH_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, "PATHS")
+                valid_scripts(loaded_scripts, 3)
             }
             ScanTypes::CUSTOM => {
                 resume_value = *LAST_CUSTOM_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, "CUSTOM")
+                valid_scripts(loaded_scripts, 4)
             }
         };
 
-        // Shared objects for managing Lua script execution and scan state.
         let lotus_obj = Arc::new(LuaLoader::new(request_option.clone(), self.output.clone()));
         let scan_type = Arc::new(scan_type);
 
-        // Process each target and script concurrently with error handling.
         iter_futures(
             scan_type.clone(),
             target_data,
@@ -103,10 +99,9 @@ impl Lotus {
                             env_vars: self.env_vars.clone(),
                         };
 
-                        // Check if the error threshold has been reached before executing.
                         let stop_after: i32 = {*self.stop_after.lock().unwrap()};
-                        if stop_after == exit_after {
-                            // Skip execution if error threshold is met.
+                        if stop_after == exit_after{
+                           // No script will be executed
                         } else {
                             log::debug!("Starting script execution: {} on {}", script_name, script_data);
                             match lotus_loader.run_scan(lua_opts).await {
@@ -114,23 +109,22 @@ impl Lotus {
                                 Err(err) => {
                                     log::error!("An error occurred while executing the script: {}", err.to_lua_err().to_string());
                                     {
-                                        let mut stop_after = self.stop_after.lock().unwrap();
-                                        log::debug!("The current number of errors encountered while executing scripts is: {}", *stop_after);
+                                        let mut stop_after = self.stop_after.lock().unwrap(); log::debug!("The current number of errors encountered while executing scripts is: {}", *stop_after);
                                         *stop_after += 1;
                                     }
                                 }
                             }
                         }
                     },
-                    self.script_workers, // Number of concurrent script workers.
-                    0, // Initial resume value.
-                    false, // Disable retry on failures.
+                    self.script_workers,
+                    0,
+                    false,
                 )
                 .await;
             },
-            self.workers, // Number of overall workers for target processing.
-            resume_value, // Resume scanning from the last checkpoint.
-            true, // Enable retry logic for target processing.
+            self.workers,
+            resume_value,
+            true,
         )
         .await;
     }

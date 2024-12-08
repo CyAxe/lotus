@@ -1,53 +1,41 @@
-SCAN_TYPE = "PATHS" -- Updated to use string-based ScanTypes
+SCAN_TYPE = 3
 BODY_MATCH = {
-    "please input shell command", 
-    "ZTE Corporation. All rights reserved"
+    'please input shell command', 'ZTE Corporation. All rights reserved'
 }
 
--- Function to send the report for detected vulnerabilities
 local function send_report(resp)
-    reports:add{
+    Reports:add{
         name = "CVE-2014-2321",
-        description = "ZTE F460 and F660 cable modems allow remote attackers to obtain administrative access via sendcmd requests to web_shell_cmd.gch, as demonstrated by using 'set TelnetCfg' commands to enable a TELNET service with specified credentials.",
+        description = "ZTE F460 and F660 cable modems allows remote attackers to obtain administrative access via sendcmd requests to web_shell_cmd.gch, as demonstrated by using 'set TelnetCfg' commands to enable a TELNET service with specified credentials.",
         risk = "high",
         url = resp.url,
         matches = {
-            status_code = tostring(resp.status_code),
-            body = BODY_MATCH,
-            full_response = http:show_response(resp)
+            status_code = "200",
+            body = {
+                'please input shell command',
+                'ZTE Corporation. All rights reserved'
+            },
+            full_response = show_response(resp)
         }
     }
 end
 
--- Function to perform the scan for the specified CVE
 local function scan_cve(target_path)
-    -- Attempt to send the HTTP request and capture the response
+    local new_path = pathjoin(HttpMessage:path(), target_path)
+    local new_url = HttpMessage:urljoin(new_path)
     local resp_status, resp = pcall(function()
-        return http:send{
-            url = "http://example.com/" .. target_path, -- Updated target URL construction
-            method = "GET"
-        }
+        return http:send{url = new_url}
     end)
-
-    -- Check if the HTTP request was successful
-    if resp_status and resp then
-        -- Match status code and response body for potential vulnerabilities
-        if resp.status_code == 200 then
-            for _, pattern in ipairs(BODY_MATCH) do
-                if string.match(resp.body, pattern) then
-                    -- If a match is found, send the report
-                    send_report(resp)
-                    break
-                end
-            end
-        end
-    else
-        -- Log the error if the HTTP request fails
+    if resp_status == true then
+        local url = resp.url
+        local body = resp.body
+        local body_match = Matcher:match_body(body, BODY_MATCH) -- Matching body with List with and conditions
+        if resp.status ~= 200 then return end
+        if body_match then send_report(resp) end
     end
 end
 
--- Main function to initiate the scan
-function main()
-    lotus.log_info("GGASg")
+function main() 
+    log_info("FFF")
     scan_cve("web_shell_cmd.gch")
 end
