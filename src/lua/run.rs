@@ -56,8 +56,8 @@ impl LuaLoader {
     fn set_lua(&self, target_url: Option<&str>, fullhttp_msg: Option<FullRequest>, lua: &Lua) {
         let lua_eng = LuaRunTime { lua };
         use crate::lua::runtime::http_ext::HTTPEXT;
-        lua_eng.add_httpfuncs(target_url, fullhttp_msg);
-        lua_eng.add_encode_function();
+        let _ = lua_eng.add_httpfuncs(target_url, fullhttp_msg);
+        let _ = lua_eng.add_encode_function();
         lua_eng.add_printfunc();
         lua_eng.add_matchingfunc();
         lua_eng.add_threadsfunc();

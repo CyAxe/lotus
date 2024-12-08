@@ -58,23 +58,23 @@ impl Lotus {
         let loaded_scripts = match scan_type {
             ScanTypes::FULL_HTTP => {
                 resume_value = *LAST_HTTP_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, 0)
+                valid_scripts(loaded_scripts, "FULL_HTTP")
             }
             ScanTypes::HOSTS => {
                 resume_value = *LAST_HOST_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, 1)
+                valid_scripts(loaded_scripts, "HOSTS")
             }
             ScanTypes::URLS => {
                 resume_value = *LAST_URL_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, 2)
+                valid_scripts(loaded_scripts, "URLS")
             }
             ScanTypes::PATHS => {
                 resume_value = *LAST_PATH_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, 3)
+                valid_scripts(loaded_scripts, "PATHS")
             }
             ScanTypes::CUSTOM => {
                 resume_value = *LAST_CUSTOM_SCAN_ID.lock().await;
-                valid_scripts(loaded_scripts, 4)
+                valid_scripts(loaded_scripts, "CUSTOM")
             }
         };
 
